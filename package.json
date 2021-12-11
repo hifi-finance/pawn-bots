@@ -1,10 +1,11 @@
 {
-  "name": "@paulrberg/solidity-template",
-  "description": "Template for writing Solidity smart contracts",
+  "name": "@hifi-finance/bot-farm-frens",
+  "description": "An NFT project from Hifi Finance",
   "version": "1.0.0",
   "author": {
-    "name": "Paul Razvan Berg",
-    "url": "https://paulrberg.com"
+    "name": "Hifi",
+    "email": "contact@hifi.finance",
+    "url": "https://hifi.finance"
   },
   "devDependencies": {
     "@codechecks/client": "^0.1.12",
@@ -83,5 +84,8 @@
     "prettier:check": "prettier --check --config ./.prettierrc.yaml \"**/*.{js,json,md,sol,ts}\"",
     "test": "hardhat test",
     "typechain": "cross-env TS_NODE_TRANSPILE_ONLY=true hardhat typechain"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.4.0"
   }
 }
