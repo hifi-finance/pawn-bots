@@ -9,12 +9,16 @@ import "./IBotFarmFrens.sol";
 
 error BotFarmFrens__MaxBffsMintOverflow();
 error BotFarmFrens__MaxBffsSupplyOverflow();
+error BotFarmFrens__NotEnoughCurrency();
 
 /// @title BotFarmFrens
 /// @author Hifi
 /// @notice Manages the mint and distribution of BFFs.
 contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable {
     /// PUBLIC STORAGE ///
+
+    /// @inheritdoc IBotFarmFrens
+    string public override baseURI;
 
     /// @inheritdoc IBotFarmFrens
     IERC20Metadata public override currency;
@@ -46,10 +50,20 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable {
         if (mintAmount + totalSupply() > MAX_BFFS_SUPPLY) {
             revert BotFarmFrens__MaxBffsSupplyOverflow();
         }
+        if (currency.balanceOf(msg.sender) < price * mintAmount) {
+            revert BotFarmFrens__NotEnoughCurrency();
+        }
         currency.transferFrom(msg.sender, address(this), price * mintAmount);
         for (uint256 i = 0; i < mintAmount; i++) {
             _safeMint(msg.sender, totalSupply());
         }
+    }
+
+    /// @inheritdoc IBotFarmFrens
+    function setBaseURI(string memory newBaseURI) public override onlyOwner {
+        string memory oldBaseURI = baseURI;
+        baseURI = newBaseURI;
+        emit SetBaseURI(oldBaseURI, baseURI);
     }
 
     /// @inheritdoc IBotFarmFrens
