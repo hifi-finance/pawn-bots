@@ -7,9 +7,9 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "hardhat/console.sol";
 import "./IBotFarmFrens.sol";
 
-error BotFarmFrens__MaxBffsMintOverflow();
-error BotFarmFrens__MaxBffsSupplyOverflow();
-error BotFarmFrens__NotEnoughCurrency();
+error BotFarmFrens__MaxBffsMintExceeded();
+error BotFarmFrens__MaxBffsSupplyExceeded();
+error BotFarmFrens__InsufficientCurrency();
 
 /// @title BotFarmFrens
 /// @author Hifi
@@ -43,20 +43,25 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable {
     /// PUBLIC NON-CONSTANT FUNCTIONS ///
 
     /// @inheritdoc IBotFarmFrens
-    function mintBff(uint256 mintAmount) public override {
+    function mintBFF(uint256 mintAmount) public override {
         if (mintAmount > MAX_BFFS_MINT) {
-            revert BotFarmFrens__MaxBffsMintOverflow();
+            revert BotFarmFrens__MaxBffsMintExceeded();
         }
         if (mintAmount + totalSupply() > MAX_BFFS_SUPPLY) {
-            revert BotFarmFrens__MaxBffsSupplyOverflow();
+            revert BotFarmFrens__MaxBffsSupplyExceeded();
         }
-        if (currency.balanceOf(msg.sender) < price * mintAmount) {
-            revert BotFarmFrens__NotEnoughCurrency();
+        uint256 fee = price * mintAmount;
+        if (currency.balanceOf(msg.sender) < fee) {
+            revert BotFarmFrens__InsufficientCurrency();
         }
-        currency.transferFrom(msg.sender, address(this), price * mintAmount);
+        currency.transferFrom(msg.sender, address(this), fee);
+        uint256[] memory mintedIds = new uint256[](mintAmount);
         for (uint256 i = 0; i < mintAmount; i++) {
-            _safeMint(msg.sender, totalSupply());
+            uint256 mintId = totalSupply();
+            _safeMint(msg.sender, mintId);
+            mintedIds[i] = mintId;
         }
+        emit MintBFF(mintedIds, msg.sender, fee);
     }
 
     /// @inheritdoc IBotFarmFrens
@@ -74,9 +79,9 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable {
     }
 
     /// @inheritdoc IBotFarmFrens
-    function withdraw() public override onlyOwner {
+    function withdraw(address recipient) public override onlyOwner {
         uint256 amount = currency.balanceOf(address(this));
-        currency.transfer(msg.sender, amount);
-        emit Withdraw(amount);
+        currency.transfer(recipient, amount);
+        emit Withdraw(recipient, amount);
     }
 }

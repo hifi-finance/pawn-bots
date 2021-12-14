@@ -8,6 +8,12 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 interface IBotFarmFrens {
     /// EVENTS ///
 
+    /// @notice Emitted when minting BFFs.
+    /// @param ids The minted BFF IDs.
+    /// @param minter The minter address.
+    /// @param fee The total mint fee paid in currency units.
+    event MintBFF(uint256[] indexed ids, address indexed minter, uint256 fee);
+
     /// @notice Emitted when base URI is set.
     /// @param oldBaseURI The old base URI.
     /// @param newBaseURI The new base URI.
@@ -18,21 +24,17 @@ interface IBotFarmFrens {
     /// @param newPrice The new mint price.
     event SetPrice(uint256 oldPrice, uint256 newPrice);
 
-    /// @notice Emitted when minting BFFs.
-    /// @param amount The amount of BFFs minted.
-    /// @param payment The total currency tokens paid for minting BFFs.
-    event MintBff(uint256 amount, uint256 payment);
-
     /// @notice Emitted when withdrawing currency.
+    /// @param recipient The recipient of currency withdrawn.
     /// @param amount The amount of currency withdrawn.
-    event Withdraw(uint256 amount);
+    event Withdraw(address indexed recipient, uint256 amount);
 
     /// PUBLIC CONSTANT FUNCTIONS ///
 
     /// @notice The base token URI.
     function baseURI() external view returns (string memory);
 
-    /// @notice The mint payment token contract.
+    /// @notice The contract of token used for paying mint fees.
     function currency() external view returns (IERC20Metadata);
 
     /// @notice The mint price in currency tokens.
@@ -42,14 +44,14 @@ interface IBotFarmFrens {
 
     /// @notice Mint new BFFs in exchange for currency.
     ///
-    /// @dev Emits a {MintBff} event.
+    /// @dev Emits a {MintBFF} event.
     ///
     /// Requirements:
     /// - The caller must have allowed this contract to spend currency tokens.
-    /// - The caller must have `price * mintAmount` currency tokens in their account.
+    /// - The caller must have at least `price * mintAmount` currency tokens in their account.
     ///
     /// @param mintAmount The amount of BFFs to mint.
-    function mintBff(uint256 mintAmount) external;
+    function mintBFF(uint256 mintAmount) external;
 
     /// @notice Set the base URI.
     ///
@@ -77,5 +79,7 @@ interface IBotFarmFrens {
     ///
     /// Requirements:
     /// - Can only be called by the owner.
-    function withdraw() external;
+    ///
+    /// @param recipient The recipient of currency withdrawn.
+    function withdraw(address recipient) external;
 }
