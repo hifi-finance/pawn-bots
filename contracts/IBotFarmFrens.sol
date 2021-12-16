@@ -47,9 +47,6 @@ interface IBotFarmFrens {
 
     /// PUBLIC CONSTANT FUNCTIONS ///
 
-    /// @notice The base token URI.
-    function baseURI() external view returns (string memory);
-
     /// @notice The contract of token used for paying mint fees.
     function currency() external view returns (IERC20Metadata);
 
@@ -64,7 +61,7 @@ interface IBotFarmFrens {
     function saleStartTime() external view returns (uint256);
 
     /// @notice The status of the sale.
-    function saleEnabled() external view returns (bool);
+    function saleIsActive() external view returns (bool);
 
     /// @notice The private sale phase whitelist.
     function whitelist(address user)
@@ -72,8 +69,8 @@ interface IBotFarmFrens {
         view
         returns (
             bool exists,
-            uint256 eligibleAmount,
-            uint256 claimedAmount
+            uint256 claimedAmount,
+            uint256 eligibleAmount
         );
 
     /// PUBLIC NON-CONSTANT FUNCTIONS ///

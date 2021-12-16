@@ -2,6 +2,7 @@
 pragma solidity >=0.8.4;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "hardhat/console.sol";
@@ -13,24 +14,21 @@ error BotFarmFrens__MaxElementsExceeded();
 error BotFarmFrens__MaxPublicMintsExceeded();
 error BotFarmFrens__NotWhitelisted();
 error BotFarmFrens__SaleAlreadyStarted();
-error BotFarmFrens__SaleIsDisabled();
+error BotFarmFrens__SaleIsNotActive();
 
 /// @title BotFarmFrens
 /// @author Hifi
 /// @notice Manages the mint and distribution of BFFs.
-contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable {
+contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGuard {
     /// STRUCTS ///
 
     struct WhitelistElement {
         bool exists;
-        uint256 eligibleAmount;
         uint256 claimedAmount;
+        uint256 eligibleAmount;
     }
 
     /// PUBLIC STORAGE ///
-
-    /// @inheritdoc IBotFarmFrens
-    string public override baseURI;
 
     /// @inheritdoc IBotFarmFrens
     IERC20Metadata public override currency;
@@ -45,7 +43,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable {
     uint256 public override saleStartTime;
 
     /// @inheritdoc IBotFarmFrens
-    bool public override saleEnabled;
+    bool public override saleIsActive;
 
     /// @inheritdoc IBotFarmFrens
     mapping(address => WhitelistElement) public override whitelist;
@@ -58,6 +56,9 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable {
 
     /// INTERNAL STORAGE ///
 
+    /// @dev The base token URI.
+    string internal baseURI;
+
     constructor(IERC20Metadata currency_) ERC721("Bot Farm Frens", "BFF") {
         currency = currency_;
     }
@@ -65,9 +66,9 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable {
     /// PUBLIC NON-CONSTANT FUNCTIONS ///
 
     /// @inheritdoc IBotFarmFrens
-    function mintBFF(uint256 mintAmount) public override {
-        if (!saleEnabled) {
-            revert BotFarmFrens__SaleIsDisabled();
+    function mintBFF(uint256 mintAmount) public override nonReentrant {
+        if (!saleIsActive) {
+            revert BotFarmFrens__SaleIsNotActive();
         }
         if (mintAmount + totalSupply() > MAX_ELEMENTS) {
             revert BotFarmFrens__MaxElementsExceeded();
@@ -89,7 +90,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable {
         }
 
         uint256 fee = price * mintAmount;
-        receiveFeeInternal(mintAmount);
+        receiveFeeInternal(fee);
 
         uint256[] memory mintedIds = new uint256[](mintAmount);
         for (uint256 i = 0; i < mintAmount; i++) {
@@ -102,7 +103,10 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable {
 
     /// @inheritdoc IBotFarmFrens
     function pauseSale() public override onlyOwner {
-        saleEnabled = false;
+        if (!saleIsActive) {
+            revert BotFarmFrens__SaleIsNotActive();
+        }
+        saleIsActive = false;
         emit PauseSale();
     }
 
@@ -140,11 +144,11 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable {
 
     /// @inheritdoc IBotFarmFrens
     function startSale() public override onlyOwner {
-        if (saleEnabled) {
+        if (saleIsActive) {
             revert BotFarmFrens__SaleAlreadyStarted();
         }
         saleStartTime = block.timestamp;
-        saleEnabled = true;
+        saleIsActive = true;
         emit StartSale();
     }
 
@@ -153,6 +157,13 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable {
         uint256 amount = currency.balanceOf(address(this));
         currency.transfer(recipient, amount);
         emit Withdraw(recipient, amount);
+    }
+
+    /// INTERNAL CONSTANT FUNCTIONS ///
+
+    /// @dev See {ERC721-_baseURI}.
+    function _baseURI() internal view override returns (string memory) {
+        return baseURI;
     }
 
     /// INTERNAL NON-CONSTANT FUNCTIONS ///
