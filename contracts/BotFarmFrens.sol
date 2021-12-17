@@ -8,12 +8,12 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "hardhat/console.sol";
 import "./IBotFarmFrens.sol";
 
-error BotFarmFrens__EligibilityExceeded();
+error BotFarmFrens__EligibilityExceededForPrivateSale();
 error BotFarmFrens__InsufficientCurrency();
 error BotFarmFrens__MaxElementsExceeded();
-error BotFarmFrens__MaxPublicMintsExceeded();
-error BotFarmFrens__NotWhitelisted();
-error BotFarmFrens__SaleAlreadyStarted();
+error BotFarmFrens__MaxMintsPerTxExceededForPublicSale();
+error BotFarmFrens__NotWhitelistedForPrivateSale();
+error BotFarmFrens__SaleIsAlreadyActive();
 error BotFarmFrens__SaleIsNotActive();
 
 /// @title BotFarmFrens
@@ -76,16 +76,16 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
         if (block.timestamp <= saleStartTime + PRIVATE_SALE_DURATION) {
             // private phase
             if (!whitelist[msg.sender].exists) {
-                revert BotFarmFrens__NotWhitelisted();
+                revert BotFarmFrens__NotWhitelistedForPrivateSale();
             }
             if (mintAmount > whitelist[msg.sender].eligibleAmount - whitelist[msg.sender].claimedAmount) {
-                revert BotFarmFrens__EligibilityExceeded();
+                revert BotFarmFrens__EligibilityExceededForPrivateSale();
             }
             whitelist[msg.sender].claimedAmount += mintAmount;
         } else {
             // public phase
             if (mintAmount > maxPublicMints) {
-                revert BotFarmFrens__MaxPublicMintsExceeded();
+                revert BotFarmFrens__MaxMintsPerTxExceededForPublicSale();
             }
         }
 
@@ -145,7 +145,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @inheritdoc IBotFarmFrens
     function startSale() public override onlyOwner {
         if (saleIsActive) {
-            revert BotFarmFrens__SaleAlreadyStarted();
+            revert BotFarmFrens__SaleIsAlreadyActive();
         }
         saleStartTime = block.timestamp;
         saleIsActive = true;
