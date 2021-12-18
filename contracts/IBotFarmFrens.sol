@@ -17,15 +17,18 @@ interface IBotFarmFrens {
     /// @notice Emitted when sale is paused.
     event PauseSale();
 
+    /// @notice Emitted when contract is sealed.
+    event SealContract();
+
     /// @notice Emitted when base URI is set.
     /// @param oldBaseURI The old base URI.
     /// @param newBaseURI The new base URI.
     event SetBaseURI(string oldBaseURI, string newBaseURI);
 
     /// @notice Emitted when maximum public mints is set.
-    /// @param oldMaxPublicMints The old maximum public mints.
-    /// @param newMaxPublicMints The new maximum public mints.
-    event SetMaxPublicMints(uint256 oldMaxPublicMints, uint256 newMaxPublicMints);
+    /// @param oldMaxPublicPerTx The old maximum public mints per transaction.
+    /// @param newMaxPublicPerTx The new maximum public mints per transaction.
+    event SetMaxPublicPerTx(uint256 oldMaxPublicPerTx, uint256 newMaxPublicPerTx);
 
     /// @notice Emitted when mint price is set.
     /// @param oldPrice The old mint price.
@@ -34,7 +37,7 @@ interface IBotFarmFrens {
 
     /// @notice Emitted when a new subset of users is added to private sale whitelist.
     /// @param users The user addresses.
-    /// @param eligibleAmount The amount of BFFs each user in provided list is eligible to mint.
+    /// @param eligibleAmount The max number of BFFs that can be minted by each user in provided list.
     event SetWhitelist(address[] indexed users, uint256 eligibleAmount);
 
     /// @notice Emitted when sale is started.
@@ -47,11 +50,15 @@ interface IBotFarmFrens {
 
     /// PUBLIC CONSTANT FUNCTIONS ///
 
+    /// @notice The contract seal status.
+    /// Note: once the contract is sealed, the owner is no longer able to pause the sale.
+    function contractIsSealed() external view returns (bool);
+
     /// @notice The contract of token used for paying mint fees.
     function currency() external view returns (IERC20Metadata);
 
-    /// @notice The maximum number of BFFs that can be minted in one transaction at public sale phase.
-    function maxPublicMints() external view returns (uint256);
+    /// @notice The maximum number of BFFs that can be minted at public sale phase by each user in one transaction.
+    function maxPublicPerTx() external view returns (uint256);
 
     /// @notice The mint price in currency tokens.
     function price() external view returns (uint256);
@@ -83,7 +90,7 @@ interface IBotFarmFrens {
     /// - The caller must have allowed this contract to spend currency tokens.
     /// - The caller must have at least `price * mintAmount` currency tokens in their account.
     ///
-    /// @param mintAmount The amount of BFFs to mint.
+    /// @param mintAmount The number of BFFs to mint.
     function mintBFF(uint256 mintAmount) external;
 
     /// @notice Pause the BFF sale.
@@ -93,6 +100,14 @@ interface IBotFarmFrens {
     /// Requirements:
     /// - Can only be called by the owner.
     function pauseSale() external;
+
+    /// @notice Seal the contract so that the start timestamp is set and sale is not pausable.
+    ///
+    /// @dev Emits a {SealContract} event.
+    ///
+    /// Requirements:
+    /// - Can only be called by the owner.
+    function sealContract() external;
 
     /// @notice Set the base URI.
     ///
@@ -104,15 +119,15 @@ interface IBotFarmFrens {
     /// @param newBaseURI The new base URI.
     function setBaseURI(string memory newBaseURI) external;
 
-    /// @notice Set the maximum number of BFFs that can be minted in one transaction at public sale phase.
+    /// @notice Set the maximum number of BFFs that can be minted at public sale phase in one transaction.
     ///
-    /// @dev Emits a {SetMaxPublicMints} event.
+    /// @dev Emits a {SetMaxPublicPerTx} event.
     ///
     /// Requirements:
     /// - Can only be called by the owner.
     ///
-    /// @param newMaxPublicMints The new maximum public mints.
-    function setMaxPublicMints(uint256 newMaxPublicMints) external;
+    /// @param newMaxPublicPerTx The new maximum public mints per transaction.
+    function setMaxPublicPerTx(uint256 newMaxPublicPerTx) external;
 
     /// @notice Set the mint price.
     ///
@@ -132,7 +147,7 @@ interface IBotFarmFrens {
     /// - Can only be called by the owner.
     ///
     /// @param users The user addresses to whitelist for private sale phase.
-    /// @param eligibleAmount The amount of BFFs each user in provided list is eligible to mint.
+    /// @param eligibleAmount The number of BFFs each user in provided list is eligible to mint.
     function setWhitelist(address[] memory users, uint256 eligibleAmount) external;
 
     /// @notice Start the BFF sale.

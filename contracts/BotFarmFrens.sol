@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "hardhat/console.sol";
 import "./IBotFarmFrens.sol";
 
+error BotFarmFrens__ContractIsSealed();
 error BotFarmFrens__EligibilityExceededForPrivateSale();
 error BotFarmFrens__InsufficientCurrency();
 error BotFarmFrens__MaxElementsExceeded();
@@ -31,10 +32,13 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// PUBLIC STORAGE ///
 
     /// @inheritdoc IBotFarmFrens
+    bool public override contractIsSealed;
+
+    /// @inheritdoc IBotFarmFrens
     IERC20Metadata public override currency;
 
     /// @inheritdoc IBotFarmFrens
-    uint256 public override maxPublicMints;
+    uint256 public override maxPublicPerTx;
 
     /// @inheritdoc IBotFarmFrens
     uint256 public override price;
@@ -84,7 +88,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
             whitelist[msg.sender].claimedAmount += mintAmount;
         } else {
             // public phase
-            if (mintAmount > maxPublicMints) {
+            if (mintAmount > maxPublicPerTx) {
                 revert BotFarmFrens__MaxMintsPerTxExceededForPublicSale();
             }
         }
@@ -103,11 +107,20 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
 
     /// @inheritdoc IBotFarmFrens
     function pauseSale() public override onlyOwner {
+        if (contractIsSealed) {
+            revert BotFarmFrens__ContractIsSealed();
+        }
         if (!saleIsActive) {
             revert BotFarmFrens__SaleIsNotActive();
         }
         saleIsActive = false;
         emit PauseSale();
+    }
+
+    /// @inheritdoc IBotFarmFrens
+    function sealContract() external override onlyOwner {
+        contractIsSealed = true;
+        emit SealContract();
     }
 
     /// @inheritdoc IBotFarmFrens
@@ -118,10 +131,10 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     }
 
     /// @inheritdoc IBotFarmFrens
-    function setMaxPublicMints(uint256 newMaxPublicMints) public override onlyOwner {
-        uint256 oldMaxPublicMints = maxPublicMints;
-        maxPublicMints = newMaxPublicMints;
-        emit SetMaxPublicMints(oldMaxPublicMints, maxPublicMints);
+    function setMaxPublicPerTx(uint256 newMaxPublicPerTx) public override onlyOwner {
+        uint256 oldMaxPublicPerTx = maxPublicPerTx;
+        maxPublicPerTx = newMaxPublicPerTx;
+        emit SetMaxPublicPerTx(oldMaxPublicPerTx, maxPublicPerTx);
     }
 
     /// @inheritdoc IBotFarmFrens
