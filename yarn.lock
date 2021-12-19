@@ -32,6 +32,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@chainlink/contracts@npm:^0.3.0":
+  version: 0.3.0
+  resolution: "@chainlink/contracts@npm:0.3.0"
+  checksum: b2a5b5210710e56327fefbf5d1fa60124ed33e82b023f4599754bd21f665b16a8732c447aa60132c0dac6660e69fe65597d48407c536faec35a8882fe6d77e1b
+  languageName: node
+  linkType: hard
+
 "@codechecks/client@npm:^0.1.12":
   version: 0.1.12
   resolution: "@codechecks/client@npm:0.1.12"
@@ -1485,6 +1492,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hifi-finance/bot-farm-frens@workspace:."
   dependencies:
+    "@chainlink/contracts": ^0.3.0
     "@codechecks/client": ^0.1.12
     "@commitlint/cli": ^14.1.0
     "@commitlint/config-conventional": ^14.1.0

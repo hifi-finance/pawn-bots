@@ -17,6 +17,9 @@ interface IBotFarmFrens {
     /// @notice Emitted when sale is paused.
     event PauseSale();
 
+    /// @notice Emitted when the metadata is revealed.
+    event Reveal();
+
     /// @notice Emitted when contract is sealed.
     event SealContract();
 
@@ -49,6 +52,9 @@ interface IBotFarmFrens {
     event Withdraw(address indexed recipient, uint256 amount);
 
     /// PUBLIC CONSTANT FUNCTIONS ///
+
+    /// @notice The offset that determines which token ID maps to which token URI.
+    function collectionOffset() external view returns (uint256);
 
     /// @notice The contract seal status.
     /// Note: once the contract is sealed, the owner is no longer able to pause the sale.
@@ -100,6 +106,14 @@ interface IBotFarmFrens {
     /// Requirements:
     /// - Can only be called by the owner.
     function pauseSale() external;
+
+    /// @notice Reveal the collection's metadata.
+    ///
+    /// @dev Emits a {Reveal} event.
+    ///
+    /// Requirements:
+    /// - Can only be called by the owner.
+    function reveal() external;
 
     /// @notice Seal the contract so that the start timestamp is set and sale is not pausable.
     ///

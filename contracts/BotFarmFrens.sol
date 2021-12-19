@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 pragma solidity >=0.8.4;
 
+import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -8,19 +9,24 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "hardhat/console.sol";
 import "./IBotFarmFrens.sol";
 
+error BotFarmFrens__CollectionOffsetAlreadySet();
 error BotFarmFrens__ContractIsSealed();
 error BotFarmFrens__EligibilityExceededForPrivateSale();
 error BotFarmFrens__InsufficientCurrency();
 error BotFarmFrens__MaxElementsExceeded();
 error BotFarmFrens__MaxMintsPerTxExceededForPublicSale();
 error BotFarmFrens__NotWhitelistedForPrivateSale();
+error BotFarmFrens__RandomnessAlreadyRequested();
 error BotFarmFrens__SaleIsAlreadyActive();
 error BotFarmFrens__SaleIsNotActive();
+error BotFarmFrens__VrfRequestIdMismatch();
 
 /// @title BotFarmFrens
 /// @author Hifi
 /// @notice Manages the mint and distribution of BFFs.
-contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGuard {
+contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGuard, VRFConsumerBase {
+    using Strings for uint256;
+
     /// STRUCTS ///
 
     struct WhitelistElement {
@@ -30,6 +36,9 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     }
 
     /// PUBLIC STORAGE ///
+
+    /// @inheritdoc IBotFarmFrens
+    uint256 public override collectionOffset;
 
     /// @inheritdoc IBotFarmFrens
     bool public override contractIsSealed;
@@ -63,8 +72,25 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @dev The base token URI.
     string internal baseURI;
 
-    constructor(IERC20Metadata currency_) ERC721("Bot Farm Frens", "BFF") {
+    /// @dev The Chainlink VRF fee in LINK.
+    uint256 internal vrfFee;
+
+    /// @dev The Chainlink VRF key hash.
+    bytes32 internal vrfKeyHash;
+
+    /// @dev The Chainlink VRF request ID.
+    bytes32 internal vrfRequestId;
+
+    constructor(
+        IERC20Metadata currency_,
+        address chainlinkToken_,
+        address vrfCoordinator_,
+        uint256 vrfFee_,
+        bytes32 vrfKeyHash_
+    ) ERC721("Bot Farm Frens", "BFF") VRFConsumerBase(vrfCoordinator_, chainlinkToken_) {
         currency = currency_;
+        vrfFee = vrfFee_;
+        vrfKeyHash = vrfKeyHash_;
     }
 
     /// PUBLIC NON-CONSTANT FUNCTIONS ///
@@ -118,6 +144,18 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     }
 
     /// @inheritdoc IBotFarmFrens
+    function reveal() public override onlyOwner {
+        if (collectionOffset != 0) {
+            revert BotFarmFrens__CollectionOffsetAlreadySet();
+        }
+        if (vrfRequestId != 0) {
+            revert BotFarmFrens__RandomnessAlreadyRequested();
+        }
+        vrfRequestId = requestRandomness(vrfKeyHash, vrfFee);
+        emit Reveal();
+    }
+
+    /// @inheritdoc IBotFarmFrens
     function sealContract() external override onlyOwner {
         contractIsSealed = true;
         emit SealContract();
@@ -165,6 +203,17 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
         emit StartSale();
     }
 
+    /// @dev See {ERC721-tokenURI}.
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+        // TODO: add placeholder URI
+        if (collectionOffset == 0) {
+            return super.tokenURI(0);
+        }
+        uint256 moddedId = (tokenId + collectionOffset) % MAX_ELEMENTS;
+        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, moddedId.toString())) : "";
+    }
+
     /// @inheritdoc IBotFarmFrens
     function withdraw(address recipient) public override onlyOwner {
         uint256 amount = currency.balanceOf(address(this));
@@ -180,6 +229,17 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     }
 
     /// INTERNAL NON-CONSTANT FUNCTIONS ///
+
+    /// @dev See {VRFConsumerBase-fulfillRandomness}.
+    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
+        if (collectionOffset != 0) {
+            revert BotFarmFrens__CollectionOffsetAlreadySet();
+        }
+        if (vrfRequestId != requestId) {
+            revert BotFarmFrens__VrfRequestIdMismatch();
+        }
+        collectionOffset = (randomness % (MAX_ELEMENTS - 1)) + 1;
+    }
 
     /// @notice Receive fee from user in currency units.
     /// @param fee The fee amount to receive in currency units.
