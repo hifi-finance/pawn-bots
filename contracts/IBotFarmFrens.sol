@@ -8,20 +8,21 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 interface IBotFarmFrens {
     /// EVENTS ///
 
-    /// @notice Emitted when minting BFFs.
-    /// @param ids The minted BFF IDs.
+    /// @notice Emitted when a user mints new BFFs.
+    /// @param mintAmount The number of minted BFFs.
     /// @param minter The minter address.
     /// @param fee The total mint fee paid in currency units.
-    event MintBFF(uint256[] indexed ids, address indexed minter, uint256 fee);
+    event MintBFF(uint256 mintAmount, address indexed minter, uint256 fee);
+
+    /// @notice Emitted when the contract owner mints unsold BFFs after sale.
+    /// @param mintAmount The number of minted BFFs.
+    event MintUnsold(uint256 mintAmount);
 
     /// @notice Emitted when sale is paused.
     event PauseSale();
 
     /// @notice Emitted when the metadata is revealed.
     event Reveal();
-
-    /// @notice Emitted when contract is sealed.
-    event SealContract();
 
     /// @notice Emitted when base URI is set.
     /// @param oldBaseURI The old base URI.
@@ -55,10 +56,6 @@ interface IBotFarmFrens {
 
     /// @notice The offset that determines which token ID maps to which token URI.
     function collectionOffset() external view returns (uint256);
-
-    /// @notice The contract seal status.
-    /// Note: once the contract is sealed, the owner is no longer able to pause the sale.
-    function contractIsSealed() external view returns (bool);
 
     /// @notice The contract of token used for paying mint fees.
     function currency() external view returns (IERC20Metadata);
@@ -95,9 +92,28 @@ interface IBotFarmFrens {
     /// Requirements:
     /// - The caller must have allowed this contract to spend currency tokens.
     /// - The caller must have at least `price * mintAmount` currency tokens in their account.
+    /// - Sale must be active.
+    /// - Cannot exceed collection size limit.
+    /// - For private phase:
+    ///   - User must be whitelisted to participate.
+    ///   - User must not exceed eligible amount.
+    /// - For public phase:
+    ///   - User must be exceed the limit for max mints per tx.
     ///
     /// @param mintAmount The number of BFFs to mint.
     function mintBFF(uint256 mintAmount) external;
+
+    /// @notice Mint any unsold BFFs after sale.
+    ///
+    /// @dev Emits a {MintUnsold} event.
+    ///
+    /// Requirements:
+    /// - Can only be called by the owner.
+    /// - Can only be called when sale is paused.
+    /// - Cannot exceed collection size limit.
+    ///
+    /// @param mintAmount The number of BFFs to mint.
+    function mintUnsold(uint256 mintAmount) external;
 
     /// @notice Pause the BFF sale.
     ///
@@ -105,6 +121,7 @@ interface IBotFarmFrens {
     ///
     /// Requirements:
     /// - Can only be called by the owner.
+    /// - Sale must be active.
     function pauseSale() external;
 
     /// @notice Reveal the collection's metadata.
@@ -113,15 +130,8 @@ interface IBotFarmFrens {
     ///
     /// Requirements:
     /// - Can only be called by the owner.
+    /// - Can only be called once during the contract's lifetime.
     function reveal() external;
-
-    /// @notice Seal the contract so that the start timestamp is set and sale is not pausable.
-    ///
-    /// @dev Emits a {SealContract} event.
-    ///
-    /// Requirements:
-    /// - Can only be called by the owner.
-    function sealContract() external;
 
     /// @notice Set the base URI.
     ///
@@ -170,6 +180,7 @@ interface IBotFarmFrens {
     ///
     /// Requirements:
     /// - Can only be called by the owner.
+    /// - Sale must not already be active.
     function startSale() external;
 
     /// @notice Withdraw the currency contained in the contract.

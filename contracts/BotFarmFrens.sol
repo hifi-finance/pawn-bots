@@ -10,14 +10,13 @@ import "hardhat/console.sol";
 import "./IBotFarmFrens.sol";
 
 error BotFarmFrens__CollectionOffsetAlreadySet();
-error BotFarmFrens__ContractIsSealed();
 error BotFarmFrens__EligibilityExceededForPrivateSale();
 error BotFarmFrens__InsufficientCurrency();
 error BotFarmFrens__MaxElementsExceeded();
 error BotFarmFrens__MaxMintsPerTxExceededForPublicSale();
 error BotFarmFrens__NotWhitelistedForPrivateSale();
 error BotFarmFrens__RandomnessAlreadyRequested();
-error BotFarmFrens__SaleIsAlreadyActive();
+error BotFarmFrens__SaleIsActive();
 error BotFarmFrens__SaleIsNotActive();
 error BotFarmFrens__VrfRequestIdMismatch();
 
@@ -39,9 +38,6 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
 
     /// @inheritdoc IBotFarmFrens
     uint256 public override collectionOffset;
-
-    /// @inheritdoc IBotFarmFrens
-    bool public override contractIsSealed;
 
     /// @inheritdoc IBotFarmFrens
     IERC20Metadata public override currency;
@@ -121,24 +117,35 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
 
         uint256 fee = price * mintAmount;
         receiveFeeInternal(fee);
-
-        uint256[] memory mintedIds = new uint256[](mintAmount);
         for (uint256 i = 0; i < mintAmount; i++) {
             uint256 mintId = totalSupply();
             _safeMint(msg.sender, mintId);
-            mintedIds[i] = mintId;
         }
-        emit MintBFF(mintedIds, msg.sender, fee);
+        emit MintBFF(mintAmount, msg.sender, fee);
+    }
+
+    /// @inheritdoc IBotFarmFrens
+    function mintUnsold(uint256 mintAmount) public override onlyOwner {
+        if (saleIsActive) {
+            revert BotFarmFrens__SaleIsActive();
+        }
+        if (mintAmount + totalSupply() > MAX_ELEMENTS) {
+            revert BotFarmFrens__MaxElementsExceeded();
+        }
+
+        for (uint256 i = 0; i < mintAmount; i++) {
+            uint256 mintId = totalSupply();
+            _safeMint(msg.sender, mintId);
+        }
+        emit MintUnsold(mintAmount);
     }
 
     /// @inheritdoc IBotFarmFrens
     function pauseSale() public override onlyOwner {
-        if (contractIsSealed) {
-            revert BotFarmFrens__ContractIsSealed();
-        }
         if (!saleIsActive) {
             revert BotFarmFrens__SaleIsNotActive();
         }
+
         saleIsActive = false;
         emit PauseSale();
     }
@@ -151,14 +158,9 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
         if (vrfRequestId != 0) {
             revert BotFarmFrens__RandomnessAlreadyRequested();
         }
+
         vrfRequestId = requestRandomness(vrfKeyHash, vrfFee);
         emit Reveal();
-    }
-
-    /// @inheritdoc IBotFarmFrens
-    function sealContract() external override onlyOwner {
-        contractIsSealed = true;
-        emit SealContract();
     }
 
     /// @inheritdoc IBotFarmFrens
@@ -196,7 +198,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @inheritdoc IBotFarmFrens
     function startSale() public override onlyOwner {
         if (saleIsActive) {
-            revert BotFarmFrens__SaleIsAlreadyActive();
+            revert BotFarmFrens__SaleIsActive();
         }
         saleStartTime = block.timestamp;
         saleIsActive = true;
