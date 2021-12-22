@@ -49,6 +49,9 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     uint256 public override price;
 
     /// @inheritdoc IBotFarmFrens
+    string public override provenanceHash;
+
+    /// @inheritdoc IBotFarmFrens
     uint256 public override saleStartTime;
 
     /// @inheritdoc IBotFarmFrens
@@ -182,6 +185,13 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
         uint256 oldPrice = price;
         price = newPrice;
         emit SetPrice(oldPrice, price);
+    }
+
+    /// @inheritdoc IBotFarmFrens
+    function setProvenanceHash(string memory newProvenanceHash) public override onlyOwner {
+        string memory oldProvenanceHash = provenanceHash;
+        provenanceHash = newProvenanceHash;
+        emit SetProvenanceHash(oldProvenanceHash, provenanceHash);
     }
 
     /// @inheritdoc IBotFarmFrens

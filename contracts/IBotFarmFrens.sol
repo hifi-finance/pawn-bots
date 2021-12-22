@@ -39,6 +39,11 @@ interface IBotFarmFrens {
     /// @param newPrice The new mint price.
     event SetPrice(uint256 oldPrice, uint256 newPrice);
 
+    /// @notice Emitted when provenance hash is set.
+    /// @param oldProvenanceHash The old provenance hash.
+    /// @param newProvenanceHash The new provenance hash.
+    event SetProvenanceHash(string oldProvenanceHash, string newProvenanceHash);
+
     /// @notice Emitted when a new subset of users is added to private sale whitelist.
     /// @param users The user addresses.
     /// @param eligibleAmount The max number of BFFs that can be minted by each user in provided list.
@@ -65,6 +70,9 @@ interface IBotFarmFrens {
 
     /// @notice The mint price in currency tokens.
     function price() external view returns (uint256);
+
+    /// @notice The post-reveal metadata provenance hash.
+    function provenanceHash() external view returns (string memory);
 
     /// @notice The sale start timestamp.
     /// Note: the sale starts with the private phase.
@@ -162,6 +170,16 @@ interface IBotFarmFrens {
     ///
     /// @param newPrice The new BFF mint price.
     function setPrice(uint256 newPrice) external;
+
+    /// @notice Set the post-reveal metadata provenance hash once it's calculated.
+    ///
+    /// @dev Emits a {SetProvenanceHash} event.
+    ///
+    /// Requirements:
+    /// - Can only be called by the owner.
+    ///
+    /// @param newProvenanceHash The new provenance hash.
+    function setProvenanceHash(string memory newProvenanceHash) external;
 
     /// @notice Whitelist users to the private sale phase.
     ///
