@@ -9,12 +9,13 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "hardhat/console.sol";
 import "./IBotFarmFrens.sol";
 
-error BotFarmFrens__CollectionOffsetAlreadySet();
-error BotFarmFrens__EligibilityExceededForPrivateSale();
-error BotFarmFrens__InsufficientCurrency();
+error BotFarmFrens__OffsetAlreadySet();
+error BotFarmFrens__EligibilityExceededForPrivatePhase();
+error BotFarmFrens__InsufficientCurrencySent();
 error BotFarmFrens__MaxElementsExceeded();
-error BotFarmFrens__MaxMintsPerTxExceededForPublicSale();
-error BotFarmFrens__NotWhitelistedForPrivateSale();
+error BotFarmFrens__MaxMintsPerTxExceededForPublicPhase();
+error BotFarmFrens__NonexistentToken();
+error BotFarmFrens__NotWhitelistedForPrivatePhase();
 error BotFarmFrens__RandomnessAlreadyRequested();
 error BotFarmFrens__SaleIsActive();
 error BotFarmFrens__SaleIsNotActive();
@@ -37,7 +38,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// PUBLIC STORAGE ///
 
     /// @inheritdoc IBotFarmFrens
-    uint256 public override collectionOffset;
+    uint256 public override offset;
 
     /// @inheritdoc IBotFarmFrens
     IERC20Metadata public override currency;
@@ -64,7 +65,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     uint256 public constant MAX_ELEMENTS = 10_000;
 
     /// @dev The private sale duration from the sale start timestamp.
-    uint256 public constant PRIVATE_SALE_DURATION = 1 days;
+    uint256 public constant PRIVATE_SALE_DURATION = 24 hours;
 
     /// INTERNAL STORAGE ///
 
@@ -92,6 +93,22 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
         vrfKeyHash = vrfKeyHash_;
     }
 
+    /// PUBLIC CONSTANT FUNCTIONS ///
+
+    /// @dev See {ERC721-tokenURI}.
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        if (!_exists(tokenId)) {
+            revert BotFarmFrens__NonexistentToken();
+        }
+        string memory bURI = _baseURI();
+        if (offset == 0) {
+            return bytes(bURI).length > 0 ? string(abi.encodePacked(bURI, "box", ".json")) : "";
+        } else {
+            uint256 moddedId = (tokenId + offset) % MAX_ELEMENTS;
+            return bytes(bURI).length > 0 ? string(abi.encodePacked(bURI, moddedId.toString(), ".json")) : "";
+        }
+    }
+
     /// PUBLIC NON-CONSTANT FUNCTIONS ///
 
     /// @inheritdoc IBotFarmFrens
@@ -105,16 +122,16 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
         if (block.timestamp <= saleStartTime + PRIVATE_SALE_DURATION) {
             // private phase
             if (!whitelist[msg.sender].exists) {
-                revert BotFarmFrens__NotWhitelistedForPrivateSale();
+                revert BotFarmFrens__NotWhitelistedForPrivatePhase();
             }
             if (mintAmount > whitelist[msg.sender].eligibleAmount - whitelist[msg.sender].claimedAmount) {
-                revert BotFarmFrens__EligibilityExceededForPrivateSale();
+                revert BotFarmFrens__EligibilityExceededForPrivatePhase();
             }
             whitelist[msg.sender].claimedAmount += mintAmount;
         } else {
             // public phase
             if (mintAmount > maxPublicPerTx) {
-                revert BotFarmFrens__MaxMintsPerTxExceededForPublicSale();
+                revert BotFarmFrens__MaxMintsPerTxExceededForPublicPhase();
             }
         }
 
@@ -155,8 +172,8 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
 
     /// @inheritdoc IBotFarmFrens
     function reveal() public override onlyOwner {
-        if (collectionOffset != 0) {
-            revert BotFarmFrens__CollectionOffsetAlreadySet();
+        if (offset != 0) {
+            revert BotFarmFrens__OffsetAlreadySet();
         }
         if (vrfRequestId != 0) {
             revert BotFarmFrens__RandomnessAlreadyRequested();
@@ -215,17 +232,6 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
         emit StartSale();
     }
 
-    /// @dev See {ERC721-tokenURI}.
-    function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
-        // TODO: add placeholder URI
-        if (collectionOffset == 0) {
-            return super.tokenURI(0);
-        }
-        uint256 moddedId = (tokenId + collectionOffset) % MAX_ELEMENTS;
-        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, moddedId.toString())) : "";
-    }
-
     /// @inheritdoc IBotFarmFrens
     function withdraw(address recipient) public override onlyOwner {
         uint256 amount = currency.balanceOf(address(this));
@@ -244,20 +250,20 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
 
     /// @dev See {VRFConsumerBase-fulfillRandomness}.
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-        if (collectionOffset != 0) {
-            revert BotFarmFrens__CollectionOffsetAlreadySet();
+        if (offset != 0) {
+            revert BotFarmFrens__OffsetAlreadySet();
         }
         if (vrfRequestId != requestId) {
             revert BotFarmFrens__VrfRequestIdMismatch();
         }
-        collectionOffset = (randomness % (MAX_ELEMENTS - 1)) + 1;
+        offset = (randomness % (MAX_ELEMENTS - 1)) + 1;
     }
 
     /// @notice Receive fee from user in currency units.
     /// @param fee The fee amount to receive in currency units.
     function receiveFeeInternal(uint256 fee) internal {
         if (currency.balanceOf(msg.sender) < fee) {
-            revert BotFarmFrens__InsufficientCurrency();
+            revert BotFarmFrens__InsufficientCurrencySent();
         }
         currency.transferFrom(msg.sender, address(this), fee);
     }

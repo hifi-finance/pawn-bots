@@ -60,12 +60,12 @@ interface IBotFarmFrens {
     /// PUBLIC CONSTANT FUNCTIONS ///
 
     /// @notice The offset that determines which token ID maps to which token URI.
-    function collectionOffset() external view returns (uint256);
+    function offset() external view returns (uint256);
 
-    /// @notice The contract of token used for paying mint fees.
+    /// @notice The ERC20 token used for paying mint fees.
     function currency() external view returns (IERC20Metadata);
 
-    /// @notice The maximum number of BFFs that can be minted at public sale phase by each user in one transaction.
+    /// @notice The maximum number of BFFs per user per transaction that can be minted during the public phase.
     function maxPublicPerTx() external view returns (uint256);
 
     /// @notice The mint price in currency tokens.
@@ -75,7 +75,7 @@ interface IBotFarmFrens {
     function provenanceHash() external view returns (string memory);
 
     /// @notice The sale start timestamp.
-    /// Note: the sale starts with the private phase.
+    /// Note: the sale starts with the private phase, which lasts 24 hrs.
     function saleStartTime() external view returns (uint256);
 
     /// @notice The status of the sale.
