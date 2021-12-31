@@ -8,20 +8,20 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 interface IBotFarmFrens {
     /// EVENTS ///
 
-    /// @notice Emitted when a user mints new BFFs.
-    /// @param mintAmount The number of minted BFFs.
-    /// @param minter The minter address.
-    /// @param fee The total mint fee paid in currency units.
-    event MintBFF(uint256 mintAmount, address indexed minter, uint256 fee);
+    /// @notice Emitted when unsold BFFs are burned from the collection.
+    /// @param burnAmount The amount of unsold BFFs burned from the collection.
+    event BurnUnsold(uint256 burnAmount);
 
-    /// @notice Emitted when the contract owner mints unsold BFFs after sale.
-    /// @param mintAmount The number of minted BFFs.
-    event MintUnsold(uint256 mintAmount);
+    /// @notice Emitted when a user mints new BFFs.
+    /// @param minter The minter's account address.
+    /// @param mintAmount The amount of minted BFFs.
+    /// @param fee The total mint fee paid in `currency` units.
+    event MintBFF(address indexed minter, uint256 mintAmount, uint256 fee);
 
     /// @notice Emitted when sale is paused.
     event PauseSale();
 
-    /// @notice Emitted when the metadata is revealed.
+    /// @notice Emitted when the collection metadata is revealed.
     event Reveal();
 
     /// @notice Emitted when base URI is set.
@@ -39,7 +39,7 @@ interface IBotFarmFrens {
     /// @param newPrice The new mint price.
     event SetPrice(uint256 oldPrice, uint256 newPrice);
 
-    /// @notice Emitted when provenance hash is set.
+    /// @notice Emitted when metadata provenance hash is set.
     /// @param oldProvenanceHash The old provenance hash.
     /// @param newProvenanceHash The new provenance hash.
     event SetProvenanceHash(string oldProvenanceHash, string newProvenanceHash);
@@ -65,13 +65,16 @@ interface IBotFarmFrens {
     /// @notice The ERC20 token used for paying mint fees.
     function currency() external view returns (IERC20Metadata);
 
-    /// @notice The maximum number of BFFs per user per transaction that can be minted during the public phase.
+    /// @notice The maximum amount of BFFs that can ever exist onchain.
+    function maxElements() external view returns (uint256);
+
+    /// @notice The maximum amount of BFFs per user per transaction that can be minted during the public phase.
     function maxPublicPerTx() external view returns (uint256);
 
-    /// @notice The mint price in currency tokens.
+    /// @notice The mint price in `currency` units.
     function price() external view returns (uint256);
 
-    /// @notice The post-reveal metadata provenance hash.
+    /// @notice The metadata provenance hash.
     function provenanceHash() external view returns (string memory);
 
     /// @notice The sale start timestamp.
@@ -81,7 +84,7 @@ interface IBotFarmFrens {
     /// @notice The status of the sale.
     function saleIsActive() external view returns (bool);
 
-    /// @notice The private sale phase whitelist.
+    /// @notice The private phase whitelist.
     function whitelist(address user)
         external
         view
@@ -93,6 +96,18 @@ interface IBotFarmFrens {
 
     /// PUBLIC NON-CONSTANT FUNCTIONS ///
 
+    /// @notice Burn unsold BFFs after the sale.
+    ///
+    /// @dev Emits a {BurnUnsold} event.
+    ///
+    /// Requirements:
+    /// - Can only be called by the owner.
+    /// - Can only be called when sale is paused.
+    /// - `burnAmount` cannot exceed `maxElements` - `totalSupply`.
+    ///
+    /// @param burnAmount The amount of unsold BFFs to burn.
+    function burnUnsold(uint256 burnAmount) external;
+
     /// @notice Mint new BFFs in exchange for currency.
     ///
     /// @dev Emits a {MintBFF} event.
@@ -101,27 +116,15 @@ interface IBotFarmFrens {
     /// - The caller must have allowed this contract to spend currency tokens.
     /// - The caller must have at least `price * mintAmount` currency tokens in their account.
     /// - Sale must be active.
-    /// - Cannot exceed collection size limit.
+    /// - `mintAmount` cannot exceed `maxElements`.
     /// - For private phase:
     ///   - User must be whitelisted to participate.
     ///   - User must not exceed eligible amount.
     /// - For public phase:
     ///   - User must be exceed the limit for max mints per tx.
     ///
-    /// @param mintAmount The number of BFFs to mint.
+    /// @param mintAmount The amount of BFFs to mint.
     function mintBFF(uint256 mintAmount) external;
-
-    /// @notice Mint any unsold BFFs after sale.
-    ///
-    /// @dev Emits a {MintUnsold} event.
-    ///
-    /// Requirements:
-    /// - Can only be called by the owner.
-    /// - Can only be called when sale is paused.
-    /// - Cannot exceed collection size limit.
-    ///
-    /// @param mintAmount The number of BFFs to mint.
-    function mintUnsold(uint256 mintAmount) external;
 
     /// @notice Pause the BFF sale.
     ///
@@ -131,6 +134,8 @@ interface IBotFarmFrens {
     /// - Can only be called by the owner.
     /// - Sale must be active.
     function pauseSale() external;
+
+    // TODO: add `reserve` function
 
     /// @notice Reveal the collection's metadata.
     ///
@@ -151,7 +156,7 @@ interface IBotFarmFrens {
     /// @param newBaseURI The new base URI.
     function setBaseURI(string memory newBaseURI) external;
 
-    /// @notice Set the maximum number of BFFs that can be minted at public sale phase in one transaction.
+    /// @notice Set the maximum amount of BFFs that can be minted at public sale phase in one transaction.
     ///
     /// @dev Emits a {SetMaxPublicPerTx} event.
     ///
@@ -171,7 +176,7 @@ interface IBotFarmFrens {
     /// @param newPrice The new BFF mint price.
     function setPrice(uint256 newPrice) external;
 
-    /// @notice Set the post-reveal metadata provenance hash once it's calculated.
+    /// @notice Set the metadata provenance hash once it's calculated.
     ///
     /// @dev Emits a {SetProvenanceHash} event.
     ///
@@ -189,7 +194,7 @@ interface IBotFarmFrens {
     /// - Can only be called by the owner.
     ///
     /// @param users The user addresses to whitelist for private sale phase.
-    /// @param eligibleAmount The number of BFFs each user in provided list is eligible to mint.
+    /// @param eligibleAmount The amount of BFFs each user in provided list is eligible to mint.
     function setWhitelist(address[] memory users, uint256 eligibleAmount) external;
 
     /// @notice Start the BFF sale.
