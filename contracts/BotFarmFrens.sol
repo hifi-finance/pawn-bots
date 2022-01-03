@@ -171,6 +171,19 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     }
 
     /// @inheritdoc IBotFarmFrens
+    function reserve(uint256 reserveAmount) public override onlyOwner {
+        uint256 totalSupply = totalSupply();
+        if (reserveAmount + totalSupply > maxElements) {
+            revert BotFarmFrens__MaxElementsExceeded();
+        }
+
+        for (uint256 i = 0; i < reserveAmount; i++) {
+            _safeMint(msg.sender, totalSupply + i);
+        }
+        emit Reserve(reserveAmount);
+    }
+
+    /// @inheritdoc IBotFarmFrens
     function reveal() public override onlyOwner {
         if (offset != 0) {
             revert BotFarmFrens__OffsetAlreadySet();

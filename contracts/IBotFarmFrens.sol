@@ -21,6 +21,10 @@ interface IBotFarmFrens {
     /// @notice Emitted when sale is paused.
     event PauseSale();
 
+    /// @notice Emitted when BFFs are reserved for project usage.
+    /// @param reserveAmount The amount of BFFs that were reserved.
+    event Reserve(uint256 reserveAmount);
+
     /// @notice Emitted when the collection metadata is revealed.
     event Reveal();
 
@@ -103,7 +107,7 @@ interface IBotFarmFrens {
     /// Requirements:
     /// - Can only be called by the owner.
     /// - Can only be called when sale is paused.
-    /// - `burnAmount` cannot exceed `maxElements` - `totalSupply`.
+    /// - `burnAmount` cannot exceed `maxElements` - `totalSupply()`.
     ///
     /// @param burnAmount The amount of unsold BFFs to burn.
     function burnUnsold(uint256 burnAmount) external;
@@ -116,12 +120,12 @@ interface IBotFarmFrens {
     /// - The caller must have allowed this contract to spend currency tokens.
     /// - The caller must have at least `price * mintAmount` currency tokens in their account.
     /// - Sale must be active.
-    /// - `mintAmount` cannot exceed `maxElements`.
+    /// - `mintAmount` plus `totalSupply()` cannot exceed `maxElements`.
     /// - For private phase:
     ///   - User must be whitelisted to participate.
-    ///   - User must not exceed eligible amount.
+    ///   - User must not exceed their eligible amount.
     /// - For public phase:
-    ///   - User must be exceed the limit for max mints per tx.
+    ///   - `mintAmount` must be exceed the limit for max public mints per tx.
     ///
     /// @param mintAmount The amount of BFFs to mint.
     function mintBFF(uint256 mintAmount) external;
@@ -135,7 +139,16 @@ interface IBotFarmFrens {
     /// - Sale must be active.
     function pauseSale() external;
 
-    // TODO: add `reserve` function
+    /// @notice Reserve collection elements for project usage.
+    ///
+    /// @dev Emits a {Reserve} event.
+    ///
+    /// @dev Requirements:
+    /// - Can only be called by the owner.
+    /// - `reserveAmount` plus `totalSupply()` cannot exceed `maxElements`.
+    ///
+    /// @param reserveAmount The amount of NFTs to reserve.
+    function reserve(uint256 reserveAmount) external;
 
     /// @notice Reveal the collection's metadata.
     ///
@@ -156,7 +169,8 @@ interface IBotFarmFrens {
     /// @param newBaseURI The new base URI.
     function setBaseURI(string memory newBaseURI) external;
 
-    /// @notice Set the maximum amount of BFFs that can be minted at public sale phase in one transaction.
+    /// @notice Set the maximum amount of BFFs that can be minted at public sale phase by
+    /// any minter in one transaction.
     ///
     /// @dev Emits a {SetMaxPublicPerTx} event.
     ///
