@@ -63,9 +63,6 @@ interface IBotFarmFrens {
 
     /// PUBLIC CONSTANT FUNCTIONS ///
 
-    /// @notice The offset that determines which token ID maps to which token URI.
-    function offset() external view returns (uint256);
-
     /// @notice The ERC20 token used for paying mint fees.
     function currency() external view returns (IERC20Metadata);
 
@@ -74,6 +71,9 @@ interface IBotFarmFrens {
 
     /// @notice The maximum amount of BFFs per user per transaction that can be minted during the public phase.
     function maxPublicPerTx() external view returns (uint256);
+
+    /// @notice The offset that determines which token ID maps to which token URI.
+    function offset() external view returns (uint256);
 
     /// @notice The mint price in `currency` units.
     function price() external view returns (uint256);

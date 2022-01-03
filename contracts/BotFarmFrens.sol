@@ -38,9 +38,6 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// PUBLIC STORAGE ///
 
     /// @inheritdoc IBotFarmFrens
-    uint256 public override offset;
-
-    /// @inheritdoc IBotFarmFrens
     IERC20Metadata public override currency;
 
     /// @inheritdoc IBotFarmFrens
@@ -48,6 +45,9 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
 
     /// @inheritdoc IBotFarmFrens
     uint256 public override maxPublicPerTx;
+
+    /// @inheritdoc IBotFarmFrens
+    uint256 public override offset;
 
     /// @inheritdoc IBotFarmFrens
     uint256 public override price;

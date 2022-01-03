@@ -28,4 +28,51 @@ contract GodModeBotFarmFrens is BotFarmFrens {
             _safeMint(msg.sender, mintIndex + i);
         }
     }
+
+    function __godMode_setBaseURI(string memory newBaseURI) external {
+        baseURI = newBaseURI;
+    }
+
+    function __godMode_setCurrency(IERC20Metadata newCurrency) external {
+        currency = newCurrency;
+    }
+
+    function __godMode_setMaxElements(uint256 newMaxElements) external {
+        maxElements = newMaxElements;
+    }
+
+    function __godMode_setMaxPublicPerTx(uint256 newMaxPublicPerTx) external {
+        maxPublicPerTx = newMaxPublicPerTx;
+    }
+
+    function __godMode_setOffset(uint256 newOffset) external {
+        offset = newOffset;
+    }
+
+    function __godMode_setProvenanceHash(string memory newProvenanceHash) external {
+        provenanceHash = newProvenanceHash;
+    }
+
+    function __godMode_setPrice(uint256 newPrice) external {
+        price = newPrice;
+    }
+
+    function __godMode_setSaleStartTime(uint256 newSaleStartTime) external {
+        saleStartTime = newSaleStartTime;
+    }
+
+    function __godMode_setSaleIsActive(bool newSaleIsActive) external {
+        saleIsActive = newSaleIsActive;
+    }
+
+    function __godMode_setWhitelist(
+        address user,
+        bool exists,
+        uint256 claimedAmount,
+        uint256 eligibleAmount
+    ) external {
+        whitelist[user].exists = exists;
+        whitelist[user].claimedAmount = claimedAmount;
+        whitelist[user].eligibleAmount = eligibleAmount;
+    }
 }

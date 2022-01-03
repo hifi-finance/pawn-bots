@@ -22,13 +22,13 @@ describe("Tests", function () {
 
   describe("BotFarmFrens", async function () {
     beforeEach(async function () {
-      const usdcToken: string = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174";
+      const usdcToken: string = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
       const linkToken: string = "0xb0897686c545045aFc77CF20eC7A532E3120E0F1";
       const vrfCoordinator: string = "0x3d2341ADb2D31f1c5530cDC622016af293177AE0";
       const vrfKeyHash: string = "0xf86195cf7690c55907b2b611ebb7343a6f649bff128701cc542f0569e2c549da";
 
       const bffArtifact: Artifact = await artifacts.readArtifact("GodModeBotFarmFrens");
-      const erc20Artifact: Artifact = await artifacts.readArtifact("IERC20Interface");
+      const erc20Artifact: Artifact = await artifacts.readArtifact("IERC20");
       const linkArtifact: Artifact = await artifacts.readArtifact("LinkTokenInterface");
 
       this.contracts.bff = <GodModeBotFarmFrens>(
