@@ -9,17 +9,17 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "hardhat/console.sol";
 import "./IBotFarmFrens.sol";
 
-error BotFarmFrens__OffsetAlreadySet();
-error BotFarmFrens__EligibilityExceededForPrivatePhase();
-error BotFarmFrens__InsufficientCurrencySent();
-error BotFarmFrens__MaxElementsExceeded();
-error BotFarmFrens__MaxMintsPerTxExceededForPublicPhase();
-error BotFarmFrens__NonexistentToken();
-error BotFarmFrens__NotWhitelistedForPrivatePhase();
-error BotFarmFrens__RandomnessAlreadyRequested();
-error BotFarmFrens__SaleIsActive();
-error BotFarmFrens__SaleIsNotActive();
-error BotFarmFrens__VrfRequestIdMismatch();
+error BFF__EligibilityExceededForPrivatePhase();
+error BFF__InsufficientCurrencySent();
+error BFF__MaxElementsExceeded();
+error BFF__MaxMintsPerTxExceededForPublicPhase();
+error BFF__NonexistentToken();
+error BFF__NotWhitelistedForPrivatePhase();
+error BFF__OffsetAlreadySet();
+error BFF__RandomnessAlreadyRequested();
+error BFF__SaleIsActive();
+error BFF__SaleIsNotActive();
+error BFF__VrfRequestIdMismatch();
 
 /// @title BotFarmFrens
 /// @author Hifi
@@ -101,7 +101,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @dev See {ERC721-tokenURI}.
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         if (!_exists(tokenId)) {
-            revert BotFarmFrens__NonexistentToken();
+            revert BFF__NonexistentToken();
         }
         string memory bURI = _baseURI();
         if (offset == 0) {
@@ -117,10 +117,10 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @inheritdoc IBotFarmFrens
     function burnUnsold(uint256 burnAmount) public override onlyOwner {
         if (saleIsActive) {
-            revert BotFarmFrens__SaleIsActive();
+            revert BFF__SaleIsActive();
         }
         if (burnAmount + totalSupply() > maxElements) {
-            revert BotFarmFrens__MaxElementsExceeded();
+            revert BFF__MaxElementsExceeded();
         }
 
         maxElements -= burnAmount;
@@ -130,24 +130,24 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @inheritdoc IBotFarmFrens
     function mintBFF(uint256 mintAmount) public override nonReentrant {
         if (!saleIsActive) {
-            revert BotFarmFrens__SaleIsNotActive();
+            revert BFF__SaleIsNotActive();
         }
         if (mintAmount + totalSupply() > maxElements) {
-            revert BotFarmFrens__MaxElementsExceeded();
+            revert BFF__MaxElementsExceeded();
         }
         if (block.timestamp <= saleStartTime + PRIVATE_SALE_DURATION) {
             // private phase
             if (!whitelist[msg.sender].exists) {
-                revert BotFarmFrens__NotWhitelistedForPrivatePhase();
+                revert BFF__NotWhitelistedForPrivatePhase();
             }
             if (mintAmount > whitelist[msg.sender].eligibleAmount - whitelist[msg.sender].claimedAmount) {
-                revert BotFarmFrens__EligibilityExceededForPrivatePhase();
+                revert BFF__EligibilityExceededForPrivatePhase();
             }
             whitelist[msg.sender].claimedAmount += mintAmount;
         } else {
             // public phase
             if (mintAmount > maxPublicPerTx) {
-                revert BotFarmFrens__MaxMintsPerTxExceededForPublicPhase();
+                revert BFF__MaxMintsPerTxExceededForPublicPhase();
             }
         }
 
@@ -163,7 +163,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @inheritdoc IBotFarmFrens
     function pauseSale() public override onlyOwner {
         if (!saleIsActive) {
-            revert BotFarmFrens__SaleIsNotActive();
+            revert BFF__SaleIsNotActive();
         }
 
         saleIsActive = false;
@@ -174,7 +174,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     function reserve(uint256 reserveAmount) public override onlyOwner {
         uint256 totalSupply = totalSupply();
         if (reserveAmount + totalSupply > maxElements) {
-            revert BotFarmFrens__MaxElementsExceeded();
+            revert BFF__MaxElementsExceeded();
         }
 
         for (uint256 i = 0; i < reserveAmount; i++) {
@@ -186,10 +186,10 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @inheritdoc IBotFarmFrens
     function reveal() public override onlyOwner {
         if (offset != 0) {
-            revert BotFarmFrens__OffsetAlreadySet();
+            revert BFF__OffsetAlreadySet();
         }
         if (vrfRequestId != 0) {
-            revert BotFarmFrens__RandomnessAlreadyRequested();
+            revert BFF__RandomnessAlreadyRequested();
         }
 
         vrfRequestId = requestRandomness(vrfKeyHash, vrfFee);
@@ -238,7 +238,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @inheritdoc IBotFarmFrens
     function startSale() public override onlyOwner {
         if (saleIsActive) {
-            revert BotFarmFrens__SaleIsActive();
+            revert BFF__SaleIsActive();
         }
         saleStartTime = block.timestamp;
         saleIsActive = true;
@@ -264,10 +264,10 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @dev See {VRFConsumerBase-fulfillRandomness}.
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         if (offset != 0) {
-            revert BotFarmFrens__OffsetAlreadySet();
+            revert BFF__OffsetAlreadySet();
         }
         if (vrfRequestId != requestId) {
-            revert BotFarmFrens__VrfRequestIdMismatch();
+            revert BFF__VrfRequestIdMismatch();
         }
         offset = (randomness % (COLLECTION_SIZE - 1)) + 1;
     }
@@ -276,7 +276,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @param fee The fee amount to receive in currency units.
     function receiveFeeInternal(uint256 fee) internal {
         if (currency.balanceOf(msg.sender) < fee) {
-            revert BotFarmFrens__InsufficientCurrencySent();
+            revert BFF__InsufficientCurrencySent();
         }
         currency.transferFrom(msg.sender, address(this), fee);
     }
