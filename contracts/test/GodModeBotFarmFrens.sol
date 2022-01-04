@@ -29,6 +29,14 @@ contract GodModeBotFarmFrens is BotFarmFrens {
         }
     }
 
+    function __godMode_returnBaseURI() external view returns (string memory) {
+        return baseURI;
+    }
+
+    function __godMode_returnVrfRequestId() external view returns (bytes32) {
+        return vrfRequestId;
+    }
+
     function __godMode_setBaseURI(string memory newBaseURI) external {
         baseURI = newBaseURI;
     }

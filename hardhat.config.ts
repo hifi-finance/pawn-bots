@@ -35,6 +35,11 @@ if (!infuraApiKey) {
   throw new Error("Please set your INFURA_API_KEY in a .env file");
 }
 
+const alchemyApiKey: string | undefined = process.env.ALCHEMY_API_KEY;
+if (!alchemyApiKey) {
+  throw new Error("Please set your ALCHEMY_API_KEY in a .env file");
+}
+
 const etherscanApiKey: string | undefined = process.env.ETHERSCAN_API_KEY;
 if (!etherscanApiKey) {
   throw new Error("Please set your ETHERSCAN_API_KEY in a .env file");
@@ -70,6 +75,10 @@ const config: HardhatUserConfig = {
         mnemonic,
       },
       chainId: chainIds.hardhat,
+      forking: {
+        url: `https://polygon-mainnet.g.alchemyapi.io/v2/${alchemyApiKey}`,
+        blockNumber: 23332200,
+      },
     },
     goerli: getChainConfig("goerli"),
     kovan: getChainConfig("kovan"),
