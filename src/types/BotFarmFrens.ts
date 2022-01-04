@@ -28,7 +28,7 @@ export interface BotFarmFrensInterface extends utils.Interface {
     "getApproved(uint256)": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
     "maxElements()": FunctionFragment;
-    "maxPublicPerTx()": FunctionFragment;
+    "maxPublicMintsPerTx()": FunctionFragment;
     "mintBFF(uint256)": FunctionFragment;
     "name()": FunctionFragment;
     "offset()": FunctionFragment;
@@ -46,7 +46,7 @@ export interface BotFarmFrensInterface extends utils.Interface {
     "saleStartTime()": FunctionFragment;
     "setApprovalForAll(address,bool)": FunctionFragment;
     "setBaseURI(string)": FunctionFragment;
-    "setMaxPublicPerTx(uint256)": FunctionFragment;
+    "setMaxPublicMintsPerTx(uint256)": FunctionFragment;
     "setPrice(uint256)": FunctionFragment;
     "setProvenanceHash(string)": FunctionFragment;
     "setWhitelist(address[],uint256)": FunctionFragment;
@@ -94,7 +94,7 @@ export interface BotFarmFrensInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "maxPublicPerTx",
+    functionFragment: "maxPublicMintsPerTx",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -145,7 +145,7 @@ export interface BotFarmFrensInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "setBaseURI", values: [string]): string;
   encodeFunctionData(
-    functionFragment: "setMaxPublicPerTx",
+    functionFragment: "setMaxPublicMintsPerTx",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -218,7 +218,7 @@ export interface BotFarmFrensInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "maxPublicPerTx",
+    functionFragment: "maxPublicMintsPerTx",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "mintBFF", data: BytesLike): Result;
@@ -260,7 +260,7 @@ export interface BotFarmFrensInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "setBaseURI", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "setMaxPublicPerTx",
+    functionFragment: "setMaxPublicMintsPerTx",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "setPrice", data: BytesLike): Result;
@@ -312,7 +312,7 @@ export interface BotFarmFrensInterface extends utils.Interface {
     "Reserve(uint256)": EventFragment;
     "Reveal()": EventFragment;
     "SetBaseURI(string,string)": EventFragment;
-    "SetMaxPublicPerTx(uint256,uint256)": EventFragment;
+    "SetMaxPublicMintsPerTx(uint256,uint256)": EventFragment;
     "SetPrice(uint256,uint256)": EventFragment;
     "SetProvenanceHash(string,string)": EventFragment;
     "SetWhitelist(address[],uint256)": EventFragment;
@@ -330,7 +330,7 @@ export interface BotFarmFrensInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Reserve"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Reveal"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetBaseURI"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetMaxPublicPerTx"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SetMaxPublicMintsPerTx"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetPrice"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetProvenanceHash"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetWhitelist"): EventFragment;
@@ -397,13 +397,13 @@ export type SetBaseURIEvent = TypedEvent<
 
 export type SetBaseURIEventFilter = TypedEventFilter<SetBaseURIEvent>;
 
-export type SetMaxPublicPerTxEvent = TypedEvent<
+export type SetMaxPublicMintsPerTxEvent = TypedEvent<
   [BigNumber, BigNumber],
-  { oldMaxPublicPerTx: BigNumber; newMaxPublicPerTx: BigNumber }
+  { oldMaxPublicMintsPerTx: BigNumber; newMaxPublicMintsPerTx: BigNumber }
 >;
 
-export type SetMaxPublicPerTxEventFilter =
-  TypedEventFilter<SetMaxPublicPerTxEvent>;
+export type SetMaxPublicMintsPerTxEventFilter =
+  TypedEventFilter<SetMaxPublicMintsPerTxEvent>;
 
 export type SetPriceEvent = TypedEvent<
   [BigNumber, BigNumber],
@@ -504,7 +504,7 @@ export interface BotFarmFrens extends BaseContract {
 
     maxElements(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    maxPublicPerTx(overrides?: CallOverrides): Promise<[BigNumber]>;
+    maxPublicMintsPerTx(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     mintBFF(
       mintAmount: BigNumberish,
@@ -579,8 +579,8 @@ export interface BotFarmFrens extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setMaxPublicPerTx(
-      newMaxPublicPerTx: BigNumberish,
+    setMaxPublicMintsPerTx(
+      newMaxPublicMintsPerTx: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -690,7 +690,7 @@ export interface BotFarmFrens extends BaseContract {
 
   maxElements(overrides?: CallOverrides): Promise<BigNumber>;
 
-  maxPublicPerTx(overrides?: CallOverrides): Promise<BigNumber>;
+  maxPublicMintsPerTx(overrides?: CallOverrides): Promise<BigNumber>;
 
   mintBFF(
     mintAmount: BigNumberish,
@@ -762,8 +762,8 @@ export interface BotFarmFrens extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setMaxPublicPerTx(
-    newMaxPublicPerTx: BigNumberish,
+  setMaxPublicMintsPerTx(
+    newMaxPublicMintsPerTx: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -870,7 +870,7 @@ export interface BotFarmFrens extends BaseContract {
 
     maxElements(overrides?: CallOverrides): Promise<BigNumber>;
 
-    maxPublicPerTx(overrides?: CallOverrides): Promise<BigNumber>;
+    maxPublicMintsPerTx(overrides?: CallOverrides): Promise<BigNumber>;
 
     mintBFF(mintAmount: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
@@ -930,8 +930,8 @@ export interface BotFarmFrens extends BaseContract {
 
     setBaseURI(newBaseURI: string, overrides?: CallOverrides): Promise<void>;
 
-    setMaxPublicPerTx(
-      newMaxPublicPerTx: BigNumberish,
+    setMaxPublicMintsPerTx(
+      newMaxPublicMintsPerTx: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1059,14 +1059,14 @@ export interface BotFarmFrens extends BaseContract {
     ): SetBaseURIEventFilter;
     SetBaseURI(oldBaseURI?: null, newBaseURI?: null): SetBaseURIEventFilter;
 
-    "SetMaxPublicPerTx(uint256,uint256)"(
-      oldMaxPublicPerTx?: null,
-      newMaxPublicPerTx?: null
-    ): SetMaxPublicPerTxEventFilter;
-    SetMaxPublicPerTx(
-      oldMaxPublicPerTx?: null,
-      newMaxPublicPerTx?: null
-    ): SetMaxPublicPerTxEventFilter;
+    "SetMaxPublicMintsPerTx(uint256,uint256)"(
+      oldMaxPublicMintsPerTx?: null,
+      newMaxPublicMintsPerTx?: null
+    ): SetMaxPublicMintsPerTxEventFilter;
+    SetMaxPublicMintsPerTx(
+      oldMaxPublicMintsPerTx?: null,
+      newMaxPublicMintsPerTx?: null
+    ): SetMaxPublicMintsPerTxEventFilter;
 
     "SetPrice(uint256,uint256)"(
       oldPrice?: null,
@@ -1146,7 +1146,7 @@ export interface BotFarmFrens extends BaseContract {
 
     maxElements(overrides?: CallOverrides): Promise<BigNumber>;
 
-    maxPublicPerTx(overrides?: CallOverrides): Promise<BigNumber>;
+    maxPublicMintsPerTx(overrides?: CallOverrides): Promise<BigNumber>;
 
     mintBFF(
       mintAmount: BigNumberish,
@@ -1221,8 +1221,8 @@ export interface BotFarmFrens extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setMaxPublicPerTx(
-      newMaxPublicPerTx: BigNumberish,
+    setMaxPublicMintsPerTx(
+      newMaxPublicMintsPerTx: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1329,7 +1329,9 @@ export interface BotFarmFrens extends BaseContract {
 
     maxElements(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    maxPublicPerTx(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    maxPublicMintsPerTx(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     mintBFF(
       mintAmount: BigNumberish,
@@ -1404,8 +1406,8 @@ export interface BotFarmFrens extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setMaxPublicPerTx(
-      newMaxPublicPerTx: BigNumberish,
+    setMaxPublicMintsPerTx(
+      newMaxPublicMintsPerTx: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

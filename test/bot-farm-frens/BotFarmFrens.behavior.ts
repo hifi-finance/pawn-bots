@@ -50,20 +50,20 @@ export function shouldBehaveLikeBotFarmFrens(): void {
       });
     });
 
-    describe("maxPublicPerTx", function () {
+    describe("maxPublicMintsPerTx", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          expect(await this.contracts.bff.maxPublicPerTx()).to.equal(0);
+          expect(await this.contracts.bff.maxPublicMintsPerTx()).to.equal(0);
         });
       });
 
       context("when changed", function () {
         beforeEach(async function () {
-          await this.contracts.bff.__godMode_setMaxPublicPerTx(14);
+          await this.contracts.bff.__godMode_setMaxPublicMintsPerTx(14);
         });
 
         it("returns the correct value", async function () {
-          expect(await this.contracts.bff.maxPublicPerTx()).to.equal(14);
+          expect(await this.contracts.bff.maxPublicMintsPerTx()).to.equal(14);
         });
       });
     });
@@ -264,8 +264,11 @@ export function shouldBehaveLikeBotFarmFrens(): void {
         context("when sale is not active", function () {
           context("when sale was never active", function () {
             it("succeeds", async function () {
-              await this.contracts.bff.burnUnsold(0);
-              expect(await this.contracts.bff.maxElements()).to.be.equal(await this.contracts.bff.COLLECTION_SIZE());
+              const burnAmount = 1250;
+              await this.contracts.bff.burnUnsold(burnAmount);
+              expect(await this.contracts.bff.maxElements()).to.be.equal(
+                (await this.contracts.bff.COLLECTION_SIZE()).sub(burnAmount),
+              );
             });
           });
 
@@ -276,8 +279,11 @@ export function shouldBehaveLikeBotFarmFrens(): void {
             });
 
             it("succeeds", async function () {
-              await this.contracts.bff.burnUnsold(0);
-              expect(await this.contracts.bff.maxElements()).to.be.equal(await this.contracts.bff.COLLECTION_SIZE());
+              const burnAmount = 1250;
+              await this.contracts.bff.burnUnsold(burnAmount);
+              expect(await this.contracts.bff.maxElements()).to.be.equal(
+                (await this.contracts.bff.COLLECTION_SIZE()).sub(burnAmount),
+              );
             });
           });
         });
@@ -294,7 +300,161 @@ export function shouldBehaveLikeBotFarmFrens(): void {
       });
 
       context("when sale is active", function () {
-        // TODO: add more tests
+        beforeEach(async function () {
+          this.price = 800000000;
+          await this.contracts.bff.setPrice(this.price);
+          await this.contracts.bff.setMaxPublicMintsPerTx(5);
+          await this.contracts.bff.startSale();
+        });
+
+        context("when `mintAmount` plus `totalSupply()` exceeds `maxElements`", function () {
+          beforeEach(async function () {
+            this.mintAmount = (await this.contracts.bff.maxElements()).add(1);
+          });
+
+          it("reverts", async function () {
+            await expect(this.contracts.bff.connect(this.signers.alice).mintBFF(this.mintAmount)).to.be.revertedWith(
+              Errors.MAX_ELEMENTS_EXCEEDED,
+            );
+          });
+        });
+
+        context("when `mintAmount` plus `totalSupply()` does not exceed `maxElements`", function () {
+          beforeEach(async function () {
+            this.mintAmount = 10;
+          });
+
+          context("when called within first 24 hrs of the sale (private phase)", function () {
+            context("when caller is not whitelisted for private phase", function () {
+              it("reverts", async function () {
+                await expect(
+                  this.contracts.bff.connect(this.signers.alice).mintBFF(this.mintAmount),
+                ).to.be.revertedWith(Errors.NOT_WHITELISTED_FOR_PRIVATE_PHASE);
+              });
+            });
+
+            context("when caller is whitelisted for private phase", function () {
+              beforeEach(async function () {
+                await this.contracts.bff.setWhitelist([this.signers.alice.address], this.mintAmount);
+              });
+
+              context("when `mintAmount` plus `claimedAmount` exceeds `eligibleAmount` for user", function () {
+                beforeEach(async function () {
+                  await this.contracts.bff.__godMode_setWhitelist(
+                    this.signers.alice.address,
+                    true,
+                    this.mintAmount,
+                    this.mintAmount,
+                  );
+                });
+
+                it("reverts", async function () {
+                  await expect(
+                    this.contracts.bff.connect(this.signers.alice).mintBFF(this.mintAmount),
+                  ).to.be.revertedWith(Errors.ELIGIBILITY_EXCEEDED_FOR_PRIVATE_PHASE);
+                });
+              });
+
+              context("when `mintAmount` plus `claimedAmount` does not exceed `eligibleAmount` for user", function () {
+                context("when user does not have enough currency to pay mint fee", function () {
+                  it("reverts", async function () {
+                    await expect(
+                      this.contracts.bff.connect(this.signers.alice).mintBFF(this.mintAmount),
+                    ).to.be.reverted;
+                  });
+                });
+
+                context("when user has enough currency to pay mint fee", function () {
+                  beforeEach(async function () {
+                    const usdcWhale = "0x06959153B974D0D5fDfd87D561db6d8d4FA0bb0B";
+                    await network.provider.request({
+                      method: "hardhat_impersonateAccount",
+                      params: [usdcWhale],
+                    });
+                    const signer = await ethers.getSigner(usdcWhale);
+                    await this.contracts.usdc
+                      .connect(signer)
+                      .transfer(this.signers.alice.address, this.price * this.mintAmount);
+                    await network.provider.request({
+                      method: "hardhat_stopImpersonatingAccount",
+                      params: [usdcWhale],
+                    });
+                    await this.contracts.usdc
+                      .connect(this.signers.alice)
+                      .approve(this.contracts.bff.address, ethers.constants.MaxUint256);
+                  });
+
+                  it("succeeds", async function () {
+                    await this.contracts.bff.connect(this.signers.alice).mintBFF(this.mintAmount);
+                    expect(await this.contracts.bff.balanceOf(this.signers.alice.address)).to.be.equal(this.mintAmount);
+                  });
+                });
+              });
+            });
+          });
+
+          context("when called after first 24 hrs of the sale (public phase)", function () {
+            beforeEach(async function () {
+              const currentTime = (await ethers.provider.getBlock("latest")).timestamp;
+              this.snapshot = await network.provider.send("evm_snapshot");
+              await network.provider.send("evm_setNextBlockTimestamp", [currentTime + 86401]);
+            });
+
+            afterEach(async function () {
+              await network.provider.send("evm_revert", [this.snapshot]);
+            });
+
+            context("when `mintAmount` exceeds `maxPublicMintsPerTx`", function () {
+              beforeEach(async function () {
+                this.mintAmount = (await this.contracts.bff.maxPublicMintsPerTx()).add(1);
+              });
+
+              it("reverts", async function () {
+                await expect(
+                  this.contracts.bff.connect(this.signers.alice).mintBFF(this.mintAmount),
+                ).to.be.revertedWith(Errors.MAX_MINTS_PER_TX_EXCEEDED_FOR_PUBLIC_PHASE);
+              });
+            });
+
+            context("when `mintAmount` does not exceed `maxPublicMintsPerTx`", function () {
+              beforeEach(async function () {
+                this.mintAmount = await this.contracts.bff.maxPublicMintsPerTx();
+              });
+
+              context("when user does not have enough currency to pay mint fee", function () {
+                it("reverts", async function () {
+                  await expect(this.contracts.bff.connect(this.signers.alice).mintBFF(this.mintAmount)).to.be.reverted;
+                });
+              });
+
+              context("when user has enough currency to pay mint fee", function () {
+                beforeEach(async function () {
+                  const usdcWhale = "0x06959153B974D0D5fDfd87D561db6d8d4FA0bb0B";
+                  await network.provider.request({
+                    method: "hardhat_impersonateAccount",
+                    params: [usdcWhale],
+                  });
+                  const signer = await ethers.getSigner(usdcWhale);
+                  await this.contracts.usdc
+                    .connect(signer)
+                    .transfer(this.signers.alice.address, this.price * this.mintAmount);
+                  await network.provider.request({
+                    method: "hardhat_stopImpersonatingAccount",
+                    params: [usdcWhale],
+                  });
+                  await this.contracts.usdc
+                    .connect(this.signers.alice)
+                    .approve(this.contracts.bff.address, ethers.constants.MaxUint256);
+                });
+
+                it("succeeds", async function () {
+                  await this.contracts.bff.connect(this.signers.alice).mintBFF(this.mintAmount);
+                  expect(await this.contracts.bff.balanceOf(this.signers.alice.address)).to.be.equal(this.mintAmount);
+                });
+              });
+            });
+          });
+        });
       });
     });
 
@@ -333,9 +493,9 @@ export function shouldBehaveLikeBotFarmFrens(): void {
       });
 
       context("when called by owner", function () {
-        context("when `reserveAmount` plus `totalSupply()` exceeds `COLLECTION_SIZE`", function () {
+        context("when `reserveAmount` plus `totalSupply()` exceeds `maxElements`", function () {
           beforeEach(async function () {
-            this.reserveAmount = (await this.contracts.bff.COLLECTION_SIZE()).add(1);
+            this.reserveAmount = (await this.contracts.bff.maxElements()).add(1);
           });
 
           it("reverts", async function () {
@@ -345,7 +505,7 @@ export function shouldBehaveLikeBotFarmFrens(): void {
           });
         });
 
-        context("when `reserveAmount` plus `totalSupply()` does not exceed `COLLECTION_SIZE`", function () {
+        context("when `reserveAmount` plus `totalSupply()` does not exceed `maxElements`", function () {
           context("when reserving in one call", function () {
             it("succeeds", async function () {
               const reservedElements = 1;
@@ -358,7 +518,7 @@ export function shouldBehaveLikeBotFarmFrens(): void {
           context("when reserving through multiple calls", function () {
             it("succeeds", async function () {
               const numberOfCalls = 10;
-              const reservedElements = (await this.contracts.bff.COLLECTION_SIZE()).div(100);
+              const reservedElements = (await this.contracts.bff.maxElements()).div(100);
 
               for (let i = 0; i < numberOfCalls; i++) {
                 await this.contracts.bff.reserve(reservedElements);
@@ -458,10 +618,10 @@ export function shouldBehaveLikeBotFarmFrens(): void {
       });
     });
 
-    describe("setMaxPublicPerTx", function () {
+    describe("setMaxPublicMintsPerTx", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.bff.connect(this.signers.alice).setMaxPublicPerTx(0)).to.be.reverted;
+          await expect(this.contracts.bff.connect(this.signers.alice).setMaxPublicMintsPerTx(0)).to.be.reverted;
         });
       });
 
@@ -469,8 +629,8 @@ export function shouldBehaveLikeBotFarmFrens(): void {
         it("succeeds", async function () {
           const maxMintsPerCall = 10;
 
-          await this.contracts.bff.setMaxPublicPerTx(maxMintsPerCall);
-          expect(await this.contracts.bff.maxPublicPerTx()).to.be.equal(maxMintsPerCall);
+          await this.contracts.bff.setMaxPublicMintsPerTx(maxMintsPerCall);
+          expect(await this.contracts.bff.maxPublicMintsPerTx()).to.be.equal(maxMintsPerCall);
         });
       });
     });
@@ -565,19 +725,19 @@ export function shouldBehaveLikeBotFarmFrens(): void {
           });
         });
 
-        // context("when sale starts after a sale pause", function () {
-        //   beforeEach(async function () {
-        //     await this.contracts.bff.startSale();
-        //     await this.contracts.bff.pauseSale();
-        //   });
+        context("when sale starts after a sale pause", function () {
+          beforeEach(async function () {
+            await this.contracts.bff.startSale();
+            await this.contracts.bff.pauseSale();
+          });
 
-        //   it("succeeds", async function () {
-        //     const saleStartTime = await this.contracts.bff.saleStartTime();
-        //     await this.contracts.bff.startSale();
-        //     expect(await this.contracts.bff.saleIsActive()).to.be.equal(true);
-        //     expect(await this.contracts.bff.saleStartTime()).to.be.equal(saleStartTime);
-        //   });
-        // });
+          it("succeeds", async function () {
+            const saleStartTime = await this.contracts.bff.saleStartTime();
+            await this.contracts.bff.startSale();
+            expect(await this.contracts.bff.saleIsActive()).to.be.equal(true);
+            expect(await this.contracts.bff.saleStartTime()).to.be.equal(saleStartTime);
+          });
+        });
       });
     });
 
@@ -590,11 +750,27 @@ export function shouldBehaveLikeBotFarmFrens(): void {
         });
       });
 
-      // context("when called by owner", function () {
-      //   it("succeeds", async function () {
-      //     await this.contracts.bff.withdraw(this.signers.alice.address);
-      //   });
-      // });
+      context("when called by owner", function () {
+        beforeEach(async function () {
+          this.withdrawAmount = 2500000000;
+          const usdcWhale = "0x06959153B974D0D5fDfd87D561db6d8d4FA0bb0B";
+          await network.provider.request({
+            method: "hardhat_impersonateAccount",
+            params: [usdcWhale],
+          });
+          const signer = await ethers.getSigner(usdcWhale);
+          await this.contracts.usdc.connect(signer).transfer(this.contracts.bff.address, this.withdrawAmount);
+          await network.provider.request({
+            method: "hardhat_stopImpersonatingAccount",
+            params: [usdcWhale],
+          });
+        });
+
+        it("succeeds", async function () {
+          await this.contracts.bff.withdraw(this.signers.bob.address);
+          expect(await this.contracts.usdc.balanceOf(this.signers.bob.address)).to.be.equal(this.withdrawAmount);
+        });
+      });
     });
   });
 }

@@ -49,8 +49,8 @@ contract GodModeBotFarmFrens is BotFarmFrens {
         maxElements = newMaxElements;
     }
 
-    function __godMode_setMaxPublicPerTx(uint256 newMaxPublicPerTx) external {
-        maxPublicPerTx = newMaxPublicPerTx;
+    function __godMode_setMaxPublicMintsPerTx(uint256 newMaxPublicMintsPerTx) external {
+        maxPublicMintsPerTx = newMaxPublicMintsPerTx;
     }
 
     function __godMode_setOffset(uint256 newOffset) external {

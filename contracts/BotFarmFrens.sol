@@ -37,6 +37,12 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
 
     /// PUBLIC STORAGE ///
 
+    /// @dev The theoretical collection size.
+    uint256 public constant COLLECTION_SIZE = 10_000;
+
+    /// @dev The private sale duration from the sale start timestamp.
+    uint256 public constant PRIVATE_SALE_DURATION = 24 hours;
+
     /// @inheritdoc IBotFarmFrens
     IERC20Metadata public override currency;
 
@@ -44,7 +50,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     uint256 public override maxElements = COLLECTION_SIZE;
 
     /// @inheritdoc IBotFarmFrens
-    uint256 public override maxPublicPerTx;
+    uint256 public override maxPublicMintsPerTx;
 
     /// @inheritdoc IBotFarmFrens
     uint256 public override offset;
@@ -63,12 +69,6 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
 
     /// @inheritdoc IBotFarmFrens
     mapping(address => WhitelistElement) public override whitelist;
-
-    /// @dev The theoretical collection size.
-    uint256 public constant COLLECTION_SIZE = 10_000;
-
-    /// @dev The private sale duration from the sale start timestamp.
-    uint256 public constant PRIVATE_SALE_DURATION = 24 hours;
 
     /// INTERNAL STORAGE ///
 
@@ -146,7 +146,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
             whitelist[msg.sender].claimedAmount += mintAmount;
         } else {
             // public phase
-            if (mintAmount > maxPublicPerTx) {
+            if (mintAmount > maxPublicMintsPerTx) {
                 revert BFF__MaxMintsPerTxExceededForPublicPhase();
             }
         }
@@ -204,10 +204,10 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     }
 
     /// @inheritdoc IBotFarmFrens
-    function setMaxPublicPerTx(uint256 newMaxPublicPerTx) public override onlyOwner {
-        uint256 oldMaxPublicPerTx = maxPublicPerTx;
-        maxPublicPerTx = newMaxPublicPerTx;
-        emit SetMaxPublicPerTx(oldMaxPublicPerTx, maxPublicPerTx);
+    function setMaxPublicMintsPerTx(uint256 newMaxPublicMintsPerTx) public override onlyOwner {
+        uint256 oldMaxPublicMintsPerTx = maxPublicMintsPerTx;
+        maxPublicMintsPerTx = newMaxPublicMintsPerTx;
+        emit SetMaxPublicMintsPerTx(oldMaxPublicMintsPerTx, maxPublicMintsPerTx);
     }
 
     /// @inheritdoc IBotFarmFrens
@@ -240,7 +240,9 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
         if (saleIsActive) {
             revert BFF__SaleIsActive();
         }
-        saleStartTime = block.timestamp;
+        if (saleStartTime == 0) {
+            saleStartTime = block.timestamp;
+        }
         saleIsActive = true;
         emit StartSale();
     }

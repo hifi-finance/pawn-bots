@@ -15,7 +15,7 @@ interface IBotFarmFrens {
     /// @notice Emitted when a user mints new BFFs.
     /// @param minter The minter's account address.
     /// @param mintAmount The amount of minted BFFs.
-    /// @param fee The total mint fee paid in `currency` units.
+    /// @param fee The total mint fee paid in currency units.
     event MintBFF(address indexed minter, uint256 mintAmount, uint256 fee);
 
     /// @notice Emitted when sale is paused.
@@ -33,10 +33,10 @@ interface IBotFarmFrens {
     /// @param newBaseURI The new base URI.
     event SetBaseURI(string oldBaseURI, string newBaseURI);
 
-    /// @notice Emitted when maximum public mints is set.
-    /// @param oldMaxPublicPerTx The old maximum public mints per transaction.
-    /// @param newMaxPublicPerTx The new maximum public mints per transaction.
-    event SetMaxPublicPerTx(uint256 oldMaxPublicPerTx, uint256 newMaxPublicPerTx);
+    /// @notice Emitted when maximum public mints per transaction is set.
+    /// @param oldMaxPublicMintsPerTx The old maximum public mints per transaction.
+    /// @param newMaxPublicMintsPerTx The new maximum public mints per transaction.
+    event SetMaxPublicMintsPerTx(uint256 oldMaxPublicMintsPerTx, uint256 newMaxPublicMintsPerTx);
 
     /// @notice Emitted when mint price is set.
     /// @param oldPrice The old mint price.
@@ -48,15 +48,15 @@ interface IBotFarmFrens {
     /// @param newProvenanceHash The new provenance hash.
     event SetProvenanceHash(string oldProvenanceHash, string newProvenanceHash);
 
-    /// @notice Emitted when a new subset of users is added to private sale whitelist.
+    /// @notice Emitted when a subset of users is updated in private sale whitelist.
     /// @param users The user addresses.
-    /// @param eligibleAmount The max number of BFFs that can be minted by each user in provided list.
+    /// @param eligibleAmount The max number of BFFs that can be minted by each user.
     event SetWhitelist(address[] indexed users, uint256 eligibleAmount);
 
     /// @notice Emitted when sale is started.
     event StartSale();
 
-    /// @notice Emitted when withdrawing currency.
+    /// @notice Emitted when currency funds are withdrawn from the contract.
     /// @param recipient The recipient of currency withdrawn.
     /// @param amount The amount of currency withdrawn.
     event Withdraw(address indexed recipient, uint256 amount);
@@ -70,12 +70,12 @@ interface IBotFarmFrens {
     function maxElements() external view returns (uint256);
 
     /// @notice The maximum amount of BFFs per user per transaction that can be minted during the public phase.
-    function maxPublicPerTx() external view returns (uint256);
+    function maxPublicMintsPerTx() external view returns (uint256);
 
     /// @notice The offset that determines which token ID maps to which token URI.
     function offset() external view returns (uint256);
 
-    /// @notice The mint price in `currency` units.
+    /// @notice The mint price in currency units.
     function price() external view returns (uint256);
 
     /// @notice The metadata provenance hash.
@@ -172,13 +172,13 @@ interface IBotFarmFrens {
     /// @notice Set the maximum amount of BFFs that can be minted at public sale phase by
     /// any minter in one transaction.
     ///
-    /// @dev Emits a {SetMaxPublicPerTx} event.
+    /// @dev Emits a {SetMaxPublicMintsPerTx} event.
     ///
     /// Requirements:
     /// - Can only be called by the owner.
     ///
-    /// @param newMaxPublicPerTx The new maximum public mints per transaction.
-    function setMaxPublicPerTx(uint256 newMaxPublicPerTx) external;
+    /// @param newMaxPublicMintsPerTx The new maximum public mints per transaction.
+    function setMaxPublicMintsPerTx(uint256 newMaxPublicMintsPerTx) external;
 
     /// @notice Set the mint price.
     ///
