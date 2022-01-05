@@ -23,7 +23,7 @@ error BFF__VrfRequestIdMismatch();
 
 /// @title BotFarmFrens
 /// @author Hifi
-/// @notice Manages the mint and distribution of BFFs.
+/// @notice Manages the mint and distribution of NFTs.
 contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGuard, VRFConsumerBase {
     using Strings for uint256;
 
@@ -62,10 +62,10 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     string public override provenanceHash;
 
     /// @inheritdoc IBotFarmFrens
-    uint256 public override saleStartTime;
+    bool public override saleIsActive;
 
     /// @inheritdoc IBotFarmFrens
-    bool public override saleIsActive;
+    uint256 public override saleStartTime;
 
     /// @inheritdoc IBotFarmFrens
     mapping(address => WhitelistElement) public override whitelist;

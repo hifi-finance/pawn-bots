@@ -8,21 +8,21 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 interface IBotFarmFrens {
     /// EVENTS ///
 
-    /// @notice Emitted when unsold BFFs are burned from the collection.
-    /// @param burnAmount The amount of unsold BFFs burned from the collection.
+    /// @notice Emitted when unsold NFTs are burned from the collection.
+    /// @param burnAmount The amount of unsold NFTs burned from the collection.
     event BurnUnsold(uint256 burnAmount);
 
-    /// @notice Emitted when a user mints new BFFs.
+    /// @notice Emitted when a user mints new NFTs.
     /// @param minter The minter's account address.
-    /// @param mintAmount The amount of minted BFFs.
+    /// @param mintAmount The amount of minted NFTs.
     /// @param fee The total mint fee paid in currency units.
     event MintBFF(address indexed minter, uint256 mintAmount, uint256 fee);
 
     /// @notice Emitted when sale is paused.
     event PauseSale();
 
-    /// @notice Emitted when BFFs are reserved for project usage.
-    /// @param reserveAmount The amount of BFFs that were reserved.
+    /// @notice Emitted when NFTs are reserved for project usage.
+    /// @param reserveAmount The amount of NFTs that were reserved.
     event Reserve(uint256 reserveAmount);
 
     /// @notice Emitted when the collection metadata is revealed.
@@ -48,9 +48,9 @@ interface IBotFarmFrens {
     /// @param newProvenanceHash The new provenance hash.
     event SetProvenanceHash(string oldProvenanceHash, string newProvenanceHash);
 
-    /// @notice Emitted when a subset of users is updated in private sale whitelist.
+    /// @notice Emitted when a subset of users is updated in private phase whitelist.
     /// @param users The user addresses.
-    /// @param eligibleAmount The max number of BFFs that can be minted by each user.
+    /// @param eligibleAmount The maximum number of NFTs that can be minted by each user.
     event SetWhitelist(address[] indexed users, uint256 eligibleAmount);
 
     /// @notice Emitted when sale is started.
@@ -66,10 +66,10 @@ interface IBotFarmFrens {
     /// @notice The ERC20 token used for paying mint fees.
     function currency() external view returns (IERC20Metadata);
 
-    /// @notice The maximum amount of BFFs that can ever exist onchain.
+    /// @notice The maximum amount of NFTs that can ever exist onchain.
     function maxElements() external view returns (uint256);
 
-    /// @notice The maximum amount of BFFs per user per transaction that can be minted during the public phase.
+    /// @notice The maximum amount of NFTs per user per transaction that can be minted during the public phase.
     function maxPublicMintsPerTx() external view returns (uint256);
 
     /// @notice The offset that determines which token ID maps to which token URI.
@@ -81,12 +81,12 @@ interface IBotFarmFrens {
     /// @notice The metadata provenance hash.
     function provenanceHash() external view returns (string memory);
 
+    /// @notice The status of the sale.
+    function saleIsActive() external view returns (bool);
+
     /// @notice The sale start timestamp.
     /// Note: the sale starts with the private phase, which lasts 24 hrs.
     function saleStartTime() external view returns (uint256);
-
-    /// @notice The status of the sale.
-    function saleIsActive() external view returns (bool);
 
     /// @notice The private phase whitelist.
     function whitelist(address user)
@@ -100,7 +100,7 @@ interface IBotFarmFrens {
 
     /// PUBLIC NON-CONSTANT FUNCTIONS ///
 
-    /// @notice Burn unsold BFFs after the sale.
+    /// @notice Burn unsold NFTs after the sale.
     ///
     /// @dev Emits a {BurnUnsold} event.
     ///
@@ -109,10 +109,10 @@ interface IBotFarmFrens {
     /// - Can only be called when sale is paused.
     /// - `burnAmount` cannot exceed `maxElements` - `totalSupply()`.
     ///
-    /// @param burnAmount The amount of unsold BFFs to burn.
+    /// @param burnAmount The amount of unsold NFTs to burn.
     function burnUnsold(uint256 burnAmount) external;
 
-    /// @notice Mint new BFFs in exchange for currency.
+    /// @notice Mint new NFTs in exchange for currency.
     ///
     /// @dev Emits a {MintBFF} event.
     ///
@@ -120,17 +120,17 @@ interface IBotFarmFrens {
     /// - The caller must have allowed this contract to spend currency tokens.
     /// - The caller must have at least `price * mintAmount` currency tokens in their account.
     /// - Sale must be active.
-    /// - `mintAmount` plus `totalSupply()` cannot exceed `maxElements`.
+    /// - `mintAmount` cannot exceed `maxElements` - `totalSupply()`.
     /// - For private phase:
     ///   - User must be whitelisted to participate.
     ///   - User must not exceed their eligible amount.
     /// - For public phase:
-    ///   - `mintAmount` must be exceed the limit for max public mints per tx.
+    ///   - `mintAmount` must be exceed the limit for maximum public mints per tx.
     ///
-    /// @param mintAmount The amount of BFFs to mint.
+    /// @param mintAmount The amount of NFTs to mint.
     function mintBFF(uint256 mintAmount) external;
 
-    /// @notice Pause the BFF sale.
+    /// @notice Pause the sale.
     ///
     /// @dev Emits a {PauseSale} event.
     ///
@@ -145,7 +145,7 @@ interface IBotFarmFrens {
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
-    /// - `reserveAmount` plus `totalSupply()` cannot exceed `maxElements`.
+    /// - `reserveAmount` cannot exceed `maxElements` - `totalSupply()`.
     ///
     /// @param reserveAmount The amount of NFTs to reserve.
     function reserve(uint256 reserveAmount) external;
@@ -169,8 +169,8 @@ interface IBotFarmFrens {
     /// @param newBaseURI The new base URI.
     function setBaseURI(string memory newBaseURI) external;
 
-    /// @notice Set the maximum amount of BFFs that can be minted at public sale phase by
-    /// any minter in one transaction.
+    /// @notice Set the maximum amount of NFTs that can be minted at public phase by
+    /// any user in one transaction.
     ///
     /// @dev Emits a {SetMaxPublicMintsPerTx} event.
     ///
@@ -187,7 +187,7 @@ interface IBotFarmFrens {
     /// Requirements:
     /// - Can only be called by the owner.
     ///
-    /// @param newPrice The new BFF mint price.
+    /// @param newPrice The new NFT mint price.
     function setPrice(uint256 newPrice) external;
 
     /// @notice Set the metadata provenance hash once it's calculated.
@@ -200,18 +200,18 @@ interface IBotFarmFrens {
     /// @param newProvenanceHash The new provenance hash.
     function setProvenanceHash(string memory newProvenanceHash) external;
 
-    /// @notice Whitelist users to the private sale phase.
+    /// @notice Whitelist users for private phase.
     ///
     /// @dev Emits a {SetWhitelist} event.
     ///
     /// Requirements:
     /// - Can only be called by the owner.
     ///
-    /// @param users The user addresses to whitelist for private sale phase.
-    /// @param eligibleAmount The amount of BFFs each user in provided list is eligible to mint.
+    /// @param users The user addresses to update.
+    /// @param eligibleAmount The amount of NFTs each user in provided list is eligible to mint.
     function setWhitelist(address[] memory users, uint256 eligibleAmount) external;
 
-    /// @notice Start the BFF sale.
+    /// @notice Start the sale.
     ///
     /// @dev Emits a {StartSale} event.
     ///
@@ -220,7 +220,7 @@ interface IBotFarmFrens {
     /// - Sale must not already be active.
     function startSale() external;
 
-    /// @notice Withdraw the currency contained in the contract.
+    /// @notice Withdraw the accumulated currency funds in the contract.
     ///
     /// @dev Emits a {Withdraw} event.
     ///
