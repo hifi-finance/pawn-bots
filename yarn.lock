@@ -32,10 +32,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@chainlink/contracts@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "@chainlink/contracts@npm:0.3.0"
-  checksum: b2a5b5210710e56327fefbf5d1fa60124ed33e82b023f4599754bd21f665b16a8732c447aa60132c0dac6660e69fe65597d48407c536faec35a8882fe6d77e1b
+"@chainlink/contracts@npm:^0.3.1":
+  version: 0.3.1
+  resolution: "@chainlink/contracts@npm:0.3.1"
+  checksum: 5bba39927f982e4c95f10290f413bca3b98e2943d71c4baad330ee2e0409c5c8e0baf5626cbe119d07ee74a628d529b5cd2db3dd10167e56041a4b5e65af172f
   languageName: node
   linkType: hard
 
@@ -1488,11 +1488,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hifi-finance/bot-farm-frens@workspace:.":
+"@hifi-finance/pawn-bots@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@hifi-finance/bot-farm-frens@workspace:."
+  resolution: "@hifi-finance/pawn-bots@workspace:."
   dependencies:
-    "@chainlink/contracts": ^0.3.0
+    "@chainlink/contracts": ^0.3.1
     "@codechecks/client": ^0.1.12
     "@commitlint/cli": ^14.1.0
     "@commitlint/config-conventional": ^14.1.0

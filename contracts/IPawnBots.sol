@@ -3,9 +3,9 @@ pragma solidity >=0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-/// @title IBotFarmFrens
+/// @title IPawnBots
 /// @author Hifi
-interface IBotFarmFrens {
+interface IPawnBots {
     /// EVENTS ///
 
     /// @notice Emitted when unsold NFTs are burned from the collection.
@@ -16,7 +16,7 @@ interface IBotFarmFrens {
     /// @param minter The minter's account address.
     /// @param mintAmount The amount of minted NFTs.
     /// @param fee The total mint fee paid in currency units.
-    event MintBFF(address indexed minter, uint256 mintAmount, uint256 fee);
+    event MintPawnBots(address indexed minter, uint256 mintAmount, uint256 fee);
 
     /// @notice Emitted when sale is paused.
     event PauseSale();
@@ -114,7 +114,7 @@ interface IBotFarmFrens {
 
     /// @notice Mint new NFTs in exchange for currency.
     ///
-    /// @dev Emits a {MintBFF} event.
+    /// @dev Emits a {MintPawnBots} event.
     ///
     /// Requirements:
     /// - The caller must have allowed this contract to spend currency tokens.
@@ -128,7 +128,8 @@ interface IBotFarmFrens {
     ///   - `mintAmount` must be exceed the limit for maximum public mints per tx.
     ///
     /// @param mintAmount The amount of NFTs to mint.
-    function mintBFF(uint256 mintAmount) external;
+    // TODO: better function name
+    function mintPawnBots(uint256 mintAmount) external;
 
     /// @notice Pause the sale.
     ///

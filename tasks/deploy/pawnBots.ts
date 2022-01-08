@@ -1,19 +1,19 @@
 import { task } from "hardhat/config";
 import { TaskArguments } from "hardhat/types";
 
-import { BotFarmFrens } from "../../src/types/BotFarmFrens";
-import { BotFarmFrens__factory } from "../../src/types/factories/BotFarmFrens__factory";
+import { PawnBots } from "../../src/types/PawnBots";
+import { PawnBots__factory } from "../../src/types/factories/PawnBots__factory";
 
-task("deploy:BotFarmFrens")
+task("deploy:PawnBots")
   .addParam("currency", "Mint fee payment currency")
   .addParam("chainlinkToken", "Chainlink token address")
   .addParam("vrfCoordinator", "Chainlink VRF coordinator")
   .addParam("vrfFee", "Chainlink VRF fee")
   .addParam("vrfKeyHash", "Chainlink VRF key hash")
   .setAction(async function (taskArguments: TaskArguments, { ethers }) {
-    const bffFactory: BotFarmFrens__factory = <BotFarmFrens__factory>await ethers.getContractFactory("BotFarmFrens");
-    const bff: BotFarmFrens = <BotFarmFrens>(
-      await bffFactory.deploy(
+    const pawnBotsFactory: PawnBots__factory = <PawnBots__factory>await ethers.getContractFactory("PawnBots");
+    const pawnBots: PawnBots = <PawnBots>(
+      await pawnBotsFactory.deploy(
         taskArguments.currency,
         taskArguments.chainlinkToken,
         taskArguments.vrfCoordinator,
@@ -21,6 +21,6 @@ task("deploy:BotFarmFrens")
         taskArguments.vrfKeyHash,
       )
     );
-    await bff.deployed();
-    console.log("BotFarmFrens deployed to: ", bff.address);
+    await pawnBots.deployed();
+    console.log("PawnBots deployed to: ", pawnBots.address);
   });

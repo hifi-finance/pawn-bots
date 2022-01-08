@@ -1,7 +1,7 @@
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import type { Fixture } from "ethereum-waffle";
 
-import type { GodModeBotFarmFrens } from "../src/types/GodModeBotFarmFrens";
+import type { GodModePawnBots } from "../src/types/GodModePawnBots";
 import { IERC20 } from "../src/types/IERC20";
 import type { LinkTokenInterface } from "../src/types/LinkTokenInterface";
 
@@ -14,8 +14,8 @@ declare module "mocha" {
 }
 
 export interface Contracts {
-  bff: GodModeBotFarmFrens;
   link: LinkTokenInterface;
+  pawnBots: GodModePawnBots;
   usdc: IERC20;
 }
 

@@ -1,5 +1,5 @@
 {
-  "name": "@hifi-finance/bot-farm-frens",
+  "name": "@hifi-finance/pawn-bots",
   "description": "An NFT project from Hifi Finance",
   "version": "1.0.0",
   "author": {
@@ -74,7 +74,7 @@
     "commit": "git-cz",
     "compile": "cross-env TS_NODE_TRANSPILE_ONLY=true hardhat compile",
     "coverage": "yarn typechain && hardhat coverage --solcoverjs ./.solcover.js --temp artifacts --testfiles \"./test/**/*.ts\"",
-    "deploy": "hardhat deploy:BotFarmFrens",
+    "deploy": "hardhat deploy:PawnBots",
     "lint": "yarn lint:sol && yarn lint:ts && yarn prettier:check",
     "lint:sol": "solhint --config ./.solhint.json --max-warnings 0 \"contracts/**/*.sol\"",
     "lint:ts": "eslint --config ./.eslintrc.yaml --ignore-path ./.eslintignore --ext .js,.ts .",
@@ -88,7 +88,7 @@
     "verify": "hardhat verify"
   },
   "dependencies": {
-    "@chainlink/contracts": "^0.3.0",
+    "@chainlink/contracts": "^0.3.1",
     "@openzeppelin/contracts": "^4.4.0"
   }
 }

@@ -2,19 +2,19 @@
 // solhint-disable func-name-mixedcase
 pragma solidity >=0.8.4;
 
-import "../BotFarmFrens.sol";
+import "../PawnBots.sol";
 
-/// @title GodModeBotFarmFrens
+/// @title GodModePawnBots
 /// @author Hifi
 /// @dev Strictly for test purposes. Do not use in production.
-contract GodModeBotFarmFrens is BotFarmFrens {
+contract GodModePawnBots is PawnBots {
     constructor(
         IERC20Metadata currency_,
         address chainlinkToken_,
         address vrfCoordinator_,
         uint256 vrfFee_,
         bytes32 vrfKeyHash_
-    ) BotFarmFrens(currency_, chainlinkToken_, vrfCoordinator_, vrfFee_, vrfKeyHash_) {
+    ) PawnBots(currency_, chainlinkToken_, vrfCoordinator_, vrfFee_, vrfKeyHash_) {
         // solhint-disable-previous-line no-empty-blocks
     }
 

@@ -7,24 +7,24 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "hardhat/console.sol";
-import "./IBotFarmFrens.sol";
+import "./IPawnBots.sol";
 
-error BFF__EligibilityExceededForPrivatePhase();
-error BFF__InsufficientCurrencySent();
-error BFF__MaxElementsExceeded();
-error BFF__MaxMintsPerTxExceededForPublicPhase();
-error BFF__NonexistentToken();
-error BFF__NotWhitelistedForPrivatePhase();
-error BFF__OffsetAlreadySet();
-error BFF__RandomnessAlreadyRequested();
-error BFF__SaleIsActive();
-error BFF__SaleIsNotActive();
-error BFF__VrfRequestIdMismatch();
+error PawnBots__EligibilityExceededForPrivatePhase();
+error PawnBots__InsufficientCurrencySent();
+error PawnBots__MaxElementsExceeded();
+error PawnBots__MaxMintsPerTxExceededForPublicPhase();
+error PawnBots__NonexistentToken();
+error PawnBots__NotWhitelistedForPrivatePhase();
+error PawnBots__OffsetAlreadySet();
+error PawnBots__RandomnessAlreadyRequested();
+error PawnBots__SaleIsActive();
+error PawnBots__SaleIsNotActive();
+error PawnBots__VrfRequestIdMismatch();
 
-/// @title BotFarmFrens
+/// @title PawnBots
 /// @author Hifi
 /// @notice Manages the mint and distribution of NFTs.
-contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGuard, VRFConsumerBase {
+contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFConsumerBase {
     using Strings for uint256;
 
     /// STRUCTS ///
@@ -43,31 +43,31 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @dev The private sale duration from the sale start timestamp.
     uint256 public constant PRIVATE_SALE_DURATION = 24 hours;
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     IERC20Metadata public override currency;
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     uint256 public override maxElements = COLLECTION_SIZE;
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     uint256 public override maxPublicMintsPerTx;
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     uint256 public override offset;
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     uint256 public override price;
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     string public override provenanceHash;
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     bool public override saleIsActive;
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     uint256 public override saleStartTime;
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     mapping(address => WhitelistElement) public override whitelist;
 
     /// INTERNAL STORAGE ///
@@ -90,7 +90,8 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
         address vrfCoordinator_,
         uint256 vrfFee_,
         bytes32 vrfKeyHash_
-    ) ERC721("Bot Farm Frens", "BFF") VRFConsumerBase(vrfCoordinator_, chainlinkToken_) {
+    ) ERC721("Pawn Bots", "PawnBots") VRFConsumerBase(vrfCoordinator_, chainlinkToken_) {
+        // TODO: better token symbol
         currency = currency_;
         vrfFee = vrfFee_;
         vrfKeyHash = vrfKeyHash_;
@@ -101,7 +102,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @dev See {ERC721-tokenURI}.
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         if (!_exists(tokenId)) {
-            revert BFF__NonexistentToken();
+            revert PawnBots__NonexistentToken();
         }
         string memory bURI = _baseURI();
         if (offset == 0) {
@@ -114,40 +115,40 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
 
     /// PUBLIC NON-CONSTANT FUNCTIONS ///
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     function burnUnsold(uint256 burnAmount) public override onlyOwner {
         if (saleIsActive) {
-            revert BFF__SaleIsActive();
+            revert PawnBots__SaleIsActive();
         }
         if (burnAmount + totalSupply() > maxElements) {
-            revert BFF__MaxElementsExceeded();
+            revert PawnBots__MaxElementsExceeded();
         }
 
         maxElements -= burnAmount;
         emit BurnUnsold(burnAmount);
     }
 
-    /// @inheritdoc IBotFarmFrens
-    function mintBFF(uint256 mintAmount) public override nonReentrant {
+    /// @inheritdoc IPawnBots
+    function mintPawnBots(uint256 mintAmount) public override nonReentrant {
         if (!saleIsActive) {
-            revert BFF__SaleIsNotActive();
+            revert PawnBots__SaleIsNotActive();
         }
         if (mintAmount + totalSupply() > maxElements) {
-            revert BFF__MaxElementsExceeded();
+            revert PawnBots__MaxElementsExceeded();
         }
         if (block.timestamp <= saleStartTime + PRIVATE_SALE_DURATION) {
             // private phase
             if (!whitelist[msg.sender].exists) {
-                revert BFF__NotWhitelistedForPrivatePhase();
+                revert PawnBots__NotWhitelistedForPrivatePhase();
             }
             if (mintAmount > whitelist[msg.sender].eligibleAmount - whitelist[msg.sender].claimedAmount) {
-                revert BFF__EligibilityExceededForPrivatePhase();
+                revert PawnBots__EligibilityExceededForPrivatePhase();
             }
             whitelist[msg.sender].claimedAmount += mintAmount;
         } else {
             // public phase
             if (mintAmount > maxPublicMintsPerTx) {
-                revert BFF__MaxMintsPerTxExceededForPublicPhase();
+                revert PawnBots__MaxMintsPerTxExceededForPublicPhase();
             }
         }
 
@@ -157,24 +158,24 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
             uint256 mintId = totalSupply();
             _safeMint(msg.sender, mintId);
         }
-        emit MintBFF(msg.sender, mintAmount, fee);
+        emit MintPawnBots(msg.sender, mintAmount, fee);
     }
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     function pauseSale() public override onlyOwner {
         if (!saleIsActive) {
-            revert BFF__SaleIsNotActive();
+            revert PawnBots__SaleIsNotActive();
         }
 
         saleIsActive = false;
         emit PauseSale();
     }
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     function reserve(uint256 reserveAmount) public override onlyOwner {
         uint256 totalSupply = totalSupply();
         if (reserveAmount + totalSupply > maxElements) {
-            revert BFF__MaxElementsExceeded();
+            revert PawnBots__MaxElementsExceeded();
         }
 
         for (uint256 i = 0; i < reserveAmount; i++) {
@@ -183,48 +184,48 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
         emit Reserve(reserveAmount);
     }
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     function reveal() public override onlyOwner {
         if (offset != 0) {
-            revert BFF__OffsetAlreadySet();
+            revert PawnBots__OffsetAlreadySet();
         }
         if (vrfRequestId != 0) {
-            revert BFF__RandomnessAlreadyRequested();
+            revert PawnBots__RandomnessAlreadyRequested();
         }
 
         vrfRequestId = requestRandomness(vrfKeyHash, vrfFee);
         emit Reveal();
     }
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     function setBaseURI(string memory newBaseURI) public override onlyOwner {
         string memory oldBaseURI = baseURI;
         baseURI = newBaseURI;
         emit SetBaseURI(oldBaseURI, baseURI);
     }
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     function setMaxPublicMintsPerTx(uint256 newMaxPublicMintsPerTx) public override onlyOwner {
         uint256 oldMaxPublicMintsPerTx = maxPublicMintsPerTx;
         maxPublicMintsPerTx = newMaxPublicMintsPerTx;
         emit SetMaxPublicMintsPerTx(oldMaxPublicMintsPerTx, maxPublicMintsPerTx);
     }
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     function setPrice(uint256 newPrice) public override onlyOwner {
         uint256 oldPrice = price;
         price = newPrice;
         emit SetPrice(oldPrice, price);
     }
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     function setProvenanceHash(string memory newProvenanceHash) public override onlyOwner {
         string memory oldProvenanceHash = provenanceHash;
         provenanceHash = newProvenanceHash;
         emit SetProvenanceHash(oldProvenanceHash, provenanceHash);
     }
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     function setWhitelist(address[] memory users, uint256 eligibleAmount) public override onlyOwner {
         for (uint256 i = 0; i < users.length; i++) {
             WhitelistElement memory elem;
@@ -235,10 +236,10 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
         emit SetWhitelist(users, eligibleAmount);
     }
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     function startSale() public override onlyOwner {
         if (saleIsActive) {
-            revert BFF__SaleIsActive();
+            revert PawnBots__SaleIsActive();
         }
         if (saleStartTime == 0) {
             saleStartTime = block.timestamp;
@@ -247,7 +248,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
         emit StartSale();
     }
 
-    /// @inheritdoc IBotFarmFrens
+    /// @inheritdoc IPawnBots
     function withdraw(address recipient) public override onlyOwner {
         uint256 amount = currency.balanceOf(address(this));
         currency.transfer(recipient, amount);
@@ -266,10 +267,10 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @dev See {VRFConsumerBase-fulfillRandomness}.
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
         if (offset != 0) {
-            revert BFF__OffsetAlreadySet();
+            revert PawnBots__OffsetAlreadySet();
         }
         if (vrfRequestId != requestId) {
-            revert BFF__VrfRequestIdMismatch();
+            revert PawnBots__VrfRequestIdMismatch();
         }
         offset = (randomness % (COLLECTION_SIZE - 1)) + 1;
     }
@@ -278,7 +279,7 @@ contract BotFarmFrens is IBotFarmFrens, ERC721Enumerable, Ownable, ReentrancyGua
     /// @param fee The fee amount to receive in currency units.
     function receiveFeeInternal(uint256 fee) internal {
         if (currency.balanceOf(msg.sender) < fee) {
-            revert BFF__InsufficientCurrencySent();
+            revert PawnBots__InsufficientCurrencySent();
         }
         currency.transferFrom(msg.sender, address(this), fee);
     }
