@@ -90,8 +90,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         address vrfCoordinator_,
         uint256 vrfFee_,
         bytes32 vrfKeyHash_
-    ) ERC721("Pawn Bots", "PawnBots") VRFConsumerBase(vrfCoordinator_, chainlinkToken_) {
-        // TODO: better token symbol
+    ) ERC721("Pawn Bots", "BOTS") VRFConsumerBase(vrfCoordinator_, chainlinkToken_) {
         currency = currency_;
         vrfFee = vrfFee_;
         vrfKeyHash = vrfKeyHash_;
@@ -129,7 +128,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     }
 
     /// @inheritdoc IPawnBots
-    function mintPawnBots(uint256 mintAmount) public override nonReentrant {
+    function mint(uint256 mintAmount) public override nonReentrant {
         if (!saleIsActive) {
             revert PawnBots__SaleIsNotActive();
         }
@@ -158,7 +157,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
             uint256 mintId = totalSupply();
             _safeMint(msg.sender, mintId);
         }
-        emit MintPawnBots(msg.sender, mintAmount, fee);
+        emit Mint(msg.sender, mintAmount, fee);
     }
 
     /// @inheritdoc IPawnBots

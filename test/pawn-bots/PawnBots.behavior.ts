@@ -170,7 +170,7 @@ export function shouldBehaveLikePawnBots(): void {
 
     describe("symbol", function () {
       it("returns the correct token symbol", async function () {
-        expect(await this.contracts.pawnBots.symbol()).to.equal("PawnBots");
+        expect(await this.contracts.pawnBots.symbol()).to.equal("BOTS");
       });
     });
 
@@ -290,10 +290,10 @@ export function shouldBehaveLikePawnBots(): void {
       });
     });
 
-    describe("mintPawnBots", function () {
+    describe("mint", function () {
       context("when sale is not active", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).mintPawnBots(0)).to.be.revertedWith(
+          await expect(this.contracts.pawnBots.connect(this.signers.alice).mint(0)).to.be.revertedWith(
             Errors.SALE_IS_NOT_ACTIVE,
           );
         });
@@ -313,9 +313,9 @@ export function shouldBehaveLikePawnBots(): void {
           });
 
           it("reverts", async function () {
-            await expect(
-              this.contracts.pawnBots.connect(this.signers.alice).mintPawnBots(this.mintAmount),
-            ).to.be.revertedWith(Errors.MAX_ELEMENTS_EXCEEDED);
+            await expect(this.contracts.pawnBots.connect(this.signers.alice).mint(this.mintAmount)).to.be.revertedWith(
+              Errors.MAX_ELEMENTS_EXCEEDED,
+            );
           });
         });
 
@@ -328,7 +328,7 @@ export function shouldBehaveLikePawnBots(): void {
             context("when caller is not whitelisted for private phase", function () {
               it("reverts", async function () {
                 await expect(
-                  this.contracts.pawnBots.connect(this.signers.alice).mintPawnBots(this.mintAmount),
+                  this.contracts.pawnBots.connect(this.signers.alice).mint(this.mintAmount),
                 ).to.be.revertedWith(Errors.NOT_WHITELISTED_FOR_PRIVATE_PHASE);
               });
             });
@@ -350,7 +350,7 @@ export function shouldBehaveLikePawnBots(): void {
 
                 it("reverts", async function () {
                   await expect(
-                    this.contracts.pawnBots.connect(this.signers.alice).mintPawnBots(this.mintAmount),
+                    this.contracts.pawnBots.connect(this.signers.alice).mint(this.mintAmount),
                   ).to.be.revertedWith(Errors.ELIGIBILITY_EXCEEDED_FOR_PRIVATE_PHASE);
                 });
               });
@@ -359,7 +359,7 @@ export function shouldBehaveLikePawnBots(): void {
                 context("when user does not have enough currency to pay mint fee", function () {
                   it("reverts", async function () {
                     await expect(
-                      this.contracts.pawnBots.connect(this.signers.alice).mintPawnBots(this.mintAmount),
+                      this.contracts.pawnBots.connect(this.signers.alice).mint(this.mintAmount),
                     ).to.be.reverted;
                   });
                 });
@@ -385,7 +385,7 @@ export function shouldBehaveLikePawnBots(): void {
                   });
 
                   it("succeeds", async function () {
-                    await this.contracts.pawnBots.connect(this.signers.alice).mintPawnBots(this.mintAmount);
+                    await this.contracts.pawnBots.connect(this.signers.alice).mint(this.mintAmount);
                     expect(await this.contracts.pawnBots.balanceOf(this.signers.alice.address)).to.be.equal(
                       this.mintAmount,
                     );
@@ -413,7 +413,7 @@ export function shouldBehaveLikePawnBots(): void {
 
               it("reverts", async function () {
                 await expect(
-                  this.contracts.pawnBots.connect(this.signers.alice).mintPawnBots(this.mintAmount),
+                  this.contracts.pawnBots.connect(this.signers.alice).mint(this.mintAmount),
                 ).to.be.revertedWith(Errors.MAX_MINTS_PER_TX_EXCEEDED_FOR_PUBLIC_PHASE);
               });
             });
@@ -426,7 +426,7 @@ export function shouldBehaveLikePawnBots(): void {
               context("when user does not have enough currency to pay mint fee", function () {
                 it("reverts", async function () {
                   await expect(
-                    this.contracts.pawnBots.connect(this.signers.alice).mintPawnBots(this.mintAmount),
+                    this.contracts.pawnBots.connect(this.signers.alice).mint(this.mintAmount),
                   ).to.be.reverted;
                 });
               });
@@ -452,7 +452,7 @@ export function shouldBehaveLikePawnBots(): void {
                 });
 
                 it("succeeds", async function () {
-                  await this.contracts.pawnBots.connect(this.signers.alice).mintPawnBots(this.mintAmount);
+                  await this.contracts.pawnBots.connect(this.signers.alice).mint(this.mintAmount);
                   expect(await this.contracts.pawnBots.balanceOf(this.signers.alice.address)).to.be.equal(
                     this.mintAmount,
                   );

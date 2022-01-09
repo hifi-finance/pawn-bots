@@ -29,7 +29,7 @@ export interface PawnBotsInterface extends utils.Interface {
     "isApprovedForAll(address,address)": FunctionFragment;
     "maxElements()": FunctionFragment;
     "maxPublicMintsPerTx()": FunctionFragment;
-    "mintPawnBots(uint256)": FunctionFragment;
+    "mint(uint256)": FunctionFragment;
     "name()": FunctionFragment;
     "offset()": FunctionFragment;
     "owner()": FunctionFragment;
@@ -97,10 +97,7 @@ export interface PawnBotsInterface extends utils.Interface {
     functionFragment: "maxPublicMintsPerTx",
     values?: undefined
   ): string;
-  encodeFunctionData(
-    functionFragment: "mintPawnBots",
-    values: [BigNumberish]
-  ): string;
+  encodeFunctionData(functionFragment: "mint", values: [BigNumberish]): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(functionFragment: "offset", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
@@ -221,10 +218,7 @@ export interface PawnBotsInterface extends utils.Interface {
     functionFragment: "maxPublicMintsPerTx",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "mintPawnBots",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "offset", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
@@ -309,7 +303,7 @@ export interface PawnBotsInterface extends utils.Interface {
     "Approval(address,address,uint256)": EventFragment;
     "ApprovalForAll(address,address,bool)": EventFragment;
     "BurnUnsold(uint256)": EventFragment;
-    "MintPawnBots(address,uint256,uint256)": EventFragment;
+    "Mint(address,uint256,uint256)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "PauseSale()": EventFragment;
     "Reserve(uint256)": EventFragment;
@@ -327,7 +321,7 @@ export interface PawnBotsInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ApprovalForAll"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "BurnUnsold"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "MintPawnBots"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Mint"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "PauseSale"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Reserve"): EventFragment;
@@ -363,12 +357,12 @@ export type BurnUnsoldEvent = TypedEvent<
 
 export type BurnUnsoldEventFilter = TypedEventFilter<BurnUnsoldEvent>;
 
-export type MintPawnBotsEvent = TypedEvent<
+export type MintEvent = TypedEvent<
   [string, BigNumber, BigNumber],
   { minter: string; mintAmount: BigNumber; fee: BigNumber }
 >;
 
-export type MintPawnBotsEventFilter = TypedEventFilter<MintPawnBotsEvent>;
+export type MintEventFilter = TypedEventFilter<MintEvent>;
 
 export type OwnershipTransferredEvent = TypedEvent<
   [string, string],
@@ -509,7 +503,7 @@ export interface PawnBots extends BaseContract {
 
     maxPublicMintsPerTx(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    mintPawnBots(
+    mint(
       mintAmount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -695,7 +689,7 @@ export interface PawnBots extends BaseContract {
 
   maxPublicMintsPerTx(overrides?: CallOverrides): Promise<BigNumber>;
 
-  mintPawnBots(
+  mint(
     mintAmount: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -875,10 +869,7 @@ export interface PawnBots extends BaseContract {
 
     maxPublicMintsPerTx(overrides?: CallOverrides): Promise<BigNumber>;
 
-    mintPawnBots(
-      mintAmount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    mint(mintAmount: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
     name(overrides?: CallOverrides): Promise<string>;
 
@@ -1030,16 +1021,16 @@ export interface PawnBots extends BaseContract {
     "BurnUnsold(uint256)"(burnAmount?: null): BurnUnsoldEventFilter;
     BurnUnsold(burnAmount?: null): BurnUnsoldEventFilter;
 
-    "MintPawnBots(address,uint256,uint256)"(
+    "Mint(address,uint256,uint256)"(
       minter?: string | null,
       mintAmount?: null,
       fee?: null
-    ): MintPawnBotsEventFilter;
-    MintPawnBots(
+    ): MintEventFilter;
+    Mint(
       minter?: string | null,
       mintAmount?: null,
       fee?: null
-    ): MintPawnBotsEventFilter;
+    ): MintEventFilter;
 
     "OwnershipTransferred(address,address)"(
       previousOwner?: string | null,
@@ -1154,7 +1145,7 @@ export interface PawnBots extends BaseContract {
 
     maxPublicMintsPerTx(overrides?: CallOverrides): Promise<BigNumber>;
 
-    mintPawnBots(
+    mint(
       mintAmount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -1339,7 +1330,7 @@ export interface PawnBots extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    mintPawnBots(
+    mint(
       mintAmount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

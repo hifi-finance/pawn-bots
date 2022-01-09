@@ -16,7 +16,7 @@ interface IPawnBots {
     /// @param minter The minter's account address.
     /// @param mintAmount The amount of minted NFTs.
     /// @param fee The total mint fee paid in currency units.
-    event MintPawnBots(address indexed minter, uint256 mintAmount, uint256 fee);
+    event Mint(address indexed minter, uint256 mintAmount, uint256 fee);
 
     /// @notice Emitted when sale is paused.
     event PauseSale();
@@ -114,7 +114,7 @@ interface IPawnBots {
 
     /// @notice Mint new NFTs in exchange for currency.
     ///
-    /// @dev Emits a {MintPawnBots} event.
+    /// @dev Emits a {Mint} event.
     ///
     /// Requirements:
     /// - The caller must have allowed this contract to spend currency tokens.
@@ -128,8 +128,7 @@ interface IPawnBots {
     ///   - `mintAmount` must be exceed the limit for maximum public mints per tx.
     ///
     /// @param mintAmount The amount of NFTs to mint.
-    // TODO: better function name
-    function mintPawnBots(uint256 mintAmount) external;
+    function mint(uint256 mintAmount) external;
 
     /// @notice Pause the sale.
     ///
