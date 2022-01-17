@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 pragma solidity >=0.8.4;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
 /// @title IPawnBots
 /// @author Hifi
 interface IPawnBots {
@@ -40,16 +38,22 @@ interface IPawnBots {
 
     /// PUBLIC CONSTANT FUNCTIONS ///
 
-    /// @notice Whether an account eligible to mint or not.
-    /// @param account The account address to check.
-    /// @param merkleProof The merkle proof of the account being eligible to mint.
-    function isEligible(address account, bytes32[] calldata merkleProof) external view returns (bool);
+    /// @notice Whether an account already claimed their eligible mint amount.
+    /// @param account The account address.
+    function isClaimed(address account) external view returns (bool);
 
-    /// @notice A cap on the total amount of NFTs that will ever be minted.
-    function mintCap() external view returns (uint256);
+    /// @notice Whether an account eligible to mint or not.
+    /// @param account The account address.
+    /// @param amount The amount of NFTs the account is eligible to mint.
+    /// @param merkleProof The merkle proof of the account being eligible to mint.
+    function isEligible(
+        address account,
+        uint256 amount,
+        bytes32[] calldata merkleProof
+    ) external view returns (bool);
 
     /// @notice Whether minting is enabled or not.
-    function mintIsEnabled() external view returns (bool);
+    function isMintEnabled() external view returns (bool);
 
     /// @notice The offset that determines how each NFT corresponds to a token URI post-reveal.
     function offset() external view returns (uint256);
@@ -69,7 +73,7 @@ interface IPawnBots {
     ///
     /// @dev Emits a {DisableMint} event.
     ///
-    /// Requirements:
+    /// @dev Requirements:
     /// - Can only be called by the owner.
     /// - Minting must be enabled when called.
     function disableMint() external;
@@ -78,7 +82,7 @@ interface IPawnBots {
     ///
     /// @dev Emits a {EnableMint} event.
     ///
-    /// Requirements:
+    /// @dev Requirements:
     /// - Can only be called by the owner.
     /// - Minting must be disabled when called.
     function enableMint() external;
@@ -87,10 +91,11 @@ interface IPawnBots {
     ///
     /// @dev Emits a {Mint} event.
     ///
-    /// Requirements:
+    /// @dev Requirements:
     /// - Minting must be enabled.
+    /// - `mintAmount` cannot exceed theoretical collection size limit minus `totalSupply()`.
     /// - Caller must be eligible to mint.
-    /// - User must not exceed their eligible amount.
+    /// - Caller must not have already claimed their eligible amount.
     ///
     /// @param mintAmount The amount of NFTs to mint.
     /// @param merkleProof The merkle proof of caller being eligible to mint.
@@ -102,17 +107,18 @@ interface IPawnBots {
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
-    /// - `reserveAmount` cannot exceed max reserve limit minus `reservedElements`.
+    /// - `reserveAmount` cannot exceed max reserved elements limit minus `reservedElements`.
     ///
     /// @param reserveAmount The amount of NFTs to reserve.
     function reserve(uint256 reserveAmount) external;
 
     /// @notice Reveal the collection's metadata.
     ///
-    /// @dev Emits a {Reveal} event.
+    /// @dev Emits a {Reveal} event indirectly through a transaction initiated by the VRF Coordinator.
     ///
-    /// Requirements:
+    /// @dev Requirements:
     /// - Can only be called by the owner.
+    /// - Can only be called after `revealTime` has passed.
     /// - Can only be called once during the contract's lifetime.
     function reveal() external;
 
@@ -120,17 +126,17 @@ interface IPawnBots {
     ///
     /// @dev Emits a {SetBaseURI} event.
     ///
-    /// Requirements:
+    /// @dev Requirements:
     /// - Can only be called by the owner.
     ///
     /// @param newBaseURI The new base URI.
     function setBaseURI(string memory newBaseURI) external;
 
-    /// @notice Set the provenance hash once it's calculated.
+    /// @notice Set the provenance hash of post-reveal art once it's calculated.
     ///
     /// @dev Emits a {SetProvenanceHash} event.
     ///
-    /// Requirements:
+    /// @dev Requirements:
     /// - Can only be called by the owner.
     ///
     /// @param newProvenanceHash The new provenance hash.
