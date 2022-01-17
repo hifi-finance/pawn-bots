@@ -8,20 +8,18 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 interface IPawnBots {
     /// EVENTS ///
 
-    /// @notice Emitted when unsold NFTs are burned from the collection.
-    /// @param burnAmount The amount of unsold NFTs burned from the collection.
-    event BurnUnsold(uint256 burnAmount);
+    /// @notice Emitted when minting is disabled.
+    event DisableMint();
+
+    /// @notice Emitted when minting is enabled.
+    event EnableMint();
 
     /// @notice Emitted when a user mints new NFTs.
     /// @param minter The minter's account address.
     /// @param mintAmount The amount of minted NFTs.
-    /// @param fee The total mint fee paid in currency units.
-    event Mint(address indexed minter, uint256 mintAmount, uint256 fee);
+    event Mint(address indexed minter, uint256 mintAmount);
 
-    /// @notice Emitted when sale is paused.
-    event PauseSale();
-
-    /// @notice Emitted when NFTs are reserved for project usage.
+    /// @notice Emitted when NFTs are reserved by the contract owner.
     /// @param reserveAmount The amount of NFTs that were reserved.
     event Reserve(uint256 reserveAmount);
 
@@ -29,123 +27,82 @@ interface IPawnBots {
     event Reveal();
 
     /// @notice Emitted when base URI is set.
-    /// @param oldBaseURI The old base URI.
-    /// @param newBaseURI The new base URI.
-    event SetBaseURI(string oldBaseURI, string newBaseURI);
+    /// @param newBaseURI The new base URI that was set.
+    event SetBaseURI(string newBaseURI);
 
-    /// @notice Emitted when maximum public mints per transaction is set.
-    /// @param oldMaxPublicMintsPerTx The old maximum public mints per transaction.
-    /// @param newMaxPublicMintsPerTx The new maximum public mints per transaction.
-    event SetMaxPublicMintsPerTx(uint256 oldMaxPublicMintsPerTx, uint256 newMaxPublicMintsPerTx);
+    /// @notice Emitted when provenance hash is set.
+    /// @param newProvenanceHash The new provenance hash that was set.
+    event SetProvenanceHash(string newProvenanceHash);
 
-    /// @notice Emitted when mint price is set.
-    /// @param oldPrice The old mint price.
-    /// @param newPrice The new mint price.
-    event SetPrice(uint256 oldPrice, uint256 newPrice);
-
-    /// @notice Emitted when metadata provenance hash is set.
-    /// @param oldProvenanceHash The old provenance hash.
-    /// @param newProvenanceHash The new provenance hash.
-    event SetProvenanceHash(string oldProvenanceHash, string newProvenanceHash);
-
-    /// @notice Emitted when a subset of users is updated in private phase whitelist.
-    /// @param users The user addresses.
-    /// @param eligibleAmount The maximum number of NFTs that can be minted by each user.
-    event SetWhitelist(address[] indexed users, uint256 eligibleAmount);
-
-    /// @notice Emitted when sale is started.
-    event StartSale();
-
-    /// @notice Emitted when currency funds are withdrawn from the contract.
-    /// @param recipient The recipient of currency withdrawn.
-    /// @param amount The amount of currency withdrawn.
-    event Withdraw(address indexed recipient, uint256 amount);
+    /// @notice Emitted when reveal timestamp is set.
+    /// @param newRevealTime The new reveal timestamp that was set.
+    event SetRevealTime(uint256 newRevealTime);
 
     /// PUBLIC CONSTANT FUNCTIONS ///
 
-    /// @notice The ERC20 token used for paying mint fees.
-    function currency() external view returns (IERC20Metadata);
+    /// @notice Whether an account eligible to mint or not.
+    /// @param account The account address to check.
+    /// @param merkleProof The merkle proof of the account being eligible to mint.
+    function isEligible(address account, bytes32[] calldata merkleProof) external view returns (bool);
 
-    /// @notice The maximum amount of NFTs that can ever exist onchain.
-    function maxElements() external view returns (uint256);
+    /// @notice A cap on the total amount of NFTs that will ever be minted.
+    function mintCap() external view returns (uint256);
 
-    /// @notice The maximum amount of NFTs per user per transaction that can be minted during the public phase.
-    function maxPublicMintsPerTx() external view returns (uint256);
+    /// @notice Whether minting is enabled or not.
+    function mintIsEnabled() external view returns (bool);
 
-    /// @notice The offset that determines which token ID maps to which token URI.
+    /// @notice The offset that determines how each NFT corresponds to a token URI post-reveal.
     function offset() external view returns (uint256);
 
-    /// @notice The mint price in currency units.
-    function price() external view returns (uint256);
-
-    /// @notice The metadata provenance hash.
+    /// @notice The provenance hash of post-reveal art.
     function provenanceHash() external view returns (string memory);
 
-    /// @notice The status of the sale.
-    function saleIsActive() external view returns (bool);
+    /// @notice The total amount of NFTs that have been reserved by the contract owner.
+    function reservedElements() external view returns (uint256);
 
-    /// @notice The sale start timestamp.
-    /// Note: the sale starts with the private phase, which lasts 24 hrs.
-    function saleStartTime() external view returns (uint256);
-
-    /// @notice The private phase whitelist.
-    function whitelist(address user)
-        external
-        view
-        returns (
-            bool exists,
-            uint256 claimedAmount,
-            uint256 eligibleAmount
-        );
+    /// @notice The timestamp from which the collection metadata can be revealed.
+    function revealTime() external view returns (uint256);
 
     /// PUBLIC NON-CONSTANT FUNCTIONS ///
 
-    /// @notice Burn unsold NFTs after the sale.
+    /// @notice Disable minting.
     ///
-    /// @dev Emits a {BurnUnsold} event.
+    /// @dev Emits a {DisableMint} event.
     ///
     /// Requirements:
     /// - Can only be called by the owner.
-    /// - Can only be called when sale is paused.
-    /// - `burnAmount` cannot exceed `maxElements` - `totalSupply()`.
-    ///
-    /// @param burnAmount The amount of unsold NFTs to burn.
-    function burnUnsold(uint256 burnAmount) external;
+    /// - Minting must be enabled when called.
+    function disableMint() external;
 
-    /// @notice Mint new NFTs in exchange for currency.
+    /// @notice Enable minting.
+    ///
+    /// @dev Emits a {EnableMint} event.
+    ///
+    /// Requirements:
+    /// - Can only be called by the owner.
+    /// - Minting must be disabled when called.
+    function enableMint() external;
+
+    /// @notice Mint new NFTs.
     ///
     /// @dev Emits a {Mint} event.
     ///
     /// Requirements:
-    /// - The caller must have allowed this contract to spend currency tokens.
-    /// - The caller must have at least `price * mintAmount` currency tokens in their account.
-    /// - Sale must be active.
-    /// - `mintAmount` cannot exceed `maxElements` - `totalSupply()`.
-    /// - For private phase:
-    ///   - User must be whitelisted to participate.
-    ///   - User must not exceed their eligible amount.
-    /// - For public phase:
-    ///   - `mintAmount` must be exceed the limit for maximum public mints per tx.
+    /// - Minting must be enabled.
+    /// - Caller must be eligible to mint.
+    /// - User must not exceed their eligible amount.
     ///
     /// @param mintAmount The amount of NFTs to mint.
-    function mint(uint256 mintAmount) external;
+    /// @param merkleProof The merkle proof of caller being eligible to mint.
+    function mint(uint256 mintAmount, bytes32[] calldata merkleProof) external;
 
-    /// @notice Pause the sale.
-    ///
-    /// @dev Emits a {PauseSale} event.
-    ///
-    /// Requirements:
-    /// - Can only be called by the owner.
-    /// - Sale must be active.
-    function pauseSale() external;
-
-    /// @notice Reserve collection elements for project usage.
+    /// @notice Reserve a subset of the NFTs in the collection by the contract owner.
     ///
     /// @dev Emits a {Reserve} event.
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
-    /// - `reserveAmount` cannot exceed `maxElements` - `totalSupply()`.
+    /// - `reserveAmount` cannot exceed max reserve limit minus `reservedElements`.
     ///
     /// @param reserveAmount The amount of NFTs to reserve.
     function reserve(uint256 reserveAmount) external;
@@ -169,28 +126,7 @@ interface IPawnBots {
     /// @param newBaseURI The new base URI.
     function setBaseURI(string memory newBaseURI) external;
 
-    /// @notice Set the maximum amount of NFTs that can be minted at public phase by
-    /// any user in one transaction.
-    ///
-    /// @dev Emits a {SetMaxPublicMintsPerTx} event.
-    ///
-    /// Requirements:
-    /// - Can only be called by the owner.
-    ///
-    /// @param newMaxPublicMintsPerTx The new maximum public mints per transaction.
-    function setMaxPublicMintsPerTx(uint256 newMaxPublicMintsPerTx) external;
-
-    /// @notice Set the mint price.
-    ///
-    /// @dev Emits a {SetPrice} event.
-    ///
-    /// Requirements:
-    /// - Can only be called by the owner.
-    ///
-    /// @param newPrice The new NFT mint price.
-    function setPrice(uint256 newPrice) external;
-
-    /// @notice Set the metadata provenance hash once it's calculated.
+    /// @notice Set the provenance hash once it's calculated.
     ///
     /// @dev Emits a {SetProvenanceHash} event.
     ///
@@ -200,33 +136,13 @@ interface IPawnBots {
     /// @param newProvenanceHash The new provenance hash.
     function setProvenanceHash(string memory newProvenanceHash) external;
 
-    /// @notice Whitelist users for private phase.
+    /// @notice Set the timestamp from which the collection metadata can be revealed.
     ///
-    /// @dev Emits a {SetWhitelist} event.
+    /// @dev Emits a {SetRevealTime} event.
     ///
-    /// Requirements:
+    /// @dev Requirements:
     /// - Can only be called by the owner.
     ///
-    /// @param users The user addresses to update.
-    /// @param eligibleAmount The amount of NFTs each user in provided list is eligible to mint.
-    function setWhitelist(address[] memory users, uint256 eligibleAmount) external;
-
-    /// @notice Start the sale.
-    ///
-    /// @dev Emits a {StartSale} event.
-    ///
-    /// Requirements:
-    /// - Can only be called by the owner.
-    /// - Sale must not already be active.
-    function startSale() external;
-
-    /// @notice Withdraw the accumulated currency funds in the contract.
-    ///
-    /// @dev Emits a {Withdraw} event.
-    ///
-    /// Requirements:
-    /// - Can only be called by the owner.
-    ///
-    /// @param recipient The recipient of currency withdrawn.
-    function withdraw(address recipient) external;
+    /// @param newRevealTime The new reveal time.
+    function setRevealTime(uint256 newRevealTime) external;
 }
