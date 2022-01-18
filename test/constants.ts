@@ -1,1 +1,1 @@
-export const vrfFee: string = "100000000000000";
+export const VRF_FEE: string = "100000000000000";

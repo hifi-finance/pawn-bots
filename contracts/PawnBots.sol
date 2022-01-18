@@ -18,6 +18,7 @@ error PawnBots__OffsetAlreadySet();
 error PawnBots__RandomnessAlreadyRequested();
 error PawnBots__TooEarlyToReveal();
 error PawnBots__UserAlreadyClaimed();
+error PawnBots__UserEligibilityExceeded();
 error PawnBots__UserIsNotEligible();
 error PawnBots__VrfRequestIdMismatch();
 
@@ -26,8 +27,6 @@ error PawnBots__VrfRequestIdMismatch();
 /// @notice Manages the mint and distribution of NFTs.
 contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFConsumerBase {
     using Strings for uint256;
-
-    /// STRUCTS ///
 
     /// PUBLIC STORAGE ///
 
@@ -38,7 +37,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     uint256 public constant MAX_RESERVED_ELEMENTS = 1_000;
 
     /// @inheritdoc IPawnBots
-    mapping(address => bool) public override isClaimed;
+    mapping(address => Claim) public override claims;
 
     /// @inheritdoc IPawnBots
     bool public override isMintEnabled;
@@ -60,9 +59,6 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     /// @dev The base token URI.
     string internal baseURI;
 
-    /// @dev The whitelist merkle root.
-    bytes32 internal merkleRoot;
-
     /// @dev The Chainlink VRF fee in LINK.
     uint256 internal vrfFee;
 
@@ -74,27 +70,15 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
 
     constructor(
         address chainlinkToken_,
-        bytes32 merkleRoot_,
         address vrfCoordinator_,
         uint256 vrfFee_,
         bytes32 vrfKeyHash_
     ) ERC721("Pawn Bots", "BOTS") VRFConsumerBase(vrfCoordinator_, chainlinkToken_) {
-        merkleRoot = merkleRoot_;
         vrfFee = vrfFee_;
         vrfKeyHash = vrfKeyHash_;
     }
 
     /// PUBLIC CONSTANT FUNCTIONS ///
-
-    /// @inheritdoc IPawnBots
-    function isEligible(
-        address account,
-        uint256 amount,
-        bytes32[] calldata merkleProof
-    ) public view override returns (bool) {
-        // TODO: check `abi.encodePacked(...)`
-        return MerkleProof.verify(merkleProof, merkleRoot, keccak256(abi.encodePacked(account, amount)));
-    }
 
     /// @dev See {ERC721-tokenURI}.
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
@@ -133,21 +117,22 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     }
 
     /// @inheritdoc IPawnBots
-    function mint(uint256 mintAmount, bytes32[] calldata merkleProof) public override nonReentrant {
+    function mint(uint256 mintAmount) public override nonReentrant {
         if (!isMintEnabled) {
             revert PawnBots__MintIsNotEnabled();
         }
         if (mintAmount + totalSupply() > COLLECTION_SIZE) {
             revert PawnBots__CollectionSizeExceeded();
         }
-        if (isEligible(msg.sender, mintAmount, merkleProof)) {
+        Claim memory claim = claims[msg.sender];
+        if (!claim.exists) {
             revert PawnBots__UserIsNotEligible();
         }
-        if (isClaimed[msg.sender]) {
-            revert PawnBots__UserAlreadyClaimed();
+        if (mintAmount > claim.allocatedAmount - claim.claimedAmount) {
+            revert PawnBots__UserEligibilityExceeded();
         }
 
-        isClaimed[msg.sender] = true;
+        claims[msg.sender].claimedAmount += mintAmount;
         for (uint256 i = 0; i < mintAmount; i++) {
             uint256 mintId = totalSupply();
             _safeMint(msg.sender, mintId);
@@ -188,6 +173,18 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     function setBaseURI(string memory newBaseURI) public override onlyOwner {
         baseURI = newBaseURI;
         emit SetBaseURI(baseURI);
+    }
+
+    /// @inheritdoc IPawnBots
+    function setClaims(NewClaim[] memory newClaims) public override onlyOwner {
+        for (uint256 i = 0; i < newClaims.length; i++) {
+            Claim memory claim;
+            NewClaim memory newClaim = newClaims[i];
+            claim.exists = true;
+            claim.allocatedAmount = newClaim.allocatedAmount;
+            claims[newClaim.user] = claim;
+        }
+        emit SetClaims();
     }
 
     /// @inheritdoc IPawnBots

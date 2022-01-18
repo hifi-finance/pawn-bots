@@ -5,7 +5,6 @@ import { PawnBots } from "../../src/types/PawnBots";
 import { PawnBots__factory } from "../../src/types/factories/PawnBots__factory";
 
 task("deploy:PawnBots")
-  .addParam("currency", "Mint fee payment currency")
   .addParam("chainlinkToken", "Chainlink token address")
   .addParam("vrfCoordinator", "Chainlink VRF coordinator")
   .addParam("vrfFee", "Chainlink VRF fee")
@@ -14,7 +13,6 @@ task("deploy:PawnBots")
     const pawnBotsFactory: PawnBots__factory = <PawnBots__factory>await ethers.getContractFactory("PawnBots");
     const pawnBots: PawnBots = <PawnBots>(
       await pawnBotsFactory.deploy(
-        taskArguments.currency,
         taskArguments.chainlinkToken,
         taskArguments.vrfCoordinator,
         taskArguments.vrfFee,

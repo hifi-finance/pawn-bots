@@ -9,12 +9,11 @@ import "../PawnBots.sol";
 /// @dev Strictly for test purposes. Do not use in production.
 contract GodModePawnBots is PawnBots {
     constructor(
-        IERC20Metadata currency_,
         address chainlinkToken_,
         address vrfCoordinator_,
         uint256 vrfFee_,
         bytes32 vrfKeyHash_
-    ) PawnBots(currency_, chainlinkToken_, vrfCoordinator_, vrfFee_, vrfKeyHash_) {
+    ) PawnBots(chainlinkToken_, vrfCoordinator_, vrfFee_, vrfKeyHash_) {
         // solhint-disable-previous-line no-empty-blocks
     }
 
@@ -41,16 +40,12 @@ contract GodModePawnBots is PawnBots {
         baseURI = newBaseURI;
     }
 
-    function __godMode_setCurrency(IERC20Metadata newCurrency) external {
-        currency = newCurrency;
+    function __godMode_setClaim(address user, Claim memory newClaim) external {
+        claims[user] = newClaim;
     }
 
-    function __godMode_setMaxElements(uint256 newMaxElements) external {
-        maxElements = newMaxElements;
-    }
-
-    function __godMode_setMaxPublicMintsPerTx(uint256 newMaxPublicMintsPerTx) external {
-        maxPublicMintsPerTx = newMaxPublicMintsPerTx;
+    function __godMode_setIsMintEnabled(bool newIsMintEnabled) external {
+        isMintEnabled = newIsMintEnabled;
     }
 
     function __godMode_setOffset(uint256 newOffset) external {
@@ -61,26 +56,11 @@ contract GodModePawnBots is PawnBots {
         provenanceHash = newProvenanceHash;
     }
 
-    function __godMode_setPrice(uint256 newPrice) external {
-        price = newPrice;
+    function __godMode_setReservedElements(uint256 newReservedElements) external {
+        reservedElements = newReservedElements;
     }
 
-    function __godMode_setSaleStartTime(uint256 newSaleStartTime) external {
-        saleStartTime = newSaleStartTime;
-    }
-
-    function __godMode_setSaleIsActive(bool newSaleIsActive) external {
-        saleIsActive = newSaleIsActive;
-    }
-
-    function __godMode_setWhitelist(
-        address user,
-        bool exists,
-        uint256 claimedAmount,
-        uint256 eligibleAmount
-    ) external {
-        whitelist[user].exists = exists;
-        whitelist[user].claimedAmount = claimedAmount;
-        whitelist[user].eligibleAmount = eligibleAmount;
+    function __godMode_setRevealTime(uint256 newRevealTime) external {
+        revealTime = newRevealTime;
     }
 }

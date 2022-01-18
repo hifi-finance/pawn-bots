@@ -17,40 +17,43 @@ import { FunctionFragment, Result, EventFragment } from "@ethersproject/abi";
 import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
+export type NewClaimStruct = { user: string; allocatedAmount: BigNumberish };
+
+export type NewClaimStructOutput = [string, BigNumber] & {
+  user: string;
+  allocatedAmount: BigNumber;
+};
+
 export interface PawnBotsInterface extends utils.Interface {
   functions: {
     "COLLECTION_SIZE()": FunctionFragment;
-    "PRIVATE_SALE_DURATION()": FunctionFragment;
+    "MAX_RESERVED_ELEMENTS()": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
-    "burnUnsold(uint256)": FunctionFragment;
-    "currency()": FunctionFragment;
+    "claims(address)": FunctionFragment;
+    "disableMint()": FunctionFragment;
+    "enableMint()": FunctionFragment;
     "getApproved(uint256)": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
-    "maxElements()": FunctionFragment;
-    "maxPublicMintsPerTx()": FunctionFragment;
+    "isMintEnabled()": FunctionFragment;
     "mint(uint256)": FunctionFragment;
     "name()": FunctionFragment;
     "offset()": FunctionFragment;
     "owner()": FunctionFragment;
     "ownerOf(uint256)": FunctionFragment;
-    "pauseSale()": FunctionFragment;
-    "price()": FunctionFragment;
     "provenanceHash()": FunctionFragment;
     "rawFulfillRandomness(bytes32,uint256)": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "reserve(uint256)": FunctionFragment;
+    "reservedElements()": FunctionFragment;
     "reveal()": FunctionFragment;
+    "revealTime()": FunctionFragment;
     "safeTransferFrom(address,address,uint256)": FunctionFragment;
-    "saleIsActive()": FunctionFragment;
-    "saleStartTime()": FunctionFragment;
     "setApprovalForAll(address,bool)": FunctionFragment;
     "setBaseURI(string)": FunctionFragment;
-    "setMaxPublicMintsPerTx(uint256)": FunctionFragment;
-    "setPrice(uint256)": FunctionFragment;
+    "setClaims((address,uint256)[])": FunctionFragment;
     "setProvenanceHash(string)": FunctionFragment;
-    "setWhitelist(address[],uint256)": FunctionFragment;
-    "startSale()": FunctionFragment;
+    "setRevealTime(uint256)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "symbol()": FunctionFragment;
     "tokenByIndex(uint256)": FunctionFragment;
@@ -59,8 +62,6 @@ export interface PawnBotsInterface extends utils.Interface {
     "totalSupply()": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
-    "whitelist(address)": FunctionFragment;
-    "withdraw(address)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -68,7 +69,7 @@ export interface PawnBotsInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "PRIVATE_SALE_DURATION",
+    functionFragment: "MAX_RESERVED_ELEMENTS",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -76,11 +77,15 @@ export interface PawnBotsInterface extends utils.Interface {
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
+  encodeFunctionData(functionFragment: "claims", values: [string]): string;
   encodeFunctionData(
-    functionFragment: "burnUnsold",
-    values: [BigNumberish]
+    functionFragment: "disableMint",
+    values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "currency", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "enableMint",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "getApproved",
     values: [BigNumberish]
@@ -90,11 +95,7 @@ export interface PawnBotsInterface extends utils.Interface {
     values: [string, string]
   ): string;
   encodeFunctionData(
-    functionFragment: "maxElements",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "maxPublicMintsPerTx",
+    functionFragment: "isMintEnabled",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "mint", values: [BigNumberish]): string;
@@ -105,8 +106,6 @@ export interface PawnBotsInterface extends utils.Interface {
     functionFragment: "ownerOf",
     values: [BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "pauseSale", values?: undefined): string;
-  encodeFunctionData(functionFragment: "price", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "provenanceHash",
     values?: undefined
@@ -123,18 +122,18 @@ export interface PawnBotsInterface extends utils.Interface {
     functionFragment: "reserve",
     values: [BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "reservedElements",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "reveal", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "revealTime",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "safeTransferFrom",
     values: [string, string, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "saleIsActive",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "saleStartTime",
-    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "setApprovalForAll",
@@ -142,22 +141,17 @@ export interface PawnBotsInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "setBaseURI", values: [string]): string;
   encodeFunctionData(
-    functionFragment: "setMaxPublicMintsPerTx",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setPrice",
-    values: [BigNumberish]
+    functionFragment: "setClaims",
+    values: [NewClaimStruct[]]
   ): string;
   encodeFunctionData(
     functionFragment: "setProvenanceHash",
     values: [string]
   ): string;
   encodeFunctionData(
-    functionFragment: "setWhitelist",
-    values: [string[], BigNumberish]
+    functionFragment: "setRevealTime",
+    values: [BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "startSale", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "supportsInterface",
     values: [BytesLike]
@@ -187,21 +181,23 @@ export interface PawnBotsInterface extends utils.Interface {
     functionFragment: "transferOwnership",
     values: [string]
   ): string;
-  encodeFunctionData(functionFragment: "whitelist", values: [string]): string;
-  encodeFunctionData(functionFragment: "withdraw", values: [string]): string;
 
   decodeFunctionResult(
     functionFragment: "COLLECTION_SIZE",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "PRIVATE_SALE_DURATION",
+    functionFragment: "MAX_RESERVED_ELEMENTS",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "burnUnsold", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "currency", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "claims", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "disableMint",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "enableMint", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getApproved",
     data: BytesLike
@@ -211,11 +207,7 @@ export interface PawnBotsInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "maxElements",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "maxPublicMintsPerTx",
+    functionFragment: "isMintEnabled",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
@@ -223,8 +215,6 @@ export interface PawnBotsInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "offset", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ownerOf", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "pauseSale", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "price", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "provenanceHash",
     data: BytesLike
@@ -238,17 +228,14 @@ export interface PawnBotsInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "reserve", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "reservedElements",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "reveal", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "revealTime", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "safeTransferFrom",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "saleIsActive",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "saleStartTime",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -256,20 +243,15 @@ export interface PawnBotsInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "setBaseURI", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "setMaxPublicMintsPerTx",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "setPrice", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "setClaims", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setProvenanceHash",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setWhitelist",
+    functionFragment: "setRevealTime",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "startSale", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "supportsInterface",
     data: BytesLike
@@ -296,44 +278,36 @@ export interface PawnBotsInterface extends utils.Interface {
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "whitelist", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
 
   events: {
     "Approval(address,address,uint256)": EventFragment;
     "ApprovalForAll(address,address,bool)": EventFragment;
-    "BurnUnsold(uint256)": EventFragment;
-    "Mint(address,uint256,uint256)": EventFragment;
+    "DisableMint()": EventFragment;
+    "EnableMint()": EventFragment;
+    "Mint(address,uint256)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
-    "PauseSale()": EventFragment;
     "Reserve(uint256)": EventFragment;
     "Reveal()": EventFragment;
-    "SetBaseURI(string,string)": EventFragment;
-    "SetMaxPublicMintsPerTx(uint256,uint256)": EventFragment;
-    "SetPrice(uint256,uint256)": EventFragment;
-    "SetProvenanceHash(string,string)": EventFragment;
-    "SetWhitelist(address[],uint256)": EventFragment;
-    "StartSale()": EventFragment;
+    "SetBaseURI(string)": EventFragment;
+    "SetClaims()": EventFragment;
+    "SetProvenanceHash(string)": EventFragment;
+    "SetRevealTime(uint256)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
-    "Withdraw(address,uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ApprovalForAll"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "BurnUnsold"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "DisableMint"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "EnableMint"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Mint"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "PauseSale"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Reserve"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Reveal"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetBaseURI"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetMaxPublicMintsPerTx"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetPrice"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SetClaims"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetProvenanceHash"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SetWhitelist"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "StartSale"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SetRevealTime"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Withdraw"): EventFragment;
 }
 
 export type ApprovalEvent = TypedEvent<
@@ -350,16 +324,17 @@ export type ApprovalForAllEvent = TypedEvent<
 
 export type ApprovalForAllEventFilter = TypedEventFilter<ApprovalForAllEvent>;
 
-export type BurnUnsoldEvent = TypedEvent<
-  [BigNumber],
-  { burnAmount: BigNumber }
->;
+export type DisableMintEvent = TypedEvent<[], {}>;
 
-export type BurnUnsoldEventFilter = TypedEventFilter<BurnUnsoldEvent>;
+export type DisableMintEventFilter = TypedEventFilter<DisableMintEvent>;
+
+export type EnableMintEvent = TypedEvent<[], {}>;
+
+export type EnableMintEventFilter = TypedEventFilter<EnableMintEvent>;
 
 export type MintEvent = TypedEvent<
-  [string, BigNumber, BigNumber],
-  { minter: string; mintAmount: BigNumber; fee: BigNumber }
+  [string, BigNumber],
+  { minter: string; mintAmount: BigNumber }
 >;
 
 export type MintEventFilter = TypedEventFilter<MintEvent>;
@@ -372,10 +347,6 @@ export type OwnershipTransferredEvent = TypedEvent<
 export type OwnershipTransferredEventFilter =
   TypedEventFilter<OwnershipTransferredEvent>;
 
-export type PauseSaleEvent = TypedEvent<[], {}>;
-
-export type PauseSaleEventFilter = TypedEventFilter<PauseSaleEvent>;
-
 export type ReserveEvent = TypedEvent<
   [BigNumber],
   { reserveAmount: BigNumber }
@@ -387,46 +358,28 @@ export type RevealEvent = TypedEvent<[], {}>;
 
 export type RevealEventFilter = TypedEventFilter<RevealEvent>;
 
-export type SetBaseURIEvent = TypedEvent<
-  [string, string],
-  { oldBaseURI: string; newBaseURI: string }
->;
+export type SetBaseURIEvent = TypedEvent<[string], { newBaseURI: string }>;
 
 export type SetBaseURIEventFilter = TypedEventFilter<SetBaseURIEvent>;
 
-export type SetMaxPublicMintsPerTxEvent = TypedEvent<
-  [BigNumber, BigNumber],
-  { oldMaxPublicMintsPerTx: BigNumber; newMaxPublicMintsPerTx: BigNumber }
->;
+export type SetClaimsEvent = TypedEvent<[], {}>;
 
-export type SetMaxPublicMintsPerTxEventFilter =
-  TypedEventFilter<SetMaxPublicMintsPerTxEvent>;
-
-export type SetPriceEvent = TypedEvent<
-  [BigNumber, BigNumber],
-  { oldPrice: BigNumber; newPrice: BigNumber }
->;
-
-export type SetPriceEventFilter = TypedEventFilter<SetPriceEvent>;
+export type SetClaimsEventFilter = TypedEventFilter<SetClaimsEvent>;
 
 export type SetProvenanceHashEvent = TypedEvent<
-  [string, string],
-  { oldProvenanceHash: string; newProvenanceHash: string }
+  [string],
+  { newProvenanceHash: string }
 >;
 
 export type SetProvenanceHashEventFilter =
   TypedEventFilter<SetProvenanceHashEvent>;
 
-export type SetWhitelistEvent = TypedEvent<
-  [string[], BigNumber],
-  { users: string[]; eligibleAmount: BigNumber }
+export type SetRevealTimeEvent = TypedEvent<
+  [BigNumber],
+  { newRevealTime: BigNumber }
 >;
 
-export type SetWhitelistEventFilter = TypedEventFilter<SetWhitelistEvent>;
-
-export type StartSaleEvent = TypedEvent<[], {}>;
-
-export type StartSaleEventFilter = TypedEventFilter<StartSaleEvent>;
+export type SetRevealTimeEventFilter = TypedEventFilter<SetRevealTimeEvent>;
 
 export type TransferEvent = TypedEvent<
   [string, string, BigNumber],
@@ -434,13 +387,6 @@ export type TransferEvent = TypedEvent<
 >;
 
 export type TransferEventFilter = TypedEventFilter<TransferEvent>;
-
-export type WithdrawEvent = TypedEvent<
-  [string, BigNumber],
-  { recipient: string; amount: BigNumber }
->;
-
-export type WithdrawEventFilter = TypedEventFilter<WithdrawEvent>;
 
 export interface PawnBots extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
@@ -471,7 +417,7 @@ export interface PawnBots extends BaseContract {
   functions: {
     COLLECTION_SIZE(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    PRIVATE_SALE_DURATION(overrides?: CallOverrides): Promise<[BigNumber]>;
+    MAX_RESERVED_ELEMENTS(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     approve(
       to: string,
@@ -481,12 +427,24 @@ export interface PawnBots extends BaseContract {
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    burnUnsold(
-      burnAmount: BigNumberish,
+    claims(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [boolean, BigNumber, BigNumber] & {
+        exists: boolean;
+        allocatedAmount: BigNumber;
+        claimedAmount: BigNumber;
+      }
+    >;
+
+    disableMint(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    currency(overrides?: CallOverrides): Promise<[string]>;
+    enableMint(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
     getApproved(
       tokenId: BigNumberish,
@@ -499,9 +457,7 @@ export interface PawnBots extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
-    maxElements(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    maxPublicMintsPerTx(overrides?: CallOverrides): Promise<[BigNumber]>;
+    isMintEnabled(overrides?: CallOverrides): Promise<[boolean]>;
 
     mint(
       mintAmount: BigNumberish,
@@ -518,12 +474,6 @@ export interface PawnBots extends BaseContract {
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string]>;
-
-    pauseSale(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    price(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     provenanceHash(overrides?: CallOverrides): Promise<[string]>;
 
@@ -542,9 +492,13 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    reservedElements(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     reveal(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    revealTime(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     "safeTransferFrom(address,address,uint256)"(
       from: string,
@@ -561,10 +515,6 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    saleIsActive(overrides?: CallOverrides): Promise<[boolean]>;
-
-    saleStartTime(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     setApprovalForAll(
       operator: string,
       approved: boolean,
@@ -576,13 +526,8 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setMaxPublicMintsPerTx(
-      newMaxPublicMintsPerTx: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    setPrice(
-      newPrice: BigNumberish,
+    setClaims(
+      newClaims: NewClaimStruct[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -591,13 +536,8 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setWhitelist(
-      users: string[],
-      eligibleAmount: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    startSale(
+    setRevealTime(
+      newRevealTime: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -637,27 +577,11 @@ export interface PawnBots extends BaseContract {
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    whitelist(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [boolean, BigNumber, BigNumber] & {
-        exists: boolean;
-        claimedAmount: BigNumber;
-        eligibleAmount: BigNumber;
-      }
-    >;
-
-    withdraw(
-      recipient: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
   };
 
   COLLECTION_SIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
-  PRIVATE_SALE_DURATION(overrides?: CallOverrides): Promise<BigNumber>;
+  MAX_RESERVED_ELEMENTS(overrides?: CallOverrides): Promise<BigNumber>;
 
   approve(
     to: string,
@@ -667,12 +591,24 @@ export interface PawnBots extends BaseContract {
 
   balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-  burnUnsold(
-    burnAmount: BigNumberish,
+  claims(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<
+    [boolean, BigNumber, BigNumber] & {
+      exists: boolean;
+      allocatedAmount: BigNumber;
+      claimedAmount: BigNumber;
+    }
+  >;
+
+  disableMint(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  currency(overrides?: CallOverrides): Promise<string>;
+  enableMint(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   getApproved(
     tokenId: BigNumberish,
@@ -685,9 +621,7 @@ export interface PawnBots extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  maxElements(overrides?: CallOverrides): Promise<BigNumber>;
-
-  maxPublicMintsPerTx(overrides?: CallOverrides): Promise<BigNumber>;
+  isMintEnabled(overrides?: CallOverrides): Promise<boolean>;
 
   mint(
     mintAmount: BigNumberish,
@@ -701,12 +635,6 @@ export interface PawnBots extends BaseContract {
   owner(overrides?: CallOverrides): Promise<string>;
 
   ownerOf(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
-
-  pauseSale(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  price(overrides?: CallOverrides): Promise<BigNumber>;
 
   provenanceHash(overrides?: CallOverrides): Promise<string>;
 
@@ -725,9 +653,13 @@ export interface PawnBots extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  reservedElements(overrides?: CallOverrides): Promise<BigNumber>;
+
   reveal(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
+
+  revealTime(overrides?: CallOverrides): Promise<BigNumber>;
 
   "safeTransferFrom(address,address,uint256)"(
     from: string,
@@ -744,10 +676,6 @@ export interface PawnBots extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  saleIsActive(overrides?: CallOverrides): Promise<boolean>;
-
-  saleStartTime(overrides?: CallOverrides): Promise<BigNumber>;
-
   setApprovalForAll(
     operator: string,
     approved: boolean,
@@ -759,13 +687,8 @@ export interface PawnBots extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setMaxPublicMintsPerTx(
-    newMaxPublicMintsPerTx: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  setPrice(
-    newPrice: BigNumberish,
+  setClaims(
+    newClaims: NewClaimStruct[],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -774,13 +697,8 @@ export interface PawnBots extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setWhitelist(
-    users: string[],
-    eligibleAmount: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  startSale(
+  setRevealTime(
+    newRevealTime: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -818,26 +736,10 @@ export interface PawnBots extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  whitelist(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<
-    [boolean, BigNumber, BigNumber] & {
-      exists: boolean;
-      claimedAmount: BigNumber;
-      eligibleAmount: BigNumber;
-    }
-  >;
-
-  withdraw(
-    recipient: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
     COLLECTION_SIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
-    PRIVATE_SALE_DURATION(overrides?: CallOverrides): Promise<BigNumber>;
+    MAX_RESERVED_ELEMENTS(overrides?: CallOverrides): Promise<BigNumber>;
 
     approve(
       to: string,
@@ -847,12 +749,20 @@ export interface PawnBots extends BaseContract {
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    burnUnsold(
-      burnAmount: BigNumberish,
+    claims(
+      arg0: string,
       overrides?: CallOverrides
-    ): Promise<void>;
+    ): Promise<
+      [boolean, BigNumber, BigNumber] & {
+        exists: boolean;
+        allocatedAmount: BigNumber;
+        claimedAmount: BigNumber;
+      }
+    >;
 
-    currency(overrides?: CallOverrides): Promise<string>;
+    disableMint(overrides?: CallOverrides): Promise<void>;
+
+    enableMint(overrides?: CallOverrides): Promise<void>;
 
     getApproved(
       tokenId: BigNumberish,
@@ -865,9 +775,7 @@ export interface PawnBots extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    maxElements(overrides?: CallOverrides): Promise<BigNumber>;
-
-    maxPublicMintsPerTx(overrides?: CallOverrides): Promise<BigNumber>;
+    isMintEnabled(overrides?: CallOverrides): Promise<boolean>;
 
     mint(mintAmount: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
@@ -878,10 +786,6 @@ export interface PawnBots extends BaseContract {
     owner(overrides?: CallOverrides): Promise<string>;
 
     ownerOf(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
-
-    pauseSale(overrides?: CallOverrides): Promise<void>;
-
-    price(overrides?: CallOverrides): Promise<BigNumber>;
 
     provenanceHash(overrides?: CallOverrides): Promise<string>;
 
@@ -898,7 +802,11 @@ export interface PawnBots extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    reservedElements(overrides?: CallOverrides): Promise<BigNumber>;
+
     reveal(overrides?: CallOverrides): Promise<void>;
+
+    revealTime(overrides?: CallOverrides): Promise<BigNumber>;
 
     "safeTransferFrom(address,address,uint256)"(
       from: string,
@@ -915,10 +823,6 @@ export interface PawnBots extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    saleIsActive(overrides?: CallOverrides): Promise<boolean>;
-
-    saleStartTime(overrides?: CallOverrides): Promise<BigNumber>;
-
     setApprovalForAll(
       operator: string,
       approved: boolean,
@@ -927,25 +831,20 @@ export interface PawnBots extends BaseContract {
 
     setBaseURI(newBaseURI: string, overrides?: CallOverrides): Promise<void>;
 
-    setMaxPublicMintsPerTx(
-      newMaxPublicMintsPerTx: BigNumberish,
+    setClaims(
+      newClaims: NewClaimStruct[],
       overrides?: CallOverrides
     ): Promise<void>;
-
-    setPrice(newPrice: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
     setProvenanceHash(
       newProvenanceHash: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setWhitelist(
-      users: string[],
-      eligibleAmount: BigNumberish,
+    setRevealTime(
+      newRevealTime: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
-
-    startSale(overrides?: CallOverrides): Promise<void>;
 
     supportsInterface(
       interfaceId: BytesLike,
@@ -980,19 +879,6 @@ export interface PawnBots extends BaseContract {
       newOwner: string,
       overrides?: CallOverrides
     ): Promise<void>;
-
-    whitelist(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [boolean, BigNumber, BigNumber] & {
-        exists: boolean;
-        claimedAmount: BigNumber;
-        eligibleAmount: BigNumber;
-      }
-    >;
-
-    withdraw(recipient: string, overrides?: CallOverrides): Promise<void>;
   };
 
   filters: {
@@ -1018,19 +904,17 @@ export interface PawnBots extends BaseContract {
       approved?: null
     ): ApprovalForAllEventFilter;
 
-    "BurnUnsold(uint256)"(burnAmount?: null): BurnUnsoldEventFilter;
-    BurnUnsold(burnAmount?: null): BurnUnsoldEventFilter;
+    "DisableMint()"(): DisableMintEventFilter;
+    DisableMint(): DisableMintEventFilter;
 
-    "Mint(address,uint256,uint256)"(
+    "EnableMint()"(): EnableMintEventFilter;
+    EnableMint(): EnableMintEventFilter;
+
+    "Mint(address,uint256)"(
       minter?: string | null,
-      mintAmount?: null,
-      fee?: null
+      mintAmount?: null
     ): MintEventFilter;
-    Mint(
-      minter?: string | null,
-      mintAmount?: null,
-      fee?: null
-    ): MintEventFilter;
+    Mint(minter?: string | null, mintAmount?: null): MintEventFilter;
 
     "OwnershipTransferred(address,address)"(
       previousOwner?: string | null,
@@ -1041,56 +925,25 @@ export interface PawnBots extends BaseContract {
       newOwner?: string | null
     ): OwnershipTransferredEventFilter;
 
-    "PauseSale()"(): PauseSaleEventFilter;
-    PauseSale(): PauseSaleEventFilter;
-
     "Reserve(uint256)"(reserveAmount?: null): ReserveEventFilter;
     Reserve(reserveAmount?: null): ReserveEventFilter;
 
     "Reveal()"(): RevealEventFilter;
     Reveal(): RevealEventFilter;
 
-    "SetBaseURI(string,string)"(
-      oldBaseURI?: null,
-      newBaseURI?: null
-    ): SetBaseURIEventFilter;
-    SetBaseURI(oldBaseURI?: null, newBaseURI?: null): SetBaseURIEventFilter;
+    "SetBaseURI(string)"(newBaseURI?: null): SetBaseURIEventFilter;
+    SetBaseURI(newBaseURI?: null): SetBaseURIEventFilter;
 
-    "SetMaxPublicMintsPerTx(uint256,uint256)"(
-      oldMaxPublicMintsPerTx?: null,
-      newMaxPublicMintsPerTx?: null
-    ): SetMaxPublicMintsPerTxEventFilter;
-    SetMaxPublicMintsPerTx(
-      oldMaxPublicMintsPerTx?: null,
-      newMaxPublicMintsPerTx?: null
-    ): SetMaxPublicMintsPerTxEventFilter;
+    "SetClaims()"(): SetClaimsEventFilter;
+    SetClaims(): SetClaimsEventFilter;
 
-    "SetPrice(uint256,uint256)"(
-      oldPrice?: null,
-      newPrice?: null
-    ): SetPriceEventFilter;
-    SetPrice(oldPrice?: null, newPrice?: null): SetPriceEventFilter;
-
-    "SetProvenanceHash(string,string)"(
-      oldProvenanceHash?: null,
+    "SetProvenanceHash(string)"(
       newProvenanceHash?: null
     ): SetProvenanceHashEventFilter;
-    SetProvenanceHash(
-      oldProvenanceHash?: null,
-      newProvenanceHash?: null
-    ): SetProvenanceHashEventFilter;
+    SetProvenanceHash(newProvenanceHash?: null): SetProvenanceHashEventFilter;
 
-    "SetWhitelist(address[],uint256)"(
-      users?: string[] | null,
-      eligibleAmount?: null
-    ): SetWhitelistEventFilter;
-    SetWhitelist(
-      users?: string[] | null,
-      eligibleAmount?: null
-    ): SetWhitelistEventFilter;
-
-    "StartSale()"(): StartSaleEventFilter;
-    StartSale(): StartSaleEventFilter;
+    "SetRevealTime(uint256)"(newRevealTime?: null): SetRevealTimeEventFilter;
+    SetRevealTime(newRevealTime?: null): SetRevealTimeEventFilter;
 
     "Transfer(address,address,uint256)"(
       from?: string | null,
@@ -1102,18 +955,12 @@ export interface PawnBots extends BaseContract {
       to?: string | null,
       tokenId?: BigNumberish | null
     ): TransferEventFilter;
-
-    "Withdraw(address,uint256)"(
-      recipient?: string | null,
-      amount?: null
-    ): WithdrawEventFilter;
-    Withdraw(recipient?: string | null, amount?: null): WithdrawEventFilter;
   };
 
   estimateGas: {
     COLLECTION_SIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
-    PRIVATE_SALE_DURATION(overrides?: CallOverrides): Promise<BigNumber>;
+    MAX_RESERVED_ELEMENTS(overrides?: CallOverrides): Promise<BigNumber>;
 
     approve(
       to: string,
@@ -1123,12 +970,15 @@ export interface PawnBots extends BaseContract {
 
     balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    burnUnsold(
-      burnAmount: BigNumberish,
+    claims(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    disableMint(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    currency(overrides?: CallOverrides): Promise<BigNumber>;
+    enableMint(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
 
     getApproved(
       tokenId: BigNumberish,
@@ -1141,9 +991,7 @@ export interface PawnBots extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    maxElements(overrides?: CallOverrides): Promise<BigNumber>;
-
-    maxPublicMintsPerTx(overrides?: CallOverrides): Promise<BigNumber>;
+    isMintEnabled(overrides?: CallOverrides): Promise<BigNumber>;
 
     mint(
       mintAmount: BigNumberish,
@@ -1160,12 +1008,6 @@ export interface PawnBots extends BaseContract {
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
-
-    pauseSale(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    price(overrides?: CallOverrides): Promise<BigNumber>;
 
     provenanceHash(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1184,9 +1026,13 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    reservedElements(overrides?: CallOverrides): Promise<BigNumber>;
+
     reveal(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    revealTime(overrides?: CallOverrides): Promise<BigNumber>;
 
     "safeTransferFrom(address,address,uint256)"(
       from: string,
@@ -1203,10 +1049,6 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    saleIsActive(overrides?: CallOverrides): Promise<BigNumber>;
-
-    saleStartTime(overrides?: CallOverrides): Promise<BigNumber>;
-
     setApprovalForAll(
       operator: string,
       approved: boolean,
@@ -1218,13 +1060,8 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setMaxPublicMintsPerTx(
-      newMaxPublicMintsPerTx: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    setPrice(
-      newPrice: BigNumberish,
+    setClaims(
+      newClaims: NewClaimStruct[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1233,13 +1070,8 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setWhitelist(
-      users: string[],
-      eligibleAmount: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    startSale(
+    setRevealTime(
+      newRevealTime: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1279,19 +1111,12 @@ export interface PawnBots extends BaseContract {
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    whitelist(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    withdraw(
-      recipient: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     COLLECTION_SIZE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    PRIVATE_SALE_DURATION(
+    MAX_RESERVED_ELEMENTS(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -1306,12 +1131,18 @@ export interface PawnBots extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    burnUnsold(
-      burnAmount: BigNumberish,
+    claims(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    disableMint(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    currency(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    enableMint(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
 
     getApproved(
       tokenId: BigNumberish,
@@ -1324,11 +1155,7 @@ export interface PawnBots extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    maxElements(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    maxPublicMintsPerTx(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    isMintEnabled(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     mint(
       mintAmount: BigNumberish,
@@ -1345,12 +1172,6 @@ export interface PawnBots extends BaseContract {
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
-
-    pauseSale(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    price(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     provenanceHash(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -1369,9 +1190,13 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    reservedElements(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     reveal(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
+
+    revealTime(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "safeTransferFrom(address,address,uint256)"(
       from: string,
@@ -1388,10 +1213,6 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    saleIsActive(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    saleStartTime(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     setApprovalForAll(
       operator: string,
       approved: boolean,
@@ -1403,13 +1224,8 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setMaxPublicMintsPerTx(
-      newMaxPublicMintsPerTx: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setPrice(
-      newPrice: BigNumberish,
+    setClaims(
+      newClaims: NewClaimStruct[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1418,13 +1234,8 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setWhitelist(
-      users: string[],
-      eligibleAmount: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    startSale(
+    setRevealTime(
+      newRevealTime: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1462,16 +1273,6 @@ export interface PawnBots extends BaseContract {
 
     transferOwnership(
       newOwner: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    whitelist(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    withdraw(
-      recipient: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };

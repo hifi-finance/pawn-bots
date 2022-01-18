@@ -4,6 +4,19 @@ pragma solidity >=0.8.4;
 /// @title IPawnBots
 /// @author Hifi
 interface IPawnBots {
+    /// STRUCTS ///
+
+    struct Claim {
+        bool exists;
+        uint256 allocatedAmount;
+        uint256 claimedAmount;
+    }
+
+    struct NewClaim {
+        address user;
+        uint256 allocatedAmount;
+    }
+
     /// EVENTS ///
 
     /// @notice Emitted when minting is disabled.
@@ -28,6 +41,9 @@ interface IPawnBots {
     /// @param newBaseURI The new base URI that was set.
     event SetBaseURI(string newBaseURI);
 
+    /// @notice Emitted when user claims are updated.
+    event SetClaims();
+
     /// @notice Emitted when provenance hash is set.
     /// @param newProvenanceHash The new provenance hash that was set.
     event SetProvenanceHash(string newProvenanceHash);
@@ -38,19 +54,16 @@ interface IPawnBots {
 
     /// PUBLIC CONSTANT FUNCTIONS ///
 
-    /// @notice Whether an account already claimed their eligible mint amount.
-    /// @param account The account address.
-    function isClaimed(address account) external view returns (bool);
-
-    /// @notice Whether an account eligible to mint or not.
-    /// @param account The account address.
-    /// @param amount The amount of NFTs the account is eligible to mint.
-    /// @param merkleProof The merkle proof of the account being eligible to mint.
-    function isEligible(
-        address account,
-        uint256 amount,
-        bytes32[] calldata merkleProof
-    ) external view returns (bool);
+    /// @notice The user claims that determine how many NFTs an eligible user is able to mint.
+    /// @param user The user account address.
+    function claims(address user)
+        external
+        view
+        returns (
+            bool exists,
+            uint256 allocatedAmount,
+            uint256 claimedAmount
+        );
 
     /// @notice Whether minting is enabled or not.
     function isMintEnabled() external view returns (bool);
@@ -94,12 +107,11 @@ interface IPawnBots {
     /// @dev Requirements:
     /// - Minting must be enabled.
     /// - `mintAmount` cannot exceed theoretical collection size limit minus `totalSupply()`.
-    /// - Caller must be eligible to mint.
-    /// - Caller must not have already claimed their eligible amount.
+    /// - Caller must have a claim to mint.
+    /// - `mintAmount` cannot exceed the user's `allocatedAmount` minus `claimedAmount`.
     ///
     /// @param mintAmount The amount of NFTs to mint.
-    /// @param merkleProof The merkle proof of caller being eligible to mint.
-    function mint(uint256 mintAmount, bytes32[] calldata merkleProof) external;
+    function mint(uint256 mintAmount) external;
 
     /// @notice Reserve a subset of the NFTs in the collection by the contract owner.
     ///
@@ -131,6 +143,16 @@ interface IPawnBots {
     ///
     /// @param newBaseURI The new base URI.
     function setBaseURI(string memory newBaseURI) external;
+
+    /// @notice Add new user claims.
+    ///
+    /// @dev Emits a {SetClaims} event.
+    ///
+    /// Requirements:
+    /// - Can only be called by the owner.
+    ///
+    /// @param newClaims The update to user claims.
+    function setClaims(NewClaim[] memory newClaims) external;
 
     /// @notice Set the provenance hash of post-reveal art once it's calculated.
     ///
