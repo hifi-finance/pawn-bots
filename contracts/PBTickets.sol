@@ -33,7 +33,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, Ownable, ReentrancyGuard {
     uint256 public constant COLLECTION_SIZE = 10_000;
 
     /// @dev The private sale duration from the sale start timestamp.
-    uint256 public constant PRIVATE_SALE_DURATION = 24 hours;
+    uint256 public constant PRIVATE_DURATION = 24 hours;
 
     /// @inheritdoc IPBTickets
     uint256 public override maxElements = COLLECTION_SIZE;
@@ -98,7 +98,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, Ownable, ReentrancyGuard {
         if (!saleIsActive) {
             revert PBTickets__SaleIsNotActive();
         }
-        if (block.timestamp > saleStartTime + PRIVATE_SALE_DURATION) {
+        if (block.timestamp > saleStartTime + PRIVATE_DURATION) {
             revert PBTickets__PrivatePhaseIsOver();
         }
         if (!isWhitelisted(msg.sender, merkleProof)) {
@@ -114,7 +114,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, Ownable, ReentrancyGuard {
         if (!saleIsActive) {
             revert PBTickets__SaleIsNotActive();
         }
-        if (block.timestamp <= saleStartTime + PRIVATE_SALE_DURATION) {
+        if (block.timestamp <= saleStartTime + PRIVATE_DURATION) {
             revert PBTickets__PublicPhaseNotYetStarted();
         }
 

@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { ethers, network } from "hardhat";
 
 import { VRF_FEE } from "../constants";
-import { Errors } from "../errors";
+import { PawnBotsErrors } from "../errors";
 
 export function shouldBehaveLikePawnBots(): void {
   describe("Deployment", function () {
@@ -210,7 +210,7 @@ export function shouldBehaveLikePawnBots(): void {
       context("when called by owner", function () {
         context("when mint is disabled", function () {
           it("reverts", async function () {
-            await expect(this.contracts.pawnBots.disableMint()).to.be.revertedWith(Errors.MINT_IS_NOT_ENABLED);
+            await expect(this.contracts.pawnBots.disableMint()).to.be.revertedWith(PawnBotsErrors.MINT_IS_NOT_ENABLED);
           });
         });
 
@@ -241,7 +241,9 @@ export function shouldBehaveLikePawnBots(): void {
           });
 
           it("reverts", async function () {
-            await expect(this.contracts.pawnBots.enableMint()).to.be.revertedWith(Errors.MINT_IS_ALREADY_ENABLED);
+            await expect(this.contracts.pawnBots.enableMint()).to.be.revertedWith(
+              PawnBotsErrors.MINT_IS_ALREADY_ENABLED,
+            );
           });
         });
 
@@ -258,7 +260,7 @@ export function shouldBehaveLikePawnBots(): void {
       context("when minting is not enabled", function () {
         it("reverts", async function () {
           await expect(this.contracts.pawnBots.connect(this.signers.alice).mint(0)).to.be.revertedWith(
-            Errors.MINT_IS_NOT_ENABLED,
+            PawnBotsErrors.MINT_IS_NOT_ENABLED,
           );
         });
       });
@@ -275,7 +277,7 @@ export function shouldBehaveLikePawnBots(): void {
 
           it("reverts", async function () {
             await expect(this.contracts.pawnBots.connect(this.signers.alice).mint(this.mintAmount)).to.be.revertedWith(
-              Errors.COLLECTION_SIZE_EXCEEDED,
+              PawnBotsErrors.COLLECTION_SIZE_EXCEEDED,
             );
           });
         });
@@ -289,7 +291,7 @@ export function shouldBehaveLikePawnBots(): void {
             it("reverts", async function () {
               await expect(
                 this.contracts.pawnBots.connect(this.signers.alice).mint(this.mintAmount),
-              ).to.be.revertedWith(Errors.USER_IS_NOT_ELIGIBLE);
+              ).to.be.revertedWith(PawnBotsErrors.USER_IS_NOT_ELIGIBLE);
             });
           });
 
@@ -324,7 +326,7 @@ export function shouldBehaveLikePawnBots(): void {
 
           it("reverts", async function () {
             await expect(this.contracts.pawnBots.reserve(this.reserveAmount)).to.be.revertedWith(
-              Errors.MAX_RESERVED_ELEMENTS_EXCEEDED,
+              PawnBotsErrors.MAX_RESERVED_ELEMENTS_EXCEEDED,
             );
           });
         });
@@ -394,7 +396,7 @@ export function shouldBehaveLikePawnBots(): void {
               });
 
               it("reverts", async function () {
-                await expect(this.contracts.pawnBots.reveal()).to.be.revertedWith(Errors.OFFSET_ALREADY_SET);
+                await expect(this.contracts.pawnBots.reveal()).to.be.revertedWith(PawnBotsErrors.OFFSET_ALREADY_SET);
               });
             });
 
@@ -404,7 +406,9 @@ export function shouldBehaveLikePawnBots(): void {
               });
 
               it("reverts", async function () {
-                await expect(this.contracts.pawnBots.reveal()).to.be.revertedWith(Errors.RANDOMNESS_ALREADY_REQUESTED);
+                await expect(this.contracts.pawnBots.reveal()).to.be.revertedWith(
+                  PawnBotsErrors.RANDOMNESS_ALREADY_REQUESTED,
+                );
               });
             });
           });
