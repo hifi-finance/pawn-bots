@@ -5,11 +5,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "hardhat/console.sol";
 import "./IPBTickets.sol";
-
-// TODO: rename `sale` to `phase`
 
 error PBTickets__InsufficientFundsSent();
 error PBTickets__MaxElementsExceeded();
@@ -24,7 +23,7 @@ error PBTickets__SaleIsNotActive();
 /// @title PBTickets
 /// @author Hifi
 /// @notice Manages the mint and distribution of NFTs.
-contract PBTickets is IPBTickets, ERC721Enumerable, Ownable, ReentrancyGuard {
+contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, ReentrancyGuard {
     using Strings for uint256;
 
     /// PUBLIC STORAGE ///
@@ -176,7 +175,22 @@ contract PBTickets is IPBTickets, ERC721Enumerable, Ownable, ReentrancyGuard {
         return baseURI;
     }
 
+    /// @dev See {IERC165-supportsInterface}.
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721Enumerable) returns (bool) {
+        return ERC721Enumerable.supportsInterface(interfaceId);
+    }
+
     /// INTERNAL NON-CONSTANT FUNCTIONS ///
+
+    /// @dev See {ERC721-_beforeTokenTransfer}.
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override(ERC721Enumerable, ERC721Pausable) {
+        ERC721Pausable._beforeTokenTransfer(from, to, tokenId);
+        ERC721Enumerable._beforeTokenTransfer(from, to, tokenId);
+    }
 
     /// @dev Mint NFTs in exchange for fees.
     function mintInternal(uint256 mintAmount) internal {
