@@ -20,7 +20,9 @@
 *.log
 .pnp.*
 coverage.json
+merkle-data.json
 npm-debug.log*
+whitelist.csv
 yarn-debug.log*
 yarn-error.log*
 

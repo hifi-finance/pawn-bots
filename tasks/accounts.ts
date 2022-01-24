@@ -1,10 +1,18 @@
 import { Signer } from "@ethersproject/abstract-signer";
 import { task } from "hardhat/config";
+import { TaskArguments } from "hardhat/types";
 
-task("accounts", "Prints the list of accounts", async (_taskArgs, hre) => {
-  const accounts: Signer[] = await hre.ethers.getSigners();
+task("accounts")
+  .setDescription("Prints the list of accounts")
+  .addOptionalParam("index", "Index of account to print")
+  .setAction(async (taskArguments: TaskArguments, { ethers }) => {
+    const accounts: Signer[] = await ethers.getSigners();
 
-  for (const account of accounts) {
-    console.log(await account.getAddress());
-  }
-});
+    if (taskArguments.index !== undefined) {
+      console.log(await accounts[taskArguments.index].getAddress());
+    } else {
+      for (const account of accounts) {
+        console.log(await account.getAddress());
+      }
+    }
+  });
