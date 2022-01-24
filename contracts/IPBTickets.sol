@@ -71,7 +71,7 @@ interface IPBTickets {
 
     /// PUBLIC NON-CONSTANT FUNCTIONS ///
 
-    /// @notice Burn unsold tickets after the sale.
+    /// @notice Burn unsold tickets.
     ///
     /// @dev Emits a {BurnUnsold} event.
     ///
@@ -83,7 +83,7 @@ interface IPBTickets {
     /// @param burnAmount The amount of tickets to burn.
     function burnUnsold(uint256 burnAmount) external;
 
-    /// @notice Mint new tickets in exchange for ETH during the private phase.
+    /// @notice Mint new tickets in exchange for ETH during the private phase of the sale.
     ///
     /// @dev Emits a {Mint} event.
     ///
@@ -99,7 +99,7 @@ interface IPBTickets {
     /// @param merkleProof The merkle proof of caller being whitelisted.
     function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) external payable;
 
-    /// @notice Mint new tickets in exchange for ETH during the public phase.
+    /// @notice Mint new tickets in exchange for ETH during the public phase of the sale.
     ///
     /// @dev Emits a {Mint} event.
     ///

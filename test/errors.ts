@@ -14,13 +14,13 @@ export enum PawnBotsErrors {
 }
 
 export enum PBTicketsErrors {
-  INSUFFICIENT_FUNDS_SENT = "PBTickets__InsufficientFundsSent",
+  INSUFFICIENT_FUNDS = "PBTickets__InsufficientFunds",
   MAX_ELEMENTS_EXCEEDED = "PBTickets__MaxElementsExceeded",
   MAX_MINTS_PER_TX_EXCEEDED = "PBTickets__MaxMintsPerTxExceeded",
+  MINT_NOT_AUTHORIZED = "PBTickets__MintNotAuthorized",
   NONEXISTENT_TOKEN = "PBTickets__NonexistentToken",
-  NOT_WHITELISTED_FOR_PRIVATE_PHASE = "PBTickets__NotWhitelistedForPrivatePhase",
-  PRIVATE_PHASE_IS_OVER = "PBTickets__PrivatePhaseIsOver",
-  PUBLIC_PHASE_NOT_YET_STARTED = "PBTickets__PublicPhaseNotYetStarted",
+  PRIVATE_PHASE_EXPIRED = "PBTickets__PrivatePhaseExpired",
+  PUBLIC_PHASE_NOT_STARTED = "PBTickets__PublicPhaseNotStarted",
   SALE_IS_ACTIVE = "PBTickets__SaleIsActive",
-  SALE_IS_NOT_ACTIVE = "PBTickets__SaleIsNotActive",
+  SALE_IS_PAUSED = "PBTickets__SaleIsPaused",
 }

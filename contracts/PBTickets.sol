@@ -10,19 +10,19 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "hardhat/console.sol";
 import "./IPBTickets.sol";
 
-error PBTickets__InsufficientFundsSent();
+error PBTickets__InsufficientFunds();
 error PBTickets__MaxElementsExceeded();
 error PBTickets__MaxMintsPerTxExceeded();
+error PBTickets__MintNotAuthorized();
 error PBTickets__NonexistentToken();
-error PBTickets__NotWhitelistedForPrivatePhase();
-error PBTickets__PrivatePhaseIsOver();
-error PBTickets__PublicPhaseNotYetStarted();
+error PBTickets__PrivatePhaseExpired();
+error PBTickets__PublicPhaseNotStarted();
 error PBTickets__SaleIsActive();
-error PBTickets__SaleIsNotActive();
+error PBTickets__SaleIsPaused();
 
 /// @title PBTickets
 /// @author Hifi
-/// @notice Manages the mint and distribution of NFTs.
+/// @notice Manages the mint and distribution of sale ticket NFTs.
 contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, ReentrancyGuard {
     using Strings for uint256;
 
@@ -95,13 +95,13 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
     /// @inheritdoc IPBTickets
     function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) public payable override nonReentrant {
         if (!isSaleActive) {
-            revert PBTickets__SaleIsNotActive();
+            revert PBTickets__SaleIsPaused();
         }
         if (block.timestamp > saleStartTime + PRIVATE_DURATION) {
-            revert PBTickets__PrivatePhaseIsOver();
+            revert PBTickets__PrivatePhaseExpired();
         }
         if (!isWhitelisted(msg.sender, merkleProof)) {
-            revert PBTickets__NotWhitelistedForPrivatePhase();
+            revert PBTickets__MintNotAuthorized();
         }
 
         mintInternal(mintAmount);
@@ -111,10 +111,10 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
     /// @inheritdoc IPBTickets
     function mintPublic(uint256 mintAmount) public payable override nonReentrant {
         if (!isSaleActive) {
-            revert PBTickets__SaleIsNotActive();
+            revert PBTickets__SaleIsPaused();
         }
         if (block.timestamp <= saleStartTime + PRIVATE_DURATION) {
-            revert PBTickets__PublicPhaseNotYetStarted();
+            revert PBTickets__PublicPhaseNotStarted();
         }
 
         mintInternal(mintAmount);
@@ -124,7 +124,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
     /// @inheritdoc IPBTickets
     function pauseSale() public override onlyOwner {
         if (!isSaleActive) {
-            revert PBTickets__SaleIsNotActive();
+            revert PBTickets__SaleIsPaused();
         }
 
         isSaleActive = false;
@@ -204,7 +204,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
         uint256 mintCost = price * mintAmount;
         if (msg.value < mintCost) {
-            revert PBTickets__InsufficientFundsSent();
+            revert PBTickets__InsufficientFunds();
         }
 
         for (uint256 i = 0; i < mintAmount; i++) {

@@ -1,4 +1,3 @@
-import { parseEther } from "@ethersproject/units";
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
 
@@ -445,6 +444,8 @@ export function shouldBehaveLikePawnBots(): void {
         });
       });
     });
+
+    // TODO: test setClaims
 
     describe("setProvenanceHash", function () {
       context("when not called by owner", function () {

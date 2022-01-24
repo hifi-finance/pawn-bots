@@ -151,7 +151,7 @@ interface IPawnBots {
     /// Requirements:
     /// - Can only be called by the owner.
     ///
-    /// @param newClaims The update to user claims.
+    /// @param newClaims The user claims to set.
     function setClaims(NewClaim[] memory newClaims) external;
 
     /// @notice Set the provenance hash of post-reveal art once it's calculated.

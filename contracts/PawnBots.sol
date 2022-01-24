@@ -22,9 +22,64 @@ error PawnBots__UserEligibilityExceeded();
 error PawnBots__UserIsNotEligible();
 error PawnBots__VrfRequestIdMismatch();
 
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;,;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;C1.;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;,G8t;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Gt.;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;L:;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;i:;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;,t;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;,,,,,,,,iiifffffLLLLLLGCLL;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;.f;;;,C0888888800000000000000000000GGGGGGGGCCCCCCCLLLLLCCCf;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;.f.;;LGG0GGCLLLLLLLLLLfLLfffffttt11iiiiiiiiiiiiiiiiiiiiiLCf.;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;f,;;CLCGGC1i1111ttttttt1111111iiiiiiiiiiiiii11iiiiiiiiitCf.;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;t,;LLLCGGCi;;;iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii1LL.;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;t,;CLLCGGCi;iiiiiiiiiiiiiiiiiiiiiiiiiii;iiiiiiiiiiiiiiiiLL,;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;1itLLLLGGCi;ii;iiiiiiiii;;iiiiiiiiiiiii;iiiiiiiiii;iiiiiLL,;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;LfLLLLGGCi;ii;;;iiiiiiiii;;ii;iiiiiiiiii;iii;;;ii;i;ii:if:;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;.:1f1tLLLCCC1;i;;;;iiiiii::1:,;i;iiiiiii;;;;;;;;;;i;;;...;;i;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;.::1LL;1LLCCC1;;;;;;ii;;i;.;;;;,;;;iiiii;;i;;;;;;;;;;;;.;;;;;i;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;,:,;tG1:fLCCC1;;;;;;iiiii;.;;;;.;;;iiii;;i;;;;;;;;;;;;;.;;;;:i;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;,::::11,1LCCCt;;;;;;;;i;;i,;;;;.;;;iiiiiiii;;;;;;;;;iii;::,:ti.;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;,:::,:i,;LLCCt;;;;;;;;;;;i;::::;;;;;;;;i;;;;;;;;;;;;ii;ii;;tL1.;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;,:::,:i,;LLCCf;;;;;;;;;;;;;i;;i;;;;;;;;;iiii;ii1i;;;;;;iii;1fi;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;.::::i1.;LLCCf;;;;;;;;;;;;;;;;;;;;;;;;;i1111i1111;;;;;;;i;;1fi;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;::,:1;.ifLCCf;;;;;;;;;;;;;;;;;;iiiiiiii11111111iiiiiiii;;;1f1;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;i1i;i:;tfLCCL;;;;;;;iiiiiiiiiiiiiiiiiiii11111iiiiiiiiiiii;tf1;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;f1i;iitfLCCLi;iiiiii11111111i1iiiiiiiiiiiiiiiiiiiii11111tfft;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;:f1i;i1tffCLCfiiiiiiiiiiiiii111111111111111ttttttttt1tt1t1fft;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;.1ft111tffLLLCLLfftttttttttttttttttfffffffffffLLffLL11titiffi;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;.:i11tfffLLLLLLLLLLLLLLLffffffffffffffttttt1111iiii;;;:::,.;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;.,:;itLLffffttt111ii1111iiii;,......;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;......;;;;;;;.,,:::::::,,,,,,,:::::::,,..;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;,,,,,,,,,:::::::::::::::::;;;;;;::::;;;;iii11111111i;.;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;,fLLLfft1ii;;;;;;iiiiiiii1111i;11;11;tLLLLLLLLLLLLLLLLLf,;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;ffffLLCCLLLLLLLLLLLLLCCCCCCCLiiLiiLiiLLLLLCLLLLLLLLLLfLi;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;.:tLLftLLLLGGGGGCCLLCCCCCCCLLLLC1,f1,fi:fLLLftttt11ttttfLL1;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;L088800GLCLLCCCCC:;;:CLCCCCCLLLLCt,1t,1t,tCLLLffffLCCLLLLLLt.;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;.L88888880GCCLLCCCCGi.,;CCCCCCCCCCCCf:iL:if,iCLLCCCCCCCLLLLLLLf,;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;.f0GG00000GGCLLLCCCCCCCCCCCCCCCCCCCCCC;:L;:L;:LCCCCCCCCLLLLLLLLL:;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;:LCCCGGGGCCCLLLLLCCCCCCCCCCCCCCCCCCCCC1,f1,f1,fCCCCCCCCCCCCLLLLLi;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;,fLLLLCCLLLLffLLLCCCGCCCCCCCCCCCCCCCCCf,tf,tf,tCCCCCCCCCCCCCLLLLt;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;fffLLLLLLfffLLLCCCGGCCCCCCCCCCCCCCCCL:iL:;L:iCCCCCCCCCCCCCLLLLf.;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;fffffLLLLLffLLLLCCCGCCCCCCCCCCCCCCCCC;,L;,L;:LCCCCCCCCCCCCLLLLf,;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;tGCCLLfffftitLLLLCCCCCCGCCCCCCCCCCCCCG1.ft.t1.tCCCCCCCCCCCLLLLLf:;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 /// @title PawnBots
 /// @author Hifi
-/// @notice Manages the mint and distribution of NFTs.
+/// @notice Manages the mint and distribution of the Pawn Bots collection NFTs.
 contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFConsumerBase {
     using Strings for uint256;
 
@@ -33,7 +88,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     /// @dev The theoretical collection size.
     uint256 public constant COLLECTION_SIZE = 10_000;
 
-    /// @dev The maximum limit for total amount of NFTs that can be reserved by the project.
+    /// @dev The maximum amount of NFTs that can be reserved by the contract owner.
     uint256 public constant MAX_RESERVED_ELEMENTS = 1_000;
 
     /// @inheritdoc IPawnBots
@@ -128,7 +183,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         if (!claim.exists) {
             revert PawnBots__UserIsNotEligible();
         }
-        if (mintAmount > claim.allocatedAmount - claim.claimedAmount) {
+        if (mintAmount + claim.claimedAmount > claim.allocatedAmount) {
             revert PawnBots__UserEligibilityExceeded();
         }
 

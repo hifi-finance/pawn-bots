@@ -1,8 +1,7 @@
 import { parseEther } from "@ethersproject/units";
 import { expect } from "chai";
-import { ethers, network } from "hardhat";
+import { ethers } from "hardhat";
 
-import { VRF_FEE } from "../constants";
 import { timeContext } from "../contexts";
 import { PBTicketsErrors, PawnBotsErrors } from "../errors";
 
@@ -242,7 +241,7 @@ export function shouldBehaveLikePBTickets(): void {
             this.contracts.pbTickets
               .connect(this.signers.alice)
               .mintPrivate(0, this.getMerkleProof(this.signers.alice.address)),
-          ).to.be.revertedWith(PBTicketsErrors.SALE_IS_NOT_ACTIVE);
+          ).to.be.revertedWith(PBTicketsErrors.SALE_IS_PAUSED);
         });
       });
 
@@ -260,7 +259,7 @@ export function shouldBehaveLikePBTickets(): void {
                 this.contracts.pbTickets
                   .connect(this.signers.bob)
                   .mintPrivate(1, this.getMerkleProof(this.signers.alice.address)),
-              ).to.be.revertedWith(PBTicketsErrors.NOT_WHITELISTED_FOR_PRIVATE_PHASE);
+              ).to.be.revertedWith(PBTicketsErrors.MINT_NOT_AUTHORIZED);
             });
           });
 
@@ -312,7 +311,7 @@ export function shouldBehaveLikePBTickets(): void {
                         .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address), {
                           value: this.funds,
                         }),
-                    ).to.be.revertedWith(PBTicketsErrors.INSUFFICIENT_FUNDS_SENT);
+                    ).to.be.revertedWith(PBTicketsErrors.INSUFFICIENT_FUNDS);
                   });
                 });
 
@@ -370,7 +369,7 @@ export function shouldBehaveLikePBTickets(): void {
               this.contracts.pbTickets
                 .connect(this.signers.alice)
                 .mintPrivate(0, this.getMerkleProof(this.signers.alice.address)),
-            ).to.be.revertedWith(PBTicketsErrors.PRIVATE_PHASE_IS_OVER);
+            ).to.be.revertedWith(PBTicketsErrors.PRIVATE_PHASE_EXPIRED);
           });
         });
       });
@@ -380,7 +379,7 @@ export function shouldBehaveLikePBTickets(): void {
       context("when sale is not active", function () {
         it("reverts", async function () {
           await expect(this.contracts.pbTickets.connect(this.signers.alice).mintPublic(0)).to.be.revertedWith(
-            PBTicketsErrors.SALE_IS_NOT_ACTIVE,
+            PBTicketsErrors.SALE_IS_PAUSED,
           );
         });
       });
@@ -395,7 +394,7 @@ export function shouldBehaveLikePBTickets(): void {
         timeContext("when called within the first 24 hours of the sale", 86397, function () {
           it("reverts", async function () {
             await expect(this.contracts.pbTickets.connect(this.signers.alice).mintPublic(0)).to.be.revertedWith(
-              PBTicketsErrors.PUBLIC_PHASE_NOT_YET_STARTED,
+              PBTicketsErrors.PUBLIC_PHASE_NOT_STARTED,
             );
           });
         });
@@ -442,7 +441,7 @@ export function shouldBehaveLikePBTickets(): void {
                     this.contracts.pbTickets
                       .connect(this.signers.alice)
                       .mintPublic(this.mintAmount, { value: this.funds }),
-                  ).to.be.revertedWith(PBTicketsErrors.INSUFFICIENT_FUNDS_SENT);
+                  ).to.be.revertedWith(PBTicketsErrors.INSUFFICIENT_FUNDS);
                 });
               });
 
@@ -501,7 +500,7 @@ export function shouldBehaveLikePBTickets(): void {
       context("when called by owner", function () {
         context("when sale is not active", function () {
           it("reverts", async function () {
-            await expect(this.contracts.pbTickets.pauseSale()).to.be.revertedWith(PBTicketsErrors.SALE_IS_NOT_ACTIVE);
+            await expect(this.contracts.pbTickets.pauseSale()).to.be.revertedWith(PBTicketsErrors.SALE_IS_PAUSED);
           });
         });
 
