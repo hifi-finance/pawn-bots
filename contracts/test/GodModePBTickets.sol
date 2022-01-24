@@ -27,6 +27,10 @@ contract GodModePBTickets is PBTickets {
         baseURI = newBaseURI;
     }
 
+    function __godMode_setIsSaleActive(bool newIsSaleActive) external {
+        isSaleActive = newIsSaleActive;
+    }
+
     function __godMode_setMaxElements(uint256 newMaxElements) external {
         maxElements = newMaxElements;
     }
@@ -37,10 +41,6 @@ contract GodModePBTickets is PBTickets {
 
     function __godMode_setPrice(uint256 newPrice) external {
         price = newPrice;
-    }
-
-    function __godMode_setSaleIsActive(bool newSaleIsActive) external {
-        saleIsActive = newSaleIsActive;
     }
 
     function __godMode_setSaleStartTime(uint256 newSaleStartTime) external {

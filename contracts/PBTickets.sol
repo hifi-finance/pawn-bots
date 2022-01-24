@@ -35,6 +35,9 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
     uint256 public constant PRIVATE_DURATION = 24 hours;
 
     /// @inheritdoc IPBTickets
+    bool public override isSaleActive;
+
+    /// @inheritdoc IPBTickets
     uint256 public override maxElements = COLLECTION_SIZE;
 
     /// @inheritdoc IPBTickets
@@ -42,9 +45,6 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
     /// @inheritdoc IPBTickets
     uint256 public override price;
-
-    /// @inheritdoc IPBTickets
-    bool public override saleIsActive;
 
     /// @inheritdoc IPBTickets
     uint256 public override saleStartTime;
@@ -81,7 +81,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
     /// @inheritdoc IPBTickets
     function burnUnsold(uint256 burnAmount) public override onlyOwner {
-        if (saleIsActive) {
+        if (isSaleActive) {
             revert PBTickets__SaleIsActive();
         }
         if (burnAmount + totalSupply() > maxElements) {
@@ -94,7 +94,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
     /// @inheritdoc IPBTickets
     function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) public payable override nonReentrant {
-        if (!saleIsActive) {
+        if (!isSaleActive) {
             revert PBTickets__SaleIsNotActive();
         }
         if (block.timestamp > saleStartTime + PRIVATE_DURATION) {
@@ -110,7 +110,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
     /// @inheritdoc IPBTickets
     function mintPublic(uint256 mintAmount) public payable override nonReentrant {
-        if (!saleIsActive) {
+        if (!isSaleActive) {
             revert PBTickets__SaleIsNotActive();
         }
         if (block.timestamp <= saleStartTime + PRIVATE_DURATION) {
@@ -123,11 +123,11 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
     /// @inheritdoc IPBTickets
     function pauseSale() public override onlyOwner {
-        if (!saleIsActive) {
+        if (!isSaleActive) {
             revert PBTickets__SaleIsNotActive();
         }
 
-        saleIsActive = false;
+        isSaleActive = false;
         emit PauseSale();
     }
 
@@ -151,13 +151,13 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
     /// @inheritdoc IPBTickets
     function startSale() public override onlyOwner {
-        if (saleIsActive) {
+        if (isSaleActive) {
             revert PBTickets__SaleIsActive();
         }
         if (saleStartTime == 0) {
             saleStartTime = block.timestamp;
         }
-        saleIsActive = true;
+        isSaleActive = true;
         emit StartSale();
     }
 

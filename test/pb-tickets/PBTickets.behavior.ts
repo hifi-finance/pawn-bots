@@ -15,6 +15,24 @@ export function shouldBehaveLikePBTickets(): void {
   });
 
   describe("View Functions", function () {
+    describe("isSaleActive", function () {
+      context("when not changed", function () {
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pbTickets.isSaleActive()).to.equal(false);
+        });
+      });
+
+      context("when changed", function () {
+        beforeEach(async function () {
+          await this.contracts.pbTickets.__godMode_setIsSaleActive(true);
+        });
+
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pbTickets.isSaleActive()).to.equal(true);
+        });
+      });
+    });
+
     describe("isWhitelisted", function () {
       context("when address is whitelisted", function () {
         it("returns the correct value", async function () {
@@ -93,24 +111,6 @@ export function shouldBehaveLikePBTickets(): void {
 
         it("returns the correct value", async function () {
           expect(await this.contracts.pbTickets.price()).to.equal("25000000000000000");
-        });
-      });
-    });
-
-    describe("saleIsActive", function () {
-      context("when not changed", function () {
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pbTickets.saleIsActive()).to.equal(false);
-        });
-      });
-
-      context("when changed", function () {
-        beforeEach(async function () {
-          await this.contracts.pbTickets.__godMode_setSaleIsActive(true);
-        });
-
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pbTickets.saleIsActive()).to.equal(true);
         });
       });
     });
@@ -513,7 +513,7 @@ export function shouldBehaveLikePBTickets(): void {
           it("succeeds", async function () {
             const contractCall = await this.contracts.pbTickets.pauseSale();
             expect(contractCall).to.emit(this.contracts.pbTickets, "PauseSale");
-            expect(await this.contracts.pbTickets.saleIsActive()).to.be.equal(false);
+            expect(await this.contracts.pbTickets.isSaleActive()).to.be.equal(false);
           });
         });
       });
@@ -597,7 +597,7 @@ export function shouldBehaveLikePBTickets(): void {
             expect(contractCall).to.emit(this.contracts.pbTickets, "StartSale");
 
             const currentTime = (await ethers.provider.getBlock("latest")).timestamp;
-            expect(await this.contracts.pbTickets.saleIsActive()).to.be.equal(true);
+            expect(await this.contracts.pbTickets.isSaleActive()).to.be.equal(true);
             expect(await this.contracts.pbTickets.saleStartTime()).to.be.equal(currentTime);
           });
         });
@@ -613,7 +613,7 @@ export function shouldBehaveLikePBTickets(): void {
 
             const contractCall = await this.contracts.pbTickets.startSale();
             expect(contractCall).to.emit(this.contracts.pbTickets, "StartSale");
-            expect(await this.contracts.pbTickets.saleIsActive()).to.be.equal(true);
+            expect(await this.contracts.pbTickets.isSaleActive()).to.be.equal(true);
             expect(await this.contracts.pbTickets.saleStartTime()).to.be.equal(startTime);
           });
         });

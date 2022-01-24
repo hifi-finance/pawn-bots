@@ -49,6 +49,9 @@ interface IPBTickets {
 
     /// PUBLIC CONSTANT FUNCTIONS ///
 
+    /// @notice The status of the sale.
+    function isSaleActive() external view returns (bool);
+
     /// @notice Whether an account is whitelisted for the private phase of the sale or not.
     /// @param account The account address to check.
     /// @param merkleProof The merkle proof of the account being whitelisted.
@@ -57,17 +60,13 @@ interface IPBTickets {
     /// @notice The maximum amount of tickets that can ever exist.
     function maxElements() external view returns (uint256);
 
-    /// @notice The maximum amount of tickets per user per transaction that can be minted during the public phase.
+    /// @notice The maximum amount of tickets that can be minted by a user in one transaction.
     function maxMintsPerTx() external view returns (uint256);
 
     /// @notice The mint price in ETH.
     function price() external view returns (uint256);
 
-    /// @notice The status of the sale.
-    function saleIsActive() external view returns (bool);
-
     /// @notice The sale start timestamp.
-    /// Note: the sale starts with the private phase, which lasts 24 hrs.
     function saleStartTime() external view returns (uint256);
 
     /// PUBLIC NON-CONSTANT FUNCTIONS ///
@@ -133,7 +132,7 @@ interface IPBTickets {
     /// @param newBaseURI The new base URI.
     function setBaseURI(string memory newBaseURI) external;
 
-    /// @notice Set the maximum amount of tickets that can be minted by any user in one transaction.
+    /// @notice Set the maximum amount of tickets that can be minted by a user in one transaction.
     ///
     /// @dev Emits a {SetMaxMintsPerTx} event.
     ///
