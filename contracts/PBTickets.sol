@@ -11,6 +11,7 @@ import "hardhat/console.sol";
 import "./IPBTickets.sol";
 
 error PBTickets__InsufficientFunds();
+error PBTickets__InvalidRecipient();
 error PBTickets__MaxElementsExceeded();
 error PBTickets__MaxMintsPerTxExceeded();
 error PBTickets__MintNotAuthorized();
@@ -163,6 +164,9 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
     /// @inheritdoc IPBTickets
     function withdraw(address recipient) public override onlyOwner {
+        if (recipient == address(0)) {
+            revert PBTickets__InvalidRecipient();
+        }
         uint256 amount = address(this).balance;
         Address.sendValue(payable(recipient), amount);
         emit Withdraw(recipient, amount);

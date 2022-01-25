@@ -233,8 +233,8 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     /// @inheritdoc IPawnBots
     function setClaims(NewClaim[] memory newClaims) public override onlyOwner {
         for (uint256 i = 0; i < newClaims.length; i++) {
-            Claim memory claim;
             NewClaim memory newClaim = newClaims[i];
+            Claim memory claim = claims[newClaim.user];
             claim.exists = true;
             claim.allocatedAmount = newClaim.allocatedAmount;
             claims[newClaim.user] = claim;

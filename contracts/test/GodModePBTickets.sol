@@ -12,6 +12,10 @@ contract GodModePBTickets is PBTickets {
         // solhint-disable-previous-line no-empty-blocks
     }
 
+    function __godMode_addEther() external payable {
+        // solhint-disable-previous-line no-empty-blocks
+    }
+
     function __godMode_mint(uint256 mintAmount) external {
         uint256 mintIndex = totalSupply();
         for (uint256 i = 0; i < mintAmount; i++) {

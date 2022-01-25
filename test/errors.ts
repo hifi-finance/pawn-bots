@@ -15,6 +15,7 @@ export enum PawnBotsErrors {
 
 export enum PBTicketsErrors {
   INSUFFICIENT_FUNDS = "PBTickets__InsufficientFunds",
+  INVALID_RECIPIENT = "PBTickets__InvalidRecipient",
   MAX_ELEMENTS_EXCEEDED = "PBTickets__MaxElementsExceeded",
   MAX_MINTS_PER_TX_EXCEEDED = "PBTickets__MaxMintsPerTxExceeded",
   MINT_NOT_AUTHORIZED = "PBTickets__MintNotAuthorized",

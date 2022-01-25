@@ -167,6 +167,7 @@ interface IPBTickets {
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
+    /// - recipient cannot be the 0 address.
     ///
     /// @param recipient The recipient of funds withdrawn.
     function withdraw(address recipient) external;

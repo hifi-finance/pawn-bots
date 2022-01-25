@@ -445,7 +445,94 @@ export function shouldBehaveLikePawnBots(): void {
       });
     });
 
-    // TODO: test setClaims
+    describe("setClaims", function () {
+      context("when not called by owner", function () {
+        it("reverts", async function () {
+          await expect(this.contracts.pawnBots.connect(this.signers.alice).setClaims([])).to.be.reverted;
+        });
+      });
+
+      context("when called by owner", function () {
+        context("when claim list provided is empty", function () {
+          it("succeeds", async function () {
+            const contractCall = await this.contracts.pawnBots.setClaims([]);
+            expect(contractCall).to.emit(this.contracts.pawnBots, "SetClaims");
+          });
+        });
+
+        context("when only 1 claim is given", function () {
+          context("when given claim is new", function () {
+            beforeEach(async function () {
+              this.claim = {
+                user: this.signers.alice.address,
+                allocatedAmount: "10",
+              };
+            });
+
+            it("succeeds", async function () {
+              const contractCall = await this.contracts.pawnBots.setClaims([this.claim]);
+              expect(contractCall).to.emit(this.contracts.pawnBots, "SetClaims");
+              const claim = await this.contracts.pawnBots.claims(this.signers.alice.address);
+              expect(claim.claimedAmount).to.be.equal("0");
+              expect(claim.allocatedAmount).to.be.equal(this.claim.allocatedAmount);
+            });
+          });
+
+          context("when given claim already exists", function () {
+            beforeEach(async function () {
+              this.claim = {
+                user: this.signers.alice.address,
+                exists: true,
+                claimedAmount: "5",
+                allocatedAmount: "10",
+              };
+              this.newClaim = {
+                user: this.signers.alice.address,
+                allocatedAmount: "12",
+              };
+              await this.contracts.pawnBots.__godMode_setClaim(this.claim.user, this.claim);
+            });
+
+            it("succeeds", async function () {
+              const contractCall = await this.contracts.pawnBots.setClaims([this.newClaim]);
+              expect(contractCall).to.emit(this.contracts.pawnBots, "SetClaims");
+              const claim = await this.contracts.pawnBots.claims(this.claim.user);
+              expect(claim.claimedAmount).to.be.equal(this.claim.claimedAmount);
+              expect(claim.allocatedAmount).to.be.equal(this.newClaim.allocatedAmount);
+            });
+          });
+        });
+
+        context("when more than one claim is given", function () {
+          beforeEach(async function () {
+            this.claims = [
+              {
+                user: this.signers.alice.address,
+                allocatedAmount: "10",
+              },
+              {
+                user: this.signers.bob.address,
+                allocatedAmount: "3",
+              },
+              {
+                user: this.signers.carol.address,
+                allocatedAmount: "5",
+              },
+            ];
+          });
+
+          it("succeeds", async function () {
+            const contractCall = await this.contracts.pawnBots.setClaims(this.claims);
+            expect(contractCall).to.emit(this.contracts.pawnBots, "SetClaims");
+            for (let i = 0; i < this.claims.length; i++) {
+              const claim = await this.contracts.pawnBots.claims(this.claims[i].user);
+              expect(claim.claimedAmount).to.be.equal("0");
+              expect(claim.allocatedAmount).to.be.equal(this.claims[i].allocatedAmount);
+            }
+          });
+        });
+      });
+    });
 
     describe("setProvenanceHash", function () {
       context("when not called by owner", function () {

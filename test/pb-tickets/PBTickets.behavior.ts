@@ -2,6 +2,7 @@ import { parseEther } from "@ethersproject/units";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
+import { ZERO_ADDRESS } from "../constants";
 import { timeContext } from "../contexts";
 import { PBTicketsErrors, PawnBotsErrors } from "../errors";
 
@@ -619,6 +620,41 @@ export function shouldBehaveLikePBTickets(): void {
       });
     });
 
-    // TODO: test withdraw
+    describe("withdraw", function () {
+      context("when not called by owner", function () {
+        it("reverts", async function () {
+          await expect(
+            this.contracts.pbTickets.connect(this.signers.alice).withdraw(this.signers.alice.address),
+          ).to.be.reverted;
+        });
+      });
+
+      context("when called by owner", function () {
+        context("when recipient is the 0 address", function () {
+          it("reverts", async function () {
+            await expect(this.contracts.pbTickets.withdraw(ZERO_ADDRESS)).to.be.revertedWith(
+              PBTicketsErrors.INVALID_RECIPIENT,
+            );
+          });
+        });
+
+        context("when recipient is a valid address", function () {
+          beforeEach(async function () {
+            this.amount = parseEther("0.1");
+            await this.contracts.pbTickets.__godMode_addEther({ value: this.amount });
+          });
+
+          it("succeeds", async function () {
+            const recipient = this.signers.alice.address;
+
+            const balanceBefore = await this.signers.alice.getBalance();
+            const contractCall = await this.contracts.pbTickets.withdraw(recipient);
+            expect(contractCall).to.emit(this.contracts.pbTickets, "Withdraw").withArgs(recipient, this.amount);
+            const balanceAfter = await this.signers.alice.getBalance();
+            expect(balanceAfter.sub(balanceBefore)).to.be.equal(this.amount);
+          });
+        });
+      });
+    });
   });
 }
