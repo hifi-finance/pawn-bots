@@ -33,28 +33,6 @@ export function shouldBehaveLikePBTickets(): void {
       });
     });
 
-    describe("isWhitelisted", function () {
-      context("when address is whitelisted", function () {
-        it("returns the correct value", async function () {
-          const list = [this.signers.alice.address, this.signers.carol.address, this.signers.eve.address];
-
-          for (const address of list) {
-            expect(await this.contracts.pbTickets.isWhitelisted(address, this.getMerkleProof(address))).to.equal(true);
-          }
-        });
-      });
-
-      context("when address is not whitelisted", function () {
-        it("returns the correct value", async function () {
-          const list = [this.signers.bob.address, this.signers.dave.address];
-
-          for (const address of list) {
-            expect(await this.contracts.pbTickets.isWhitelisted(address, this.getMerkleProof(address))).to.equal(false);
-          }
-        });
-      });
-    });
-
     describe("maxElements", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {

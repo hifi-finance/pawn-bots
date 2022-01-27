@@ -52,11 +52,6 @@ interface IPBTickets {
     /// @notice The status of the sale.
     function isSaleActive() external view returns (bool);
 
-    /// @notice Whether an account is whitelisted for the private phase of the sale or not.
-    /// @param account The account address to check.
-    /// @param merkleProof The merkle proof of the account being whitelisted.
-    function isWhitelisted(address account, bytes32[] calldata merkleProof) external view returns (bool);
-
     /// @notice The maximum amount of tickets that can ever exist.
     function maxElements() external view returns (uint256);
 
@@ -90,13 +85,13 @@ interface IPBTickets {
     /// @dev Requirements:
     /// - Can only be called when sale is active.
     /// - Can only be called within the first 24 hours of the sale.
-    /// - Caller must be whitelisted for the private phase.
+    /// - Caller must be eligible to mint in the private phase.
     /// - `mintAmount` cannot exceed `maxMintsPerTx`.
     /// - `mintAmount` cannot exceed `maxElements` minus `totalSupply()`.
     /// - Can only be called when caller has placed at least `price * mintAmount` ETH as the transaction value.
     ///
     /// @param mintAmount The amount of tickets to mint.
-    /// @param merkleProof The merkle proof of caller being whitelisted.
+    /// @param merkleProof The merkle proof of caller being eligible to mint.
     function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) external payable;
 
     /// @notice Mint new tickets in exchange for ETH during the public phase of the sale.

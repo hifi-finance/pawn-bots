@@ -55,7 +55,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
     /// @dev The base token URI.
     string internal baseURI;
 
-    /// @dev The whitelist merkle root.
+    /// @dev The merkle root of addresses eligible to mint in the private phase.
     bytes32 internal merkleRoot;
 
     constructor(bytes32 merkleRoot_) ERC721("Pawn Bots Mint Tickets", "PBTKT") {
@@ -63,11 +63,6 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
     }
 
     /// PUBLIC CONSTANT FUNCTIONS ///
-
-    /// @inheritdoc IPBTickets
-    function isWhitelisted(address account, bytes32[] calldata merkleProof) public view override returns (bool) {
-        return MerkleProof.verify(merkleProof, merkleRoot, keccak256(abi.encodePacked(account)));
-    }
 
     /// @dev See {ERC721-tokenURI}.
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
@@ -101,7 +96,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
         if (block.timestamp > saleStartTime + PRIVATE_DURATION) {
             revert PBTickets__PrivatePhaseExpired();
         }
-        if (!isWhitelisted(msg.sender, merkleProof)) {
+        if (!MerkleProof.verify(merkleProof, merkleRoot, keccak256(abi.encodePacked(msg.sender)))) {
             revert PBTickets__MintNotAuthorized();
         }
 
@@ -196,7 +191,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
         ERC721Enumerable._beforeTokenTransfer(from, to, tokenId);
     }
 
-    /// @dev Mint NFTs in exchange for fees.
+    /// @dev Mint ticket NFTs in exchange for fees.
     function mintInternal(uint256 mintAmount) internal {
         if (mintAmount > maxMintsPerTx) {
             revert PBTickets__MaxMintsPerTxExceeded();
