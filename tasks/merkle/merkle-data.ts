@@ -17,6 +17,7 @@ task("merkle:data")
     const merkleLeaves: Buffer[] = accounts.map(keccak256);
     const merkleTree: MerkleTree = new MerkleTree(merkleLeaves, keccak256, { sortPairs: true, sortLeaves: true });
     let data: { [account: string]: { proof: string } } = {};
+    // TODO: split generated file into small light chunks
     for (const account of accounts) {
       const merkleProof: string[] = merkleTree.getHexProof(keccak256(account));
       data[account.toLowerCase()] = { proof: merkleProof.toString() };
