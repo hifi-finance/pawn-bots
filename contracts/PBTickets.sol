@@ -12,12 +12,12 @@ import "./IPBTickets.sol";
 
 error PBTickets__InsufficientFunds();
 error PBTickets__InvalidRecipient();
-error PBTickets__MaxElementsExceeded();
 error PBTickets__MaxMintsPerTxExceeded();
 error PBTickets__MintNotAuthorized();
 error PBTickets__NonexistentToken();
 error PBTickets__PrivatePhaseExpired();
 error PBTickets__PublicPhaseNotStarted();
+error PBTickets__SaleCapExceeded();
 error PBTickets__SaleIsActive();
 error PBTickets__SaleIsPaused();
 
@@ -29,8 +29,8 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
     /// PUBLIC STORAGE ///
 
-    /// @dev The theoretical collection size.
-    uint256 public constant COLLECTION_SIZE = 10_000;
+    /// @dev The number of tickets on sale.
+    uint256 public constant MAX_TICKETS = 9_000;
 
     /// @dev The private sale duration from the sale start timestamp.
     uint256 public constant PRIVATE_DURATION = 24 hours;
@@ -39,13 +39,13 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
     bool public override isSaleActive;
 
     /// @inheritdoc IPBTickets
-    uint256 public override maxElements = COLLECTION_SIZE;
-
-    /// @inheritdoc IPBTickets
     uint256 public override maxMintsPerTx;
 
     /// @inheritdoc IPBTickets
     uint256 public override price;
+
+    /// @inheritdoc IPBTickets
+    uint256 public override saleCap = MAX_TICKETS;
 
     /// @inheritdoc IPBTickets
     uint256 public override saleStartTime;
@@ -80,11 +80,11 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
         if (isSaleActive) {
             revert PBTickets__SaleIsActive();
         }
-        if (burnAmount + totalSupply() > maxElements) {
-            revert PBTickets__MaxElementsExceeded();
+        if (burnAmount + totalSupply() > saleCap) {
+            revert PBTickets__SaleCapExceeded();
         }
 
-        maxElements -= burnAmount;
+        saleCap -= burnAmount;
         emit BurnUnsold(burnAmount);
     }
 
@@ -197,8 +197,8 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
             revert PBTickets__MaxMintsPerTxExceeded();
         }
         uint256 totalSupply = totalSupply();
-        if (mintAmount + totalSupply > maxElements) {
-            revert PBTickets__MaxElementsExceeded();
+        if (mintAmount + totalSupply > saleCap) {
+            revert PBTickets__SaleCapExceeded();
         }
 
         uint256 mintCost = price * mintAmount;

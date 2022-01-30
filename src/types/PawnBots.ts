@@ -27,7 +27,7 @@ export type NewClaimStructOutput = [string, BigNumber] & {
 export interface PawnBotsInterface extends utils.Interface {
   functions: {
     "COLLECTION_SIZE()": FunctionFragment;
-    "MAX_RESERVED_ELEMENTS()": FunctionFragment;
+    "RESERVE_CAP()": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
     "claims(address)": FunctionFragment;
@@ -69,7 +69,7 @@ export interface PawnBotsInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "MAX_RESERVED_ELEMENTS",
+    functionFragment: "RESERVE_CAP",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -187,7 +187,7 @@ export interface PawnBotsInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "MAX_RESERVED_ELEMENTS",
+    functionFragment: "RESERVE_CAP",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
@@ -417,7 +417,7 @@ export interface PawnBots extends BaseContract {
   functions: {
     COLLECTION_SIZE(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    MAX_RESERVED_ELEMENTS(overrides?: CallOverrides): Promise<[BigNumber]>;
+    RESERVE_CAP(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     approve(
       to: string,
@@ -581,7 +581,7 @@ export interface PawnBots extends BaseContract {
 
   COLLECTION_SIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
-  MAX_RESERVED_ELEMENTS(overrides?: CallOverrides): Promise<BigNumber>;
+  RESERVE_CAP(overrides?: CallOverrides): Promise<BigNumber>;
 
   approve(
     to: string,
@@ -739,7 +739,7 @@ export interface PawnBots extends BaseContract {
   callStatic: {
     COLLECTION_SIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
-    MAX_RESERVED_ELEMENTS(overrides?: CallOverrides): Promise<BigNumber>;
+    RESERVE_CAP(overrides?: CallOverrides): Promise<BigNumber>;
 
     approve(
       to: string,
@@ -960,7 +960,7 @@ export interface PawnBots extends BaseContract {
   estimateGas: {
     COLLECTION_SIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
-    MAX_RESERVED_ELEMENTS(overrides?: CallOverrides): Promise<BigNumber>;
+    RESERVE_CAP(overrides?: CallOverrides): Promise<BigNumber>;
 
     approve(
       to: string,
@@ -1116,9 +1116,7 @@ export interface PawnBots extends BaseContract {
   populateTransaction: {
     COLLECTION_SIZE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    MAX_RESERVED_ELEMENTS(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    RESERVE_CAP(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     approve(
       to: string,

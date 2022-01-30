@@ -52,14 +52,14 @@ interface IPBTickets {
     /// @notice The status of the sale.
     function isSaleActive() external view returns (bool);
 
-    /// @notice The maximum amount of tickets that can ever exist.
-    function maxElements() external view returns (uint256);
-
     /// @notice The maximum amount of tickets that can be minted by a user in one transaction.
     function maxMintsPerTx() external view returns (uint256);
 
     /// @notice The mint price in ETH.
     function price() external view returns (uint256);
+
+    /// @notice The ticket sale cap.
+    function saleCap() external view returns (uint256);
 
     /// @notice The sale start timestamp.
     function saleStartTime() external view returns (uint256);
@@ -73,7 +73,7 @@ interface IPBTickets {
     /// @dev Requirements:
     /// - Can only be called by the owner.
     /// - Can only be called when sale is paused.
-    /// - `burnAmount` cannot exceed `maxElements` - `totalSupply()`.
+    /// - `burnAmount` cannot exceed `saleCap` - `totalSupply()`.
     ///
     /// @param burnAmount The amount of tickets to burn.
     function burnUnsold(uint256 burnAmount) external;
@@ -87,7 +87,7 @@ interface IPBTickets {
     /// - Can only be called within the first 24 hours of the sale.
     /// - Caller must be eligible to mint in the private phase.
     /// - `mintAmount` cannot exceed `maxMintsPerTx`.
-    /// - `mintAmount` cannot exceed `maxElements` minus `totalSupply()`.
+    /// - `mintAmount` cannot exceed `saleCap` minus `totalSupply()`.
     /// - Can only be called when caller has placed at least `price * mintAmount` ETH as the transaction value.
     ///
     /// @param mintAmount The amount of tickets to mint.
@@ -102,7 +102,7 @@ interface IPBTickets {
     /// - Can only be called when sale is active.
     /// - Can only be called after the first 24 hours of the sale.
     /// - `mintAmount` cannot exceed `maxMintsPerTx`.
-    /// - `mintAmount` cannot exceed `maxElements` minus `totalSupply()`.
+    /// - `mintAmount` cannot exceed `saleCap` minus `totalSupply()`.
     /// - Can only be called when caller has placed at least `price * mintAmount` ETH as the transaction value.
     ///
     /// @param mintAmount The amount of tickets to mint.

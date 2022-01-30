@@ -8,7 +8,7 @@ export function shouldBehaveLikePawnBots(): void {
   describe("Deployment", function () {
     it("should contain the correct constants", async function () {
       expect(await this.contracts.pawnBots.COLLECTION_SIZE()).to.equal(10000);
-      expect(await this.contracts.pawnBots.MAX_RESERVED_ELEMENTS()).to.equal(1000);
+      expect(await this.contracts.pawnBots.RESERVE_CAP()).to.equal(1000);
     });
   });
 
@@ -325,7 +325,7 @@ export function shouldBehaveLikePawnBots(): void {
 
           it("reverts", async function () {
             await expect(this.contracts.pawnBots.reserve(this.reserveAmount)).to.be.revertedWith(
-              PawnBotsErrors.MAX_RESERVED_ELEMENTS_EXCEEDED,
+              PawnBotsErrors.RESERVE_CAP_EXCEEDED,
             );
           });
         });

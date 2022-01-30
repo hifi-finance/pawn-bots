@@ -35,16 +35,16 @@ contract GodModePBTickets is PBTickets {
         isSaleActive = newIsSaleActive;
     }
 
-    function __godMode_setMaxElements(uint256 newMaxElements) external {
-        maxElements = newMaxElements;
-    }
-
     function __godMode_setMaxMintsPerTx(uint256 newMaxMintsPerTx) external {
         maxMintsPerTx = newMaxMintsPerTx;
     }
 
     function __godMode_setPrice(uint256 newPrice) external {
         price = newPrice;
+    }
+
+    function __godMode_setSaleCap(uint256 newSaleCap) external {
+        saleCap = newSaleCap;
     }
 
     function __godMode_setSaleStartTime(uint256 newSaleStartTime) external {

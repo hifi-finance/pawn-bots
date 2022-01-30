@@ -10,11 +10,11 @@ import "hardhat/console.sol";
 import "./IPawnBots.sol";
 
 error PawnBots__CollectionSizeExceeded();
-error PawnBots__MaxReservedElementsExceeded();
 error PawnBots__MintIsAlreadyEnabled();
 error PawnBots__MintIsNotEnabled();
 error PawnBots__NonexistentToken();
 error PawnBots__OffsetAlreadySet();
+error PawnBots__ReserveCapExceeded();
 error PawnBots__RandomnessAlreadyRequested();
 error PawnBots__TooEarlyToReveal();
 error PawnBots__UserAlreadyClaimed();
@@ -89,7 +89,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     uint256 public constant COLLECTION_SIZE = 10_000;
 
     /// @dev The maximum amount of NFTs that can be reserved by the contract owner.
-    uint256 public constant MAX_RESERVED_ELEMENTS = 1_000;
+    uint256 public constant RESERVE_CAP = 1_000;
 
     /// @inheritdoc IPawnBots
     mapping(address => Claim) public override claims;
@@ -197,8 +197,8 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
 
     /// @inheritdoc IPawnBots
     function reserve(uint256 reserveAmount) public override onlyOwner {
-        if (reserveAmount + reservedElements > MAX_RESERVED_ELEMENTS) {
-            revert PawnBots__MaxReservedElementsExceeded();
+        if (reserveAmount + reservedElements > RESERVE_CAP) {
+            revert PawnBots__ReserveCapExceeded();
         }
 
         uint256 totalSupply = totalSupply();
