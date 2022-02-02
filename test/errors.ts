@@ -21,7 +21,13 @@ export enum PBTicketsErrors {
   NONEXISTENT_TOKEN = "PBTickets__NonexistentToken",
   PRIVATE_PHASE_EXPIRED = "PBTickets__PrivatePhaseExpired",
   PUBLIC_PHASE_NOT_STARTED = "PBTickets__PublicPhaseNotStarted",
+  SALE_ALREADY_STARTED = "PBTickets__SaleAlreadyStarted",
+  SALE_NOT_STARTED = "PBTickets__SaleNotStarted",
   SALE_CAP_EXCEEDED = "PBTickets__SaleCapExceeded",
-  SALE_IS_ACTIVE = "PBTickets__SaleIsActive",
-  SALE_IS_PAUSED = "PBTickets__SaleIsPaused",
+}
+
+export enum ImportedErrors {
+  CALLER_NOT_OWNER = "Ownable: caller is not the owner",
+  NOT_PAUSED = "Pausable: not paused",
+  PAUSED = "Pausable: paused",
 }

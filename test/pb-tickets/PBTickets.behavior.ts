@@ -4,7 +4,7 @@ import { ethers } from "hardhat";
 
 import { ZERO_ADDRESS } from "../constants";
 import { timeContext } from "../contexts";
-import { PBTicketsErrors } from "../errors";
+import { ImportedErrors, PBTicketsErrors } from "../errors";
 
 export function shouldBehaveLikePBTickets(): void {
   describe("Deployment", function () {
@@ -15,24 +15,6 @@ export function shouldBehaveLikePBTickets(): void {
   });
 
   describe("View Functions", function () {
-    describe("isSaleActive", function () {
-      context("when not changed", function () {
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pbTickets.isSaleActive()).to.equal(false);
-        });
-      });
-
-      context("when changed", function () {
-        beforeEach(async function () {
-          await this.contracts.pbTickets.__godMode_setIsSaleActive(true);
-        });
-
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pbTickets.isSaleActive()).to.equal(true);
-        });
-      });
-    });
-
     describe("maxMintsPerTx", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
@@ -120,7 +102,7 @@ export function shouldBehaveLikePBTickets(): void {
     describe("tokenURI", function () {
       context("when token does not exist", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pbTickets.tokenURI(0)).to.be.reverted;
+          await expect(this.contracts.pbTickets.tokenURI(0)).to.be.revertedWith(PBTicketsErrors.NONEXISTENT_TOKEN);
         });
       });
 
@@ -155,61 +137,56 @@ export function shouldBehaveLikePBTickets(): void {
     describe("burnUnsold", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pbTickets.connect(this.signers.alice).burnUnsold(0)).to.be.reverted;
+          await expect(this.contracts.pbTickets.connect(this.signers.alice).burnUnsold(0)).to.be.revertedWith(
+            ImportedErrors.CALLER_NOT_OWNER,
+          );
         });
       });
 
       context("when called by owner", function () {
-        context("when sale is active", function () {
-          beforeEach(async function () {
-            await this.contracts.pbTickets.startSale();
-          });
-
+        context("when tickets are not paused", function () {
           it("reverts", async function () {
-            await expect(this.contracts.pbTickets.burnUnsold(0)).to.be.revertedWith(PBTicketsErrors.SALE_IS_ACTIVE);
+            await expect(this.contracts.pbTickets.burnUnsold(0)).to.be.revertedWith(ImportedErrors.NOT_PAUSED);
           });
         });
 
-        context("when sale is not active", function () {
-          context("when sale is paused", function () {
+        context("when tickets are paused", function () {
+          beforeEach(async function () {
+            await this.contracts.pbTickets.pauseTickets(true);
+          });
+
+          context("when `burnAmount` is 0", function () {
+            it("succeeds", async function () {
+              const contractCall = await this.contracts.pbTickets.burnUnsold(0);
+              expect(contractCall).to.emit(this.contracts.pbTickets, "BurnUnsold").withArgs(0);
+              expect(await this.contracts.pbTickets.saleCap()).to.be.equal(
+                await this.contracts.pbTickets.MAX_TICKETS(),
+              );
+            });
+          });
+
+          context("when `burnAmount` is `MAX_TICKETS`", function () {
             beforeEach(async function () {
-              await this.contracts.pbTickets.startSale();
-              await this.contracts.pbTickets.pauseSale();
+              this.maxTickets = await this.contracts.pbTickets.MAX_TICKETS();
             });
 
-            context("when `burnAmount` is 0", function () {
+            context("if `totalSupply` is 0", function () {
               it("succeeds", async function () {
-                const contractCall = await this.contracts.pbTickets.burnUnsold(0);
-                expect(contractCall).to.emit(this.contracts.pbTickets, "BurnUnsold").withArgs(0);
-                expect(await this.contracts.pbTickets.saleCap()).to.be.equal(
-                  await this.contracts.pbTickets.MAX_TICKETS(),
-                );
+                const contractCall = await this.contracts.pbTickets.burnUnsold(this.maxTickets);
+                expect(contractCall).to.emit(this.contracts.pbTickets, "BurnUnsold").withArgs(this.maxTickets);
+                expect(await this.contracts.pbTickets.saleCap()).to.be.equal("0");
               });
             });
 
-            context("when `burnAmount` is `MAX_TICKETS`", function () {
+            context("if `totalSupply` is greater than 0", function () {
               beforeEach(async function () {
-                this.maxTickets = await this.contracts.pbTickets.MAX_TICKETS();
+                await this.contracts.pbTickets.__godMode_mint(1);
               });
 
-              context("if `totalSupply` is 0", function () {
-                it("succeeds", async function () {
-                  const contractCall = await this.contracts.pbTickets.burnUnsold(this.maxTickets);
-                  expect(contractCall).to.emit(this.contracts.pbTickets, "BurnUnsold").withArgs(this.maxTickets);
-                  expect(await this.contracts.pbTickets.saleCap()).to.be.equal("0");
-                });
-              });
-
-              context("if `totalSupply` is greater than 0", function () {
-                beforeEach(async function () {
-                  await this.contracts.pbTickets.__godMode_mint(1);
-                });
-
-                it("reverts", async function () {
-                  await expect(this.contracts.pbTickets.burnUnsold(this.maxTickets)).to.be.revertedWith(
-                    PBTicketsErrors.SALE_CAP_EXCEEDED,
-                  );
-                });
+              it("reverts", async function () {
+                await expect(this.contracts.pbTickets.burnUnsold(this.maxTickets)).to.be.revertedWith(
+                  PBTicketsErrors.SALE_CAP_EXCEEDED,
+                );
               });
             });
           });
@@ -218,35 +195,212 @@ export function shouldBehaveLikePBTickets(): void {
     });
 
     describe("mintPrivate", function () {
-      context("when sale is not active", function () {
+      context("when tickets are paused", function () {
+        beforeEach(async function () {
+          await this.contracts.pbTickets.pauseTickets(true);
+        });
+
         it("reverts", async function () {
           await expect(
             this.contracts.pbTickets
               .connect(this.signers.alice)
-              .mintPrivate(0, this.getMerkleProof(this.signers.alice.address)),
-          ).to.be.revertedWith(PBTicketsErrors.SALE_IS_PAUSED);
+              .mintPrivate(1, this.getMerkleProof(this.signers.alice.address)),
+          ).to.be.revertedWith(ImportedErrors.PAUSED);
         });
       });
 
-      context("when sale is active", function () {
-        beforeEach(async function () {
-          await this.contracts.pbTickets.startSale();
-          await this.contracts.pbTickets.__godMode_setPrice(parseEther("0.04"));
-          await this.contracts.pbTickets.__godMode_setMaxMintsPerTx("5");
+      context("when tickets are not paused", function () {
+        context("when sale is not started", function () {
+          it("reverts", async function () {
+            await expect(
+              this.contracts.pbTickets
+                .connect(this.signers.alice)
+                .mintPrivate(0, this.getMerkleProof(this.signers.alice.address)),
+            ).to.be.revertedWith(PBTicketsErrors.SALE_NOT_STARTED);
+          });
         });
 
-        context("when called within the first 24 hours of the sale", function () {
-          context("when minter is not whitelisted", function () {
-            it("reverts", async function () {
-              await expect(
-                this.contracts.pbTickets
-                  .connect(this.signers.bob)
-                  .mintPrivate(1, this.getMerkleProof(this.signers.alice.address)),
-              ).to.be.revertedWith(PBTicketsErrors.MINT_NOT_AUTHORIZED);
+        context("when sale is started", function () {
+          beforeEach(async function () {
+            await this.contracts.pbTickets.startSale();
+            await this.contracts.pbTickets.__godMode_setPrice(parseEther("0.04"));
+            await this.contracts.pbTickets.__godMode_setMaxMintsPerTx("5");
+          });
+
+          context("when called within the first 24 hours of the sale", function () {
+            context("when minter is not whitelisted", function () {
+              it("reverts", async function () {
+                await expect(
+                  this.contracts.pbTickets
+                    .connect(this.signers.bob)
+                    .mintPrivate(1, this.getMerkleProof(this.signers.alice.address)),
+                ).to.be.revertedWith(PBTicketsErrors.MINT_NOT_AUTHORIZED);
+              });
+            });
+
+            context("when minter is whitelisted", function () {
+              context("`mintAmount` is greater than `maxMintsPerTx`", function () {
+                beforeEach(async function () {
+                  this.mintAmount = (await this.contracts.pbTickets.maxMintsPerTx()).add(1);
+                });
+
+                it("reverts", async function () {
+                  await expect(
+                    this.contracts.pbTickets
+                      .connect(this.signers.alice)
+                      .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address)),
+                  ).to.be.revertedWith(PBTicketsErrors.MAX_MINTS_PER_TX_EXCEEDED);
+                });
+              });
+
+              context("`mintAmount` is less than or equal to `maxMintsPerTx`", function () {
+                beforeEach(async function () {
+                  this.mintAmount = await this.contracts.pbTickets.maxMintsPerTx();
+                });
+
+                context("when `mintAmount` is greater than `saleCap` minus `totalSupply()`", function () {
+                  beforeEach(async function () {
+                    await this.contracts.pbTickets.__godMode_setSaleCap(this.mintAmount.sub(1));
+                    await this.contracts.pbTickets.__godMode_setMaxMintsPerTx(this.mintAmount);
+                  });
+
+                  it("reverts", async function () {
+                    await expect(
+                      this.contracts.pbTickets
+                        .connect(this.signers.alice)
+                        .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address)),
+                    ).to.be.revertedWith(PBTicketsErrors.SALE_CAP_EXCEEDED);
+                  });
+                });
+
+                context("when `mintAmount` is less than or equal to `saleCap` minus `totalSupply()`", function () {
+                  context("when user sends less funds than the needed value", function () {
+                    beforeEach(async function () {
+                      this.funds = (await this.contracts.pbTickets.price()).sub(1);
+                    });
+
+                    it("reverts", async function () {
+                      await expect(
+                        this.contracts.pbTickets
+                          .connect(this.signers.alice)
+                          .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address), {
+                            value: this.funds,
+                          }),
+                      ).to.be.revertedWith(PBTicketsErrors.INSUFFICIENT_FUNDS);
+                    });
+                  });
+
+                  context("when user sends the exact needed value", function () {
+                    beforeEach(async function () {
+                      this.funds = (await this.contracts.pbTickets.price()).mul(this.mintAmount);
+                    });
+
+                    it("succeeds", async function () {
+                      const contractCall = await this.contracts.pbTickets
+                        .connect(this.signers.alice)
+                        .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address), {
+                          value: this.funds,
+                        });
+                      expect(contractCall)
+                        .to.emit(this.contracts.pbTickets, "Mint")
+                        .withArgs(
+                          this.signers.alice.address,
+                          this.mintAmount,
+                          await this.contracts.pbTickets.price(),
+                          0,
+                        );
+                      expect(await this.contracts.pbTickets.balanceOf(this.signers.alice.address)).to.be.equal(
+                        this.mintAmount,
+                      );
+                      expect(await ethers.provider.getBalance(this.contracts.pbTickets.address)).to.be.equal(
+                        this.funds,
+                      );
+                    });
+                  });
+
+                  context("when user sends more than the needed value", function () {
+                    beforeEach(async function () {
+                      this.funds = (await this.contracts.pbTickets.price()).mul(this.mintAmount).add(parseEther("1"));
+                    });
+
+                    it("succeeds", async function () {
+                      const contractCall = await this.contracts.pbTickets
+                        .connect(this.signers.alice)
+                        .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address), {
+                          value: this.funds,
+                        });
+                      expect(contractCall)
+                        .to.emit(this.contracts.pbTickets, "Mint")
+                        .withArgs(
+                          this.signers.alice.address,
+                          this.mintAmount,
+                          await this.contracts.pbTickets.price(),
+                          0,
+                        );
+                      expect(await this.contracts.pbTickets.balanceOf(this.signers.alice.address)).to.be.equal(
+                        this.mintAmount,
+                      );
+                      expect(await ethers.provider.getBalance(this.contracts.pbTickets.address)).to.be.equal(
+                        this.funds.sub(parseEther("1")),
+                      );
+                    });
+                  });
+                });
+              });
             });
           });
 
-          context("when minter is whitelisted", function () {
+          timeContext("when called after the first 24 hours of the sale", 86401, function () {
+            it("reverts", async function () {
+              await expect(
+                this.contracts.pbTickets
+                  .connect(this.signers.alice)
+                  .mintPrivate(0, this.getMerkleProof(this.signers.alice.address)),
+              ).to.be.revertedWith(PBTicketsErrors.PRIVATE_PHASE_EXPIRED);
+            });
+          });
+        });
+      });
+    });
+
+    describe("mintPublic", function () {
+      context("when tickets are paused", function () {
+        beforeEach(async function () {
+          await this.contracts.pbTickets.pauseTickets(true);
+        });
+
+        it("reverts", async function () {
+          await expect(this.contracts.pbTickets.connect(this.signers.alice).mintPublic(0)).to.be.revertedWith(
+            ImportedErrors.PAUSED,
+          );
+        });
+      });
+
+      context("when tickets are not paused", function () {
+        context("when sale is not started", function () {
+          it("reverts", async function () {
+            await expect(this.contracts.pbTickets.connect(this.signers.alice).mintPublic(0)).to.be.revertedWith(
+              PBTicketsErrors.SALE_NOT_STARTED,
+            );
+          });
+        });
+
+        context("when sale is started", function () {
+          beforeEach(async function () {
+            await this.contracts.pbTickets.startSale();
+            await this.contracts.pbTickets.__godMode_setPrice(parseEther("0.04"));
+            await this.contracts.pbTickets.__godMode_setMaxMintsPerTx("5");
+          });
+
+          timeContext("when called within the first 24 hours of the sale", 86397, function () {
+            it("reverts", async function () {
+              await expect(this.contracts.pbTickets.connect(this.signers.alice).mintPublic(0)).to.be.revertedWith(
+                PBTicketsErrors.PUBLIC_PHASE_NOT_STARTED,
+              );
+            });
+          });
+
+          timeContext("when called after the first 24 hours of the sale", 86401, function () {
             context("`mintAmount` is greater than `maxMintsPerTx`", function () {
               beforeEach(async function () {
                 this.mintAmount = (await this.contracts.pbTickets.maxMintsPerTx()).add(1);
@@ -254,9 +408,7 @@ export function shouldBehaveLikePBTickets(): void {
 
               it("reverts", async function () {
                 await expect(
-                  this.contracts.pbTickets
-                    .connect(this.signers.alice)
-                    .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address)),
+                  this.contracts.pbTickets.connect(this.signers.alice).mintPublic(this.mintAmount),
                 ).to.be.revertedWith(PBTicketsErrors.MAX_MINTS_PER_TX_EXCEEDED);
               });
             });
@@ -274,9 +426,7 @@ export function shouldBehaveLikePBTickets(): void {
 
                 it("reverts", async function () {
                   await expect(
-                    this.contracts.pbTickets
-                      .connect(this.signers.alice)
-                      .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address)),
+                    this.contracts.pbTickets.connect(this.signers.alice).mintPublic(this.mintAmount),
                   ).to.be.revertedWith(PBTicketsErrors.SALE_CAP_EXCEEDED);
                 });
               });
@@ -291,9 +441,7 @@ export function shouldBehaveLikePBTickets(): void {
                     await expect(
                       this.contracts.pbTickets
                         .connect(this.signers.alice)
-                        .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address), {
-                          value: this.funds,
-                        }),
+                        .mintPublic(this.mintAmount, { value: this.funds }),
                     ).to.be.revertedWith(PBTicketsErrors.INSUFFICIENT_FUNDS);
                   });
                 });
@@ -306,12 +454,10 @@ export function shouldBehaveLikePBTickets(): void {
                   it("succeeds", async function () {
                     const contractCall = await this.contracts.pbTickets
                       .connect(this.signers.alice)
-                      .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address), {
-                        value: this.funds,
-                      });
+                      .mintPublic(this.mintAmount, { value: this.funds });
                     expect(contractCall)
                       .to.emit(this.contracts.pbTickets, "Mint")
-                      .withArgs(this.signers.alice.address, this.mintAmount, await this.contracts.pbTickets.price(), 0);
+                      .withArgs(this.signers.alice.address, this.mintAmount, await this.contracts.pbTickets.price(), 1);
                     expect(await this.contracts.pbTickets.balanceOf(this.signers.alice.address)).to.be.equal(
                       this.mintAmount,
                     );
@@ -327,12 +473,10 @@ export function shouldBehaveLikePBTickets(): void {
                   it("succeeds", async function () {
                     const contractCall = await this.contracts.pbTickets
                       .connect(this.signers.alice)
-                      .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address), {
-                        value: this.funds,
-                      });
+                      .mintPublic(this.mintAmount, { value: this.funds });
                     expect(contractCall)
                       .to.emit(this.contracts.pbTickets, "Mint")
-                      .withArgs(this.signers.alice.address, this.mintAmount, await this.contracts.pbTickets.price(), 0);
+                      .withArgs(this.signers.alice.address, this.mintAmount, await this.contracts.pbTickets.price(), 1);
                     expect(await this.contracts.pbTickets.balanceOf(this.signers.alice.address)).to.be.equal(
                       this.mintAmount,
                     );
@@ -345,157 +489,56 @@ export function shouldBehaveLikePBTickets(): void {
             });
           });
         });
-
-        timeContext("when called after the first 24 hours of the sale", 86401, function () {
-          it("reverts", async function () {
-            await expect(
-              this.contracts.pbTickets
-                .connect(this.signers.alice)
-                .mintPrivate(0, this.getMerkleProof(this.signers.alice.address)),
-            ).to.be.revertedWith(PBTicketsErrors.PRIVATE_PHASE_EXPIRED);
-          });
-        });
       });
     });
 
-    describe("mintPublic", function () {
-      context("when sale is not active", function () {
+    describe("pauseTickets", function () {
+      context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pbTickets.connect(this.signers.alice).mintPublic(0)).to.be.revertedWith(
-            PBTicketsErrors.SALE_IS_PAUSED,
+          await expect(this.contracts.pbTickets.connect(this.signers.alice).pauseTickets(true)).to.be.revertedWith(
+            ImportedErrors.CALLER_NOT_OWNER,
           );
         });
       });
 
-      context("when sale is active", function () {
-        beforeEach(async function () {
-          await this.contracts.pbTickets.startSale();
-          await this.contracts.pbTickets.__godMode_setPrice(parseEther("0.04"));
-          await this.contracts.pbTickets.__godMode_setMaxMintsPerTx("5");
-        });
-
-        timeContext("when called within the first 24 hours of the sale", 86397, function () {
-          it("reverts", async function () {
-            await expect(this.contracts.pbTickets.connect(this.signers.alice).mintPublic(0)).to.be.revertedWith(
-              PBTicketsErrors.PUBLIC_PHASE_NOT_STARTED,
-            );
-          });
-        });
-
-        timeContext("when called after the first 24 hours of the sale", 86401, function () {
-          context("`mintAmount` is greater than `maxMintsPerTx`", function () {
+      context("when called by owner", function () {
+        context("when state given is `true`", function () {
+          context("when tickets are already paused", function () {
             beforeEach(async function () {
-              this.mintAmount = (await this.contracts.pbTickets.maxMintsPerTx()).add(1);
+              await this.contracts.pbTickets.pauseTickets(true);
             });
 
             it("reverts", async function () {
-              await expect(
-                this.contracts.pbTickets.connect(this.signers.alice).mintPublic(this.mintAmount),
-              ).to.be.revertedWith(PBTicketsErrors.MAX_MINTS_PER_TX_EXCEEDED);
+              await expect(this.contracts.pbTickets.pauseTickets(true)).to.be.revertedWith(ImportedErrors.PAUSED);
             });
           });
 
-          context("`mintAmount` is less than or equal to `maxMintsPerTx`", function () {
+          context("when tickets are not paused", function () {
+            it("succeeds", async function () {
+              const contractCall = await this.contracts.pbTickets.pauseTickets(true);
+              expect(contractCall).to.emit(this.contracts.pbTickets, "PauseTickets").withArgs(true);
+              expect(await this.contracts.pbTickets.paused()).to.be.equal(true);
+            });
+          });
+        });
+
+        context("when state given is `false`", function () {
+          context("when tickets are paused", function () {
             beforeEach(async function () {
-              this.mintAmount = await this.contracts.pbTickets.maxMintsPerTx();
+              await this.contracts.pbTickets.pauseTickets(true);
             });
 
-            context("when `mintAmount` is greater than `saleCap` minus `totalSupply()`", function () {
-              beforeEach(async function () {
-                await this.contracts.pbTickets.__godMode_setSaleCap(this.mintAmount.sub(1));
-                await this.contracts.pbTickets.__godMode_setMaxMintsPerTx(this.mintAmount);
-              });
-
-              it("reverts", async function () {
-                await expect(
-                  this.contracts.pbTickets.connect(this.signers.alice).mintPublic(this.mintAmount),
-                ).to.be.revertedWith(PBTicketsErrors.SALE_CAP_EXCEEDED);
-              });
-            });
-
-            context("when `mintAmount` is less than or equal to `saleCap` minus `totalSupply()`", function () {
-              context("when user sends less funds than the needed value", function () {
-                beforeEach(async function () {
-                  this.funds = (await this.contracts.pbTickets.price()).sub(1);
-                });
-
-                it("reverts", async function () {
-                  await expect(
-                    this.contracts.pbTickets
-                      .connect(this.signers.alice)
-                      .mintPublic(this.mintAmount, { value: this.funds }),
-                  ).to.be.revertedWith(PBTicketsErrors.INSUFFICIENT_FUNDS);
-                });
-              });
-
-              context("when user sends the exact needed value", function () {
-                beforeEach(async function () {
-                  this.funds = (await this.contracts.pbTickets.price()).mul(this.mintAmount);
-                });
-
-                it("succeeds", async function () {
-                  const contractCall = await this.contracts.pbTickets
-                    .connect(this.signers.alice)
-                    .mintPublic(this.mintAmount, { value: this.funds });
-                  expect(contractCall)
-                    .to.emit(this.contracts.pbTickets, "Mint")
-                    .withArgs(this.signers.alice.address, this.mintAmount, await this.contracts.pbTickets.price(), 1);
-                  expect(await this.contracts.pbTickets.balanceOf(this.signers.alice.address)).to.be.equal(
-                    this.mintAmount,
-                  );
-                  expect(await ethers.provider.getBalance(this.contracts.pbTickets.address)).to.be.equal(this.funds);
-                });
-              });
-
-              context("when user sends more than the needed value", function () {
-                beforeEach(async function () {
-                  this.funds = (await this.contracts.pbTickets.price()).mul(this.mintAmount).add(parseEther("1"));
-                });
-
-                it("succeeds", async function () {
-                  const contractCall = await this.contracts.pbTickets
-                    .connect(this.signers.alice)
-                    .mintPublic(this.mintAmount, { value: this.funds });
-                  expect(contractCall)
-                    .to.emit(this.contracts.pbTickets, "Mint")
-                    .withArgs(this.signers.alice.address, this.mintAmount, await this.contracts.pbTickets.price(), 1);
-                  expect(await this.contracts.pbTickets.balanceOf(this.signers.alice.address)).to.be.equal(
-                    this.mintAmount,
-                  );
-                  expect(await ethers.provider.getBalance(this.contracts.pbTickets.address)).to.be.equal(
-                    this.funds.sub(parseEther("1")),
-                  );
-                });
-              });
+            it("succeeds", async function () {
+              const contractCall = await this.contracts.pbTickets.pauseTickets(false);
+              expect(contractCall).to.emit(this.contracts.pbTickets, "PauseTickets").withArgs(false);
+              expect(await this.contracts.pbTickets.paused()).to.be.equal(false);
             });
           });
-        });
-      });
-    });
 
-    describe("pauseSale", function () {
-      context("when not called by owner", function () {
-        it("reverts", async function () {
-          await expect(this.contracts.pbTickets.connect(this.signers.alice).pauseSale()).to.be.reverted;
-        });
-      });
-
-      context("when called by owner", function () {
-        context("when sale is not active", function () {
-          it("reverts", async function () {
-            await expect(this.contracts.pbTickets.pauseSale()).to.be.revertedWith(PBTicketsErrors.SALE_IS_PAUSED);
-          });
-        });
-
-        context("when sale is active", function () {
-          beforeEach(async function () {
-            await this.contracts.pbTickets.startSale();
-          });
-
-          it("succeeds", async function () {
-            const contractCall = await this.contracts.pbTickets.pauseSale();
-            expect(contractCall).to.emit(this.contracts.pbTickets, "PauseSale");
-            expect(await this.contracts.pbTickets.isSaleActive()).to.be.equal(false);
+          context("when tickets are already not paused", function () {
+            it("reverts", async function () {
+              await expect(this.contracts.pbTickets.pauseTickets(false)).to.be.revertedWith(ImportedErrors.NOT_PAUSED);
+            });
           });
         });
       });
@@ -504,7 +547,9 @@ export function shouldBehaveLikePBTickets(): void {
     describe("setBaseURI", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pbTickets.connect(this.signers.alice).setBaseURI("")).to.be.reverted;
+          await expect(this.contracts.pbTickets.connect(this.signers.alice).setBaseURI("")).to.be.revertedWith(
+            ImportedErrors.CALLER_NOT_OWNER,
+          );
         });
       });
 
@@ -522,7 +567,9 @@ export function shouldBehaveLikePBTickets(): void {
     describe("setMaxMintsPerTx", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pbTickets.connect(this.signers.alice).setMaxMintsPerTx(0)).to.be.reverted;
+          await expect(this.contracts.pbTickets.connect(this.signers.alice).setMaxMintsPerTx(0)).to.be.revertedWith(
+            ImportedErrors.CALLER_NOT_OWNER,
+          );
         });
       });
 
@@ -540,7 +587,9 @@ export function shouldBehaveLikePBTickets(): void {
     describe("setPrice", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pbTickets.connect(this.signers.alice).setPrice(parseEther("0.1"))).to.be.reverted;
+          await expect(
+            this.contracts.pbTickets.connect(this.signers.alice).setPrice(parseEther("0.1")),
+          ).to.be.revertedWith(ImportedErrors.CALLER_NOT_OWNER);
         });
       });
 
@@ -558,7 +607,9 @@ export function shouldBehaveLikePBTickets(): void {
     describe("startSale", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pbTickets.connect(this.signers.alice).startSale()).to.be.reverted;
+          await expect(this.contracts.pbTickets.connect(this.signers.alice).startSale()).to.be.revertedWith(
+            ImportedErrors.CALLER_NOT_OWNER,
+          );
         });
       });
 
@@ -569,7 +620,7 @@ export function shouldBehaveLikePBTickets(): void {
           });
 
           it("reverts", async function () {
-            await expect(this.contracts.pbTickets.startSale()).to.be.revertedWith(PBTicketsErrors.SALE_IS_ACTIVE);
+            await expect(this.contracts.pbTickets.startSale()).to.be.revertedWith(PBTicketsErrors.SALE_ALREADY_STARTED);
           });
         });
 
@@ -579,24 +630,7 @@ export function shouldBehaveLikePBTickets(): void {
             expect(contractCall).to.emit(this.contracts.pbTickets, "StartSale");
 
             const currentTime = (await ethers.provider.getBlock("latest")).timestamp;
-            expect(await this.contracts.pbTickets.isSaleActive()).to.be.equal(true);
             expect(await this.contracts.pbTickets.saleStartTime()).to.be.equal(currentTime);
-          });
-        });
-
-        context("when sale starts after a sale pause", function () {
-          beforeEach(async function () {
-            await this.contracts.pbTickets.startSale();
-            await this.contracts.pbTickets.pauseSale();
-          });
-
-          it("succeeds", async function () {
-            const startTime = await this.contracts.pbTickets.saleStartTime();
-
-            const contractCall = await this.contracts.pbTickets.startSale();
-            expect(contractCall).to.emit(this.contracts.pbTickets, "StartSale");
-            expect(await this.contracts.pbTickets.isSaleActive()).to.be.equal(true);
-            expect(await this.contracts.pbTickets.saleStartTime()).to.be.equal(startTime);
           });
         });
       });
@@ -607,7 +641,7 @@ export function shouldBehaveLikePBTickets(): void {
         it("reverts", async function () {
           await expect(
             this.contracts.pbTickets.connect(this.signers.alice).withdraw(this.signers.alice.address),
-          ).to.be.reverted;
+          ).to.be.revertedWith(ImportedErrors.CALLER_NOT_OWNER);
         });
       });
 

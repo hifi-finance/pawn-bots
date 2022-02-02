@@ -17,9 +17,9 @@ error PBTickets__MintNotAuthorized();
 error PBTickets__NonexistentToken();
 error PBTickets__PrivatePhaseExpired();
 error PBTickets__PublicPhaseNotStarted();
+error PBTickets__SaleAlreadyStarted();
 error PBTickets__SaleCapExceeded();
-error PBTickets__SaleIsActive();
-error PBTickets__SaleIsPaused();
+error PBTickets__SaleNotStarted();
 
 /// @title PBTickets
 /// @author Hifi
@@ -34,9 +34,6 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
     /// @dev The private sale duration from the sale start timestamp.
     uint256 public constant PRIVATE_DURATION = 24 hours;
-
-    /// @inheritdoc IPBTickets
-    bool public override isSaleActive;
 
     /// @inheritdoc IPBTickets
     uint256 public override maxMintsPerTx;
@@ -76,22 +73,24 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
     /// PUBLIC NON-CONSTANT FUNCTIONS ///
 
     /// @inheritdoc IPBTickets
-    function burnUnsold(uint256 burnAmount) public override onlyOwner {
-        if (isSaleActive) {
-            revert PBTickets__SaleIsActive();
-        }
+    function burnUnsold(uint256 burnAmount) public override onlyOwner whenPaused {
         if (burnAmount + totalSupply() > saleCap) {
             revert PBTickets__SaleCapExceeded();
         }
-
         saleCap -= burnAmount;
         emit BurnUnsold(burnAmount);
     }
 
     /// @inheritdoc IPBTickets
-    function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) public payable override nonReentrant {
-        if (!isSaleActive) {
-            revert PBTickets__SaleIsPaused();
+    function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof)
+        public
+        payable
+        override
+        nonReentrant
+        whenNotPaused
+    {
+        if (saleStartTime == 0) {
+            revert PBTickets__SaleNotStarted();
         }
         if (block.timestamp > saleStartTime + PRIVATE_DURATION) {
             revert PBTickets__PrivatePhaseExpired();
@@ -99,32 +98,30 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
         if (!MerkleProof.verify(merkleProof, merkleRoot, keccak256(abi.encodePacked(msg.sender)))) {
             revert PBTickets__MintNotAuthorized();
         }
-
         mintInternal(mintAmount);
         emit Mint(msg.sender, mintAmount, price, MintPhase.PRIVATE);
     }
 
     /// @inheritdoc IPBTickets
-    function mintPublic(uint256 mintAmount) public payable override nonReentrant {
-        if (!isSaleActive) {
-            revert PBTickets__SaleIsPaused();
+    function mintPublic(uint256 mintAmount) public payable override nonReentrant whenNotPaused {
+        if (saleStartTime == 0) {
+            revert PBTickets__SaleNotStarted();
         }
         if (block.timestamp <= saleStartTime + PRIVATE_DURATION) {
             revert PBTickets__PublicPhaseNotStarted();
         }
-
         mintInternal(mintAmount);
         emit Mint(msg.sender, mintAmount, price, MintPhase.PUBLIC);
     }
 
     /// @inheritdoc IPBTickets
-    function pauseSale() public override onlyOwner {
-        if (!isSaleActive) {
-            revert PBTickets__SaleIsPaused();
+    function pauseTickets(bool state) public override onlyOwner {
+        if (state) {
+            _pause();
+        } else {
+            _unpause();
         }
-
-        isSaleActive = false;
-        emit PauseSale();
+        emit PauseTickets(state);
     }
 
     /// @inheritdoc IPBTickets
@@ -147,13 +144,10 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
     /// @inheritdoc IPBTickets
     function startSale() public override onlyOwner {
-        if (isSaleActive) {
-            revert PBTickets__SaleIsActive();
+        if (saleStartTime != 0) {
+            revert PBTickets__SaleAlreadyStarted();
         }
-        if (saleStartTime == 0) {
-            saleStartTime = block.timestamp;
-        }
-        isSaleActive = true;
+        saleStartTime = block.timestamp;
         emit StartSale();
     }
 
@@ -200,17 +194,14 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
         if (mintAmount + totalSupply > saleCap) {
             revert PBTickets__SaleCapExceeded();
         }
-
         uint256 mintCost = price * mintAmount;
         if (msg.value < mintCost) {
             revert PBTickets__InsufficientFunds();
         }
-
         for (uint256 i = 0; i < mintAmount; i++) {
             uint256 mintId = totalSupply + i;
             _safeMint(msg.sender, mintId);
         }
-
         if (msg.value > mintCost) {
             Address.sendValue(payable(msg.sender), msg.value - mintCost);
         }

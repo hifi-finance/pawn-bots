@@ -20,15 +20,16 @@ interface IPBTickets {
     /// @notice Emitted when a user mints new tickets.
     /// @param minter The minter's account address.
     /// @param mintAmount The amount of minted tickets.
-    /// @param price The mint price per ticket that was paid.
+    /// @param price The mint price per ticket that is paid.
     /// @param phase The mint phase.
     event Mint(address indexed minter, uint256 mintAmount, uint256 price, MintPhase phase);
 
-    /// @notice Emitted when ticket sale is paused.
-    event PauseSale();
+    /// @notice Emitted when tickets are paused or unpaused.
+    /// @param state True if paused.
+    event PauseTickets(bool state);
 
     /// @notice Emitted when base URI is set.
-    /// @param baseURI The new base URI that was set.
+    /// @param baseURI The new base URI that is set.
     event SetBaseURI(string baseURI);
 
     /// @notice Emitted when maximum mints per transaction is set.
@@ -48,9 +49,6 @@ interface IPBTickets {
     event Withdraw(address indexed recipient, uint256 amount);
 
     /// PUBLIC CONSTANT FUNCTIONS ///
-
-    /// @notice The status of the sale.
-    function isSaleActive() external view returns (bool);
 
     /// @notice The maximum amount of tickets that can be minted by a user in one transaction.
     function maxMintsPerTx() external view returns (uint256);
@@ -72,7 +70,7 @@ interface IPBTickets {
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
-    /// - Can only be called when sale is paused.
+    /// - Can only be called when tickets are paused.
     /// - `burnAmount` cannot exceed `saleCap` - `totalSupply()`.
     ///
     /// @param burnAmount The amount of tickets to burn.
@@ -83,7 +81,8 @@ interface IPBTickets {
     /// @dev Emits a {Mint} event.
     ///
     /// @dev Requirements:
-    /// - Can only be called when sale is active.
+    /// - Can only be called when tickets are not paused.
+    /// - Can only be called after sale is started.
     /// - Can only be called within the first 24 hours of the sale.
     /// - Caller must be eligible to mint in the private phase.
     /// - `mintAmount` cannot exceed `maxMintsPerTx`.
@@ -99,7 +98,8 @@ interface IPBTickets {
     /// @dev Emits a {Mint} event.
     ///
     /// @dev Requirements:
-    /// - Can only be called when sale is active.
+    /// - Can only be called when tickets are not paused.
+    /// - Can only be called after sale is started.
     /// - Can only be called after the first 24 hours of the sale.
     /// - `mintAmount` cannot exceed `maxMintsPerTx`.
     /// - `mintAmount` cannot exceed `saleCap` minus `totalSupply()`.
@@ -108,14 +108,14 @@ interface IPBTickets {
     /// @param mintAmount The amount of tickets to mint.
     function mintPublic(uint256 mintAmount) external payable;
 
-    /// @notice Pause the sale.
+    /// @notice Pause or unpause ticket minting and transfers.
     ///
-    /// @dev Emits a {PauseSale} event.
+    /// @dev Emits a {PauseTickets} event.
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
-    /// - Sale must be active.
-    function pauseSale() external;
+    /// @param state The new pause state.
+    function pauseTickets(bool state) external;
 
     /// @notice Set the base URI.
     ///
@@ -153,7 +153,7 @@ interface IPBTickets {
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
-    /// - Sale must not already be active.
+    /// - Can only be called when sale is not started.
     function startSale() external;
 
     /// @notice Withdraw the accumulated funds in the contract.

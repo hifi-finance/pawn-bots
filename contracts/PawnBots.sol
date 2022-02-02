@@ -156,7 +156,6 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         if (!isMintEnabled) {
             revert PawnBots__MintIsNotEnabled();
         }
-
         isMintEnabled = false;
         emit DisableMint();
     }
@@ -166,7 +165,6 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         if (isMintEnabled) {
             revert PawnBots__MintIsAlreadyEnabled();
         }
-
         isMintEnabled = true;
         emit EnableMint();
     }
@@ -186,7 +184,6 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         if (mintAmount + claim.claimedAmount > claim.allocatedAmount) {
             revert PawnBots__UserEligibilityExceeded();
         }
-
         claims[msg.sender].claimedAmount += mintAmount;
         for (uint256 i = 0; i < mintAmount; i++) {
             uint256 mintId = totalSupply();
@@ -200,7 +197,6 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         if (reserveAmount + reservedElements > RESERVE_CAP) {
             revert PawnBots__ReserveCapExceeded();
         }
-
         uint256 totalSupply = totalSupply();
         for (uint256 i = 0; i < reserveAmount; i++) {
             _safeMint(msg.sender, totalSupply + i);
@@ -220,7 +216,6 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         if (vrfRequestId != 0) {
             revert PawnBots__RandomnessAlreadyRequested();
         }
-
         vrfRequestId = requestRandomness(vrfKeyHash, vrfFee);
     }
 
@@ -271,7 +266,6 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         if (vrfRequestId != requestId) {
             revert PawnBots__VrfRequestIdMismatch();
         }
-
         offset = (randomness % (COLLECTION_SIZE - 1)) + 1;
         emit Reveal();
     }

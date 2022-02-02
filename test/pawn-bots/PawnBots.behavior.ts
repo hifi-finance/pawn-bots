@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ethers, network } from "hardhat";
 
 import { VRF_FEE } from "../constants";
-import { PawnBotsErrors } from "../errors";
+import { ImportedErrors, PawnBotsErrors } from "../errors";
 
 export function shouldBehaveLikePawnBots(): void {
   describe("Deployment", function () {
@@ -157,7 +157,7 @@ export function shouldBehaveLikePawnBots(): void {
     describe("tokenURI", function () {
       context("when token does not exist", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.tokenURI(0)).to.be.reverted;
+          await expect(this.contracts.pawnBots.tokenURI(0)).to.be.revertedWith(PawnBotsErrors.NONEXISTENT_TOKEN);
         });
       });
 
@@ -202,7 +202,9 @@ export function shouldBehaveLikePawnBots(): void {
     describe("disableMint", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).disableMint()).to.be.reverted;
+          await expect(this.contracts.pawnBots.connect(this.signers.alice).disableMint()).to.be.revertedWith(
+            ImportedErrors.CALLER_NOT_OWNER,
+          );
         });
       });
 
@@ -229,7 +231,9 @@ export function shouldBehaveLikePawnBots(): void {
     describe("enableMint", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).enableMint()).to.be.reverted;
+          await expect(this.contracts.pawnBots.connect(this.signers.alice).enableMint()).to.be.revertedWith(
+            ImportedErrors.CALLER_NOT_OWNER,
+          );
         });
       });
 
@@ -313,7 +317,9 @@ export function shouldBehaveLikePawnBots(): void {
     describe("reserve", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).reserve(0)).to.be.reverted;
+          await expect(this.contracts.pawnBots.connect(this.signers.alice).reserve(0)).to.be.revertedWith(
+            ImportedErrors.CALLER_NOT_OWNER,
+          );
         });
       });
 
@@ -360,7 +366,7 @@ export function shouldBehaveLikePawnBots(): void {
     describe("reveal", function () {
       context("when contract doesn't contain the VRF fee in its balance", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.reveal()).to.be.reverted;
+          await expect(this.contracts.pawnBots.reveal()).to.be.revertedWith("");
         });
       });
 
@@ -382,7 +388,9 @@ export function shouldBehaveLikePawnBots(): void {
 
         context("when not called by owner", function () {
           it("reverts", async function () {
-            await expect(this.contracts.pawnBots.connect(this.signers.alice).reveal()).to.be.reverted;
+            await expect(this.contracts.pawnBots.connect(this.signers.alice).reveal()).to.be.revertedWith(
+              ImportedErrors.CALLER_NOT_OWNER,
+            );
           });
         });
 
@@ -431,7 +439,9 @@ export function shouldBehaveLikePawnBots(): void {
     describe("setBaseURI", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).setBaseURI("")).to.be.reverted;
+          await expect(this.contracts.pawnBots.connect(this.signers.alice).setBaseURI("")).to.be.revertedWith(
+            ImportedErrors.CALLER_NOT_OWNER,
+          );
         });
       });
 
@@ -448,7 +458,9 @@ export function shouldBehaveLikePawnBots(): void {
     describe("setClaims", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).setClaims([])).to.be.reverted;
+          await expect(this.contracts.pawnBots.connect(this.signers.alice).setClaims([])).to.be.revertedWith(
+            ImportedErrors.CALLER_NOT_OWNER,
+          );
         });
       });
 
@@ -537,7 +549,9 @@ export function shouldBehaveLikePawnBots(): void {
     describe("setProvenanceHash", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).setProvenanceHash("")).to.be.reverted;
+          await expect(this.contracts.pawnBots.connect(this.signers.alice).setProvenanceHash("")).to.be.revertedWith(
+            ImportedErrors.CALLER_NOT_OWNER,
+          );
         });
       });
 
@@ -554,7 +568,9 @@ export function shouldBehaveLikePawnBots(): void {
     describe("setRevealTime", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).setRevealTime("0")).to.be.reverted;
+          await expect(this.contracts.pawnBots.connect(this.signers.alice).setRevealTime("0")).to.be.revertedWith(
+            ImportedErrors.CALLER_NOT_OWNER,
+          );
         });
       });
 
