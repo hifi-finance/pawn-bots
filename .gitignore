@@ -13,6 +13,7 @@
 **/.coverage_cache
 **/.coverage_contracts
 **/dist
+**/merkle-data
 **/node_modules
 
 # files
@@ -20,7 +21,6 @@
 *.log
 .pnp.*
 coverage.json
-merkle-data.json
 npm-debug.log*
 whitelist.csv
 yarn-debug.log*

@@ -8,6 +8,7 @@
 **/cache
 **/coverage
 **/dist
+**/merkle-data
 **/node_modules
 **/types
 
@@ -16,7 +17,6 @@
 *.log
 .pnp.*
 coverage.json
-merkle-data.json
 npm-debug.log*
 whitelist.csv
 yarn-debug.log*
