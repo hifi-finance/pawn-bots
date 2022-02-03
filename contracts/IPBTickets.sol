@@ -32,9 +32,13 @@ interface IPBTickets {
     /// @param baseURI The new base URI that is set.
     event SetBaseURI(string baseURI);
 
-    /// @notice Emitted when maximum mints per transaction is set.
-    /// @param maxMintsPerTx The new maximum mints per transaction.
-    event SetMaxMintsPerTx(uint256 maxMintsPerTx);
+    /// @notice Emitted when maximum private mints is set.
+    /// @param maxPrivateMints The new maximum private mints.
+    event SetMaxPrivateMints(uint256 maxPrivateMints);
+
+    /// @notice Emitted when maximum public mints per transaction is set.
+    /// @param maxPublicMintsPerTx The new maximum public mints per transaction.
+    event SetMaxPublicMintsPerTx(uint256 maxPublicMintsPerTx);
 
     /// @notice Emitted when mint price is set.
     /// @param price The new mint price.
@@ -50,8 +54,15 @@ interface IPBTickets {
 
     /// PUBLIC CONSTANT FUNCTIONS ///
 
-    /// @notice The maximum amount of tickets that can be minted by a user in one transaction.
-    function maxMintsPerTx() external view returns (uint256);
+    /// @notice The total amount of tickets minted by a user during the private phase.
+    /// @param user The user account address.
+    function claimedPrivateMints(address user) external view returns (uint256);
+
+    /// @notice The maximum total amount of tickets that can be minted by a user during the private phase.
+    function maxPrivateMints() external view returns (uint256);
+
+    /// @notice The maximum amount of tickets that can be minted by a user during the public phase in one transaction.
+    function maxPublicMintsPerTx() external view returns (uint256);
 
     /// @notice The mint price in ETH.
     function price() external view returns (uint256);
@@ -85,7 +96,7 @@ interface IPBTickets {
     /// - Can only be called after sale is started.
     /// - Can only be called within the first 24 hours of the sale.
     /// - Caller must be eligible to mint in the private phase.
-    /// - `mintAmount` cannot exceed `maxMintsPerTx`.
+    /// - `mintAmount` cannot exceed `maxPrivateMints` minus `claimedPrivateMints(user)`.
     /// - `mintAmount` cannot exceed `saleCap` minus `totalSupply()`.
     /// - Can only be called when caller has placed at least `price * mintAmount` ETH as the transaction value.
     ///
@@ -101,7 +112,7 @@ interface IPBTickets {
     /// - Can only be called when tickets are not paused.
     /// - Can only be called after sale is started.
     /// - Can only be called after the first 24 hours of the sale.
-    /// - `mintAmount` cannot exceed `maxMintsPerTx`.
+    /// - `mintAmount` cannot exceed `maxPublicMintsPerTx`.
     /// - `mintAmount` cannot exceed `saleCap` minus `totalSupply()`.
     /// - Can only be called when caller has placed at least `price * mintAmount` ETH as the transaction value.
     ///
@@ -127,15 +138,25 @@ interface IPBTickets {
     /// @param newBaseURI The new base URI.
     function setBaseURI(string memory newBaseURI) external;
 
-    /// @notice Set the maximum amount of tickets that can be minted by a user in one transaction.
+    /// @notice Set the maximum private mints.
     ///
-    /// @dev Emits a {SetMaxMintsPerTx} event.
+    /// @dev Emits a {SetMaxPrivateMints} event.
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
     ///
-    /// @param newMaxMintsPerTx The new maximum mints per transaction.
-    function setMaxMintsPerTx(uint256 newMaxMintsPerTx) external;
+    /// @param newMaxPrivateMints The new maximum private mints.
+    function setMaxPrivateMints(uint256 newMaxPrivateMints) external;
+
+    /// @notice Set the maximum public mints per transaction.
+    ///
+    /// @dev Emits a {SetMaxPublicMintsPerTx} event.
+    ///
+    /// @dev Requirements:
+    /// - Can only be called by the owner.
+    ///
+    /// @param newMaxPublicMintsPerTx The new maximum public mints per transaction.
+    function setMaxPublicMintsPerTx(uint256 newMaxPublicMintsPerTx) external;
 
     /// @notice Set the mint price.
     ///

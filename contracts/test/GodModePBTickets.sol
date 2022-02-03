@@ -38,8 +38,16 @@ contract GodModePBTickets is PBTickets {
         baseURI = newBaseURI;
     }
 
-    function __godMode_setMaxMintsPerTx(uint256 newMaxMintsPerTx) external {
-        maxMintsPerTx = newMaxMintsPerTx;
+    function __godMode_setClaimedPrivateMints(address user, uint256 newClaimedPrivateMints) external {
+        claimedPrivateMints[user] = newClaimedPrivateMints;
+    }
+
+    function __godMode_setMaxPrivateMints(uint256 newMaxPrivateMints) external {
+        maxPrivateMints = newMaxPrivateMints;
+    }
+
+    function __godMode_setMaxPublicMintsPerTx(uint256 newMaxPublicMintsPerTx) external {
+        maxPublicMintsPerTx = newMaxPublicMintsPerTx;
     }
 
     function __godMode_setPrice(uint256 newPrice) external {

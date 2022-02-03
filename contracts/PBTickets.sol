@@ -12,7 +12,8 @@ import "./IPBTickets.sol";
 
 error PBTickets__InsufficientFunds();
 error PBTickets__InvalidRecipient();
-error PBTickets__MaxMintsPerTxExceeded();
+error PBTickets__MaxPrivateMintsExceeded();
+error PBTickets__MaxPublicMintsPerTxExceeded();
 error PBTickets__MintNotAuthorized();
 error PBTickets__NonexistentToken();
 error PBTickets__PrivatePhaseExpired();
@@ -36,7 +37,13 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
     uint256 public constant PRIVATE_DURATION = 24 hours;
 
     /// @inheritdoc IPBTickets
-    uint256 public override maxMintsPerTx;
+    mapping(address => uint256) public override claimedPrivateMints;
+
+    /// @inheritdoc IPBTickets
+    uint256 public override maxPrivateMints;
+
+    /// @inheritdoc IPBTickets
+    uint256 public override maxPublicMintsPerTx;
 
     /// @inheritdoc IPBTickets
     uint256 public override price;
@@ -98,7 +105,11 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
         if (!MerkleProof.verify(merkleProof, merkleRoot, keccak256(abi.encodePacked(msg.sender)))) {
             revert PBTickets__MintNotAuthorized();
         }
+        if (mintAmount + claimedPrivateMints[msg.sender] > maxPrivateMints) {
+            revert PBTickets__MaxPrivateMintsExceeded();
+        }
         mintInternal(mintAmount);
+        claimedPrivateMints[msg.sender] += mintAmount;
         emit Mint(msg.sender, mintAmount, price, MintPhase.PRIVATE);
     }
 
@@ -109,6 +120,9 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
         }
         if (block.timestamp <= saleStartTime + PRIVATE_DURATION) {
             revert PBTickets__PublicPhaseNotStarted();
+        }
+        if (mintAmount > maxPublicMintsPerTx) {
+            revert PBTickets__MaxPublicMintsPerTxExceeded();
         }
         mintInternal(mintAmount);
         emit Mint(msg.sender, mintAmount, price, MintPhase.PUBLIC);
@@ -131,9 +145,15 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
     }
 
     /// @inheritdoc IPBTickets
-    function setMaxMintsPerTx(uint256 newMaxMintsPerTx) public override onlyOwner {
-        maxMintsPerTx = newMaxMintsPerTx;
-        emit SetMaxMintsPerTx(maxMintsPerTx);
+    function setMaxPrivateMints(uint256 newMaxPrivateMints) public override onlyOwner {
+        maxPrivateMints = newMaxPrivateMints;
+        emit SetMaxPrivateMints(maxPrivateMints);
+    }
+
+    /// @inheritdoc IPBTickets
+    function setMaxPublicMintsPerTx(uint256 newMaxPublicMintsPerTx) public override onlyOwner {
+        maxPublicMintsPerTx = newMaxPublicMintsPerTx;
+        emit SetMaxPublicMintsPerTx(maxPublicMintsPerTx);
     }
 
     /// @inheritdoc IPBTickets
@@ -187,9 +207,6 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
     /// @dev Mint ticket NFTs in exchange for fees.
     function mintInternal(uint256 mintAmount) internal {
-        if (mintAmount > maxMintsPerTx) {
-            revert PBTickets__MaxMintsPerTxExceeded();
-        }
         uint256 totalSupply = totalSupply();
         if (mintAmount + totalSupply > saleCap) {
             revert PBTickets__SaleCapExceeded();
