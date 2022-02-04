@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "hardhat/console.sol";
 import "./IPBTickets.sol";
 
 error PBTickets__InsufficientFunds();
@@ -108,8 +107,8 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
         if (mintAmount + claimedPrivateMints[msg.sender] > maxPrivateMints) {
             revert PBTickets__MaxPrivateMintsExceeded();
         }
-        mintInternal(mintAmount);
         claimedPrivateMints[msg.sender] += mintAmount;
+        mintInternal(mintAmount);
         emit Mint(msg.sender, mintAmount, price, MintPhase.PRIVATE);
     }
 

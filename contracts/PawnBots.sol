@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "hardhat/console.sol";
 import "./IPawnBots.sol";
 
 error PawnBots__CollectionSizeExceeded();
@@ -185,8 +184,9 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
             revert PawnBots__UserEligibilityExceeded();
         }
         claims[msg.sender].claimedAmount += mintAmount;
+        uint256 totalSupply = totalSupply();
         for (uint256 i = 0; i < mintAmount; i++) {
-            uint256 mintId = totalSupply();
+            uint256 mintId = totalSupply + i;
             _safeMint(msg.sender, mintId);
         }
         emit Mint(msg.sender, mintAmount);
@@ -197,11 +197,12 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         if (reserveAmount + reservedElements > RESERVE_CAP) {
             revert PawnBots__ReserveCapExceeded();
         }
+        reservedElements += reserveAmount;
         uint256 totalSupply = totalSupply();
         for (uint256 i = 0; i < reserveAmount; i++) {
-            _safeMint(msg.sender, totalSupply + i);
+            uint256 mintId = totalSupply + i;
+            _safeMint(msg.sender, mintId);
         }
-        reservedElements += reserveAmount;
         emit Reserve(reserveAmount);
     }
 
