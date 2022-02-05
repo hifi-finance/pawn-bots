@@ -1,3 +1,3 @@
-import "./merkle-data";
-import "./merkle-proof";
-import "./merkle-root";
+import "./data";
+import "./proof";
+import "./root";
