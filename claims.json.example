@@ -1,0 +1,22 @@
+[
+  {
+    "user": "user1",
+    "allocatedAmount": 0
+  },
+  {
+    "user": "user2",
+    "allocatedAmount": 0
+  },
+  {
+    "user": "user3",
+    "allocatedAmount": 0
+  },
+  {
+    "user": "user4",
+    "allocatedAmount": 0
+  },
+  {
+    "user": "user5",
+    "allocatedAmount": 0
+  }
+]
