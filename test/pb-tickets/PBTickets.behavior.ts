@@ -258,7 +258,8 @@ export function shouldBehaveLikePBTickets(): void {
 
         context("when sale is started", function () {
           beforeEach(async function () {
-            await this.contracts.pbTickets.startSale();
+            const currentTime = (await ethers.provider.getBlock("latest")).timestamp;
+            await this.contracts.pbTickets.__godMode_setSaleStartTime(currentTime);
             await this.contracts.pbTickets.__godMode_setPrice(parseEther("0.04"));
             await this.contracts.pbTickets.__godMode_setMaxPrivateMints("5");
             await this.contracts.pbTickets.__godMode_setClaimedPrivateMints(this.signers.alice.address, "1");
@@ -428,7 +429,8 @@ export function shouldBehaveLikePBTickets(): void {
 
         context("when sale is started", function () {
           beforeEach(async function () {
-            await this.contracts.pbTickets.startSale();
+            const currentTime = (await ethers.provider.getBlock("latest")).timestamp;
+            await this.contracts.pbTickets.__godMode_setSaleStartTime(currentTime);
             await this.contracts.pbTickets.__godMode_setPrice(parseEther("0.04"));
             await this.contracts.pbTickets.__godMode_setMaxPublicMintsPerTx("5");
           });
@@ -679,7 +681,8 @@ export function shouldBehaveLikePBTickets(): void {
       context("when called by owner", function () {
         context("when sale has already started", function () {
           beforeEach(async function () {
-            await this.contracts.pbTickets.startSale();
+            const currentTime = (await ethers.provider.getBlock("latest")).timestamp;
+            await this.contracts.pbTickets.__godMode_setSaleStartTime(currentTime);
           });
 
           it("reverts", async function () {

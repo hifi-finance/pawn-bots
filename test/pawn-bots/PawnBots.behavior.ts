@@ -210,6 +210,10 @@ export function shouldBehaveLikePawnBots(): void {
 
       context("when called by owner", function () {
         context("when mint is disabled", function () {
+          beforeEach(async function () {
+            await this.contracts.pawnBots.__godMode_setIsMintEnabled(false);
+          });
+
           it("reverts", async function () {
             await expect(this.contracts.pawnBots.disableMint()).to.be.revertedWith(PawnBotsErrors.MINT_IS_NOT_ENABLED);
           });
@@ -217,7 +221,7 @@ export function shouldBehaveLikePawnBots(): void {
 
         context("when mint is enabled", function () {
           beforeEach(async function () {
-            await this.contracts.pawnBots.enableMint();
+            await this.contracts.pawnBots.__godMode_setIsMintEnabled(true);
           });
 
           it("succeeds", async function () {
@@ -240,7 +244,7 @@ export function shouldBehaveLikePawnBots(): void {
       context("when called by owner", function () {
         context("when mint is enabled", function () {
           beforeEach(async function () {
-            await this.contracts.pawnBots.enableMint();
+            await this.contracts.pawnBots.__godMode_setIsMintEnabled(true);
           });
 
           it("reverts", async function () {
@@ -251,6 +255,10 @@ export function shouldBehaveLikePawnBots(): void {
         });
 
         context("when mint is disabled", function () {
+          beforeEach(async function () {
+            await this.contracts.pawnBots.__godMode_setIsMintEnabled(false);
+          });
+
           it("succeeds", async function () {
             await this.contracts.pawnBots.enableMint();
             expect(await this.contracts.pawnBots.isMintEnabled()).to.be.equal(true);
@@ -270,7 +278,7 @@ export function shouldBehaveLikePawnBots(): void {
 
       context("when minting is enabled", function () {
         beforeEach(async function () {
-          await this.contracts.pawnBots.enableMint();
+          await this.contracts.pawnBots.__godMode_setIsMintEnabled(true);
         });
 
         context("when `mintAmount` plus `totalSupply()` exceeds theoretical collection size", function () {
@@ -300,9 +308,13 @@ export function shouldBehaveLikePawnBots(): void {
 
           context("when caller has a claim to mint", function () {
             beforeEach(async function () {
-              const claim = { user: this.signers.alice.address, allocatedAmount: this.mintAmount };
+              const claim = {
+                exists: true,
+                allocatedAmount: this.mintAmount,
+                claimedAmount: "0",
+              };
 
-              await this.contracts.pawnBots.setClaims([claim]);
+              await this.contracts.pawnBots.__godMode_setClaim(this.signers.alice.address, claim);
             });
 
             it("succeeds", async function () {
@@ -396,9 +408,12 @@ export function shouldBehaveLikePawnBots(): void {
 
         context("when called by owner", function () {
           context("when called again after the first time", function () {
+            beforeEach(async function () {
+              await this.contracts.pawnBots.reveal();
+            });
+
             context("when offset is already set", function () {
               beforeEach(async function () {
-                await this.contracts.pawnBots.reveal();
                 await this.contracts.pawnBots.__godMode_setOffset("1456");
               });
 
@@ -409,7 +424,7 @@ export function shouldBehaveLikePawnBots(): void {
 
             context("when offset is not yet set", function () {
               beforeEach(async function () {
-                await this.contracts.pawnBots.reveal();
+                await this.contracts.pawnBots.__godMode_setOffset("0");
               });
 
               it("reverts", async function () {
