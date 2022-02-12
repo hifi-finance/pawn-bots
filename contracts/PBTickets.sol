@@ -189,7 +189,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
     /// @dev See {IERC165-supportsInterface}.
     function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721Enumerable) returns (bool) {
-        return ERC721Enumerable.supportsInterface(interfaceId);
+        return super.supportsInterface(interfaceId);
     }
 
     /// INTERNAL NON-CONSTANT FUNCTIONS ///
@@ -200,8 +200,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
         address to,
         uint256 tokenId
     ) internal override(ERC721Enumerable, ERC721Pausable) {
-        ERC721Pausable._beforeTokenTransfer(from, to, tokenId);
-        ERC721Enumerable._beforeTokenTransfer(from, to, tokenId);
+        super._beforeTokenTransfer(from, to, tokenId);
     }
 
     /// @dev Mint ticket NFTs in exchange for fees.
