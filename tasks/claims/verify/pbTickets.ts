@@ -23,7 +23,7 @@ task("claims:verify:pbTickets")
       }
       console.log("Verified " + user + ".");
     }
-    if (claims.length !== Number(await pbTickets.totalSupply())) {
+    if (claims.map(c => c.allocatedAmount).reduce((a, b) => a + b, 0) !== Number(await pbTickets.totalSupply())) {
       throw Error("Input claim count does not match with PBTKT total supply.");
     }
 
