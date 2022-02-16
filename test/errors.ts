@@ -23,8 +23,8 @@ export enum PBTicketsErrors {
   PRIVATE_PHASE_EXPIRED = "PBTickets__PrivatePhaseExpired",
   PUBLIC_PHASE_NOT_STARTED = "PBTickets__PublicPhaseNotStarted",
   SALE_ALREADY_STARTED = "PBTickets__SaleAlreadyStarted",
-  SALE_NOT_STARTED = "PBTickets__SaleNotStarted",
   SALE_CAP_EXCEEDED = "PBTickets__SaleCapExceeded",
+  SALE_NOT_STARTED = "PBTickets__SaleNotStarted",
 }
 
 export enum ImportedErrors {

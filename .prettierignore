@@ -8,7 +8,7 @@
 **/cache
 **/coverage
 **/dist
-**/merkle-data
+**/merkle_chunks
 **/node_modules
 **/types
 

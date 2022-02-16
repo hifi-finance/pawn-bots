@@ -1,3 +1,1 @@
-import "./data";
-import "./proof";
-import "./root";
+import "./generate";

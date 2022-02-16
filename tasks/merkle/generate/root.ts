@@ -3,10 +3,10 @@ import { TaskArguments } from "hardhat/types";
 import keccak256 from "keccak256";
 import { MerkleTree } from "merkletreejs";
 
-import { loadEntries } from "./helpers";
+import { loadEntries } from "../helpers";
 
-task("merkle:root")
-  .setDescription("Generates a merkle root from a list of Ethereum accounts")
+task("merkle:generate:root")
+  .setDescription("Generates a merkle root hash from a provided list of Ethereum accounts")
   .addParam("file", "CSV file containing the Ethereum accounts to construct Merkle tree from")
   .setAction(async function (taskArguments: TaskArguments, { ethers }) {
     const accounts = loadEntries(taskArguments.file).map(ethers.utils.getAddress);
@@ -19,6 +19,5 @@ task("merkle:root")
       }
     }
     const merkleRoot: string = merkleTree.getHexRoot();
-
     console.log(merkleRoot);
   });

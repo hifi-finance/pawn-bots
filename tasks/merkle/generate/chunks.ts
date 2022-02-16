@@ -5,11 +5,11 @@ import { TaskArguments } from "hardhat/types";
 import keccak256 from "keccak256";
 import { MerkleTree } from "merkletreejs";
 
-import { loadEntries } from "./helpers";
+import { loadEntries } from "../helpers";
 
-task("merkle:data")
-  .setDescription("Generates Merkle data files from a provided list of Ethereum accounts")
-  .addParam("file", "CSV file containing all Ethereum accounts to generate Merkle data from")
+task("merkle:generate:chunks")
+  .setDescription("Generates Merkle data chunk files from a provided list of Ethereum accounts")
+  .addParam("file", "CSV file containing the Ethereum accounts to construct Merkle tree from")
   .addParam("chunkSize", "How many data entries at most should each chunk file contain")
   .setAction(async function (taskArguments: TaskArguments, { ethers }) {
     const accounts = loadEntries(taskArguments.file)
@@ -24,7 +24,7 @@ task("merkle:data")
     }
     const chunkIds: string[] = [];
     const chunkSize = Number(taskArguments.chunkSize);
-    const dir = "merkle-data/";
+    const dir = "merkle_chunks/";
     if (existsSync(dir)) {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -45,10 +45,8 @@ task("merkle:data")
             ),
         ),
       );
-
       console.log("Generated Merkle data chunk file: " + chunkFile);
     }
-
     writeFileSync(dir + "index.json", JSON.stringify(chunkIds));
     console.log("Generated index file: " + dir + "index.json");
   });

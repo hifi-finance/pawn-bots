@@ -7,7 +7,6 @@ task("accounts")
   .addOptionalParam("index", "Index of account to print")
   .setAction(async (taskArguments: TaskArguments, { ethers }) => {
     const accounts: Signer[] = await ethers.getSigners();
-
     if (taskArguments.index !== undefined) {
       console.log(await accounts[taskArguments.index].getAddress());
     } else {
