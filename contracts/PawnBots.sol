@@ -5,7 +5,6 @@ import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./IPawnBots.sol";
 
 error PawnBots__CollectionSizeExceeded();
@@ -16,7 +15,6 @@ error PawnBots__OffsetAlreadySet();
 error PawnBots__RandomnessAlreadyRequested();
 error PawnBots__ReserveCapExceeded();
 error PawnBots__TooEarlyToReveal();
-error PawnBots__UserAlreadyClaimed();
 error PawnBots__UserEligibilityExceeded();
 error PawnBots__UserIsNotEligible();
 error PawnBots__VrfRequestIdMismatch();

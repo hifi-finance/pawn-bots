@@ -7,7 +7,6 @@ export enum PawnBotsErrors {
   RANDOMNESS_ALREADY_REQUESTED = "PawnBots__RandomnessAlreadyRequested",
   RESERVE_CAP_EXCEEDED = "PawnBots__ReserveCapExceeded",
   TOO_EARLY_TO_REVEAL = "PawnBots__TooEarlyToReveal",
-  USER_ALREADY_CLAIMED = "PawnBots__UserAlreadyClaimed",
   USER_ELIGIBILITY_EXCEEDED = "PawnBots__UserEligibilityExceeded",
   USER_IS_NOT_ELIGIBLE = "PawnBots__UserIsNotEligible",
   VRF_REQUEST_ID_MISMATCH = "PawnBots__VrfRequestIdMismatch",
