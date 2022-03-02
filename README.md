@@ -1,6 +1,6 @@
 # Pawn Bots [![Coverage Status](https://coveralls.io/repos/github/hifi-finance/pawn-bots/badge.svg?branch=main)](https://coveralls.io/github/hifi-finance/pawn-bots?branch=main) [![Yarn](https://img.shields.io/badge/maintained%20with-yarn-2d8dbb.svg)](https://yarnpkg.com/) [![Styled with Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://prettier.io) [![Commitizen Friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/) [![license: LGPL3.0](https://img.shields.io/badge/license-LGPL3.0-yellow.svg)](https://opensource.org/licenses/lgpl-3.0)
 
-10,000 NFTs built specifically as collateral, giving you the power to borrow up up to 50% of their value.
+Pawn Bots is a limited collection of 8,888 NFTs that allow you to borrow up to 50% of their value.
 
 ## Development
 
