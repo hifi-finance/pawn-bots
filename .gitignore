@@ -31,8 +31,10 @@ yarn-error.log*
 src/types/*
 !src/types/common.ts
 !src/types/PawnBots.ts
+!src/types/PBTickets.ts
 
 # factories
 !src/types/factories
 src/types/factories/*
 !src/types/factories/PawnBots__factory.ts
+!src/types/factories/PBTickets__factory.ts
