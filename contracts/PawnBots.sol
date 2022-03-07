@@ -182,10 +182,8 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
             revert PawnBots__UserEligibilityExceeded();
         }
         claims[msg.sender].claimedAmount += mintAmount;
-        uint256 totalSupply = totalSupply();
         for (uint256 i = 0; i < mintAmount; i++) {
-            uint256 mintId = totalSupply + i;
-            _safeMint(msg.sender, mintId);
+            _safeMint(msg.sender, totalSupply());
         }
         emit Mint(msg.sender, mintAmount);
     }
@@ -196,10 +194,8 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
             revert PawnBots__ReserveCapExceeded();
         }
         reservedElements += reserveAmount;
-        uint256 totalSupply = totalSupply();
         for (uint256 i = 0; i < reserveAmount; i++) {
-            uint256 mintId = totalSupply + i;
-            _safeMint(msg.sender, mintId);
+            _safeMint(msg.sender, totalSupply());
         }
         emit Reserve(reserveAmount);
     }

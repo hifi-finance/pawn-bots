@@ -204,8 +204,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
     /// @dev Mint ticket NFTs in exchange for fees.
     function mintInternal(uint256 mintAmount) internal {
-        uint256 totalSupply = totalSupply();
-        if (mintAmount + totalSupply > saleCap) {
+        if (mintAmount + totalSupply() > saleCap) {
             revert PBTickets__SaleCapExceeded();
         }
         uint256 mintCost = price * mintAmount;
@@ -213,8 +212,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
             revert PBTickets__InsufficientFunds();
         }
         for (uint256 i = 0; i < mintAmount; i++) {
-            uint256 mintId = totalSupply + i;
-            _safeMint(msg.sender, mintId);
+            _safeMint(msg.sender, totalSupply());
         }
         if (msg.value > mintCost) {
             Address.sendValue(payable(msg.sender), msg.value - mintCost);
