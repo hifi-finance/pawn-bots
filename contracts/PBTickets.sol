@@ -3,9 +3,9 @@ pragma solidity >=0.8.4;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Pausable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "erc721a/contracts/ERC721A.sol";
 import "./IPBTickets.sol";
 
 error PBTickets__InsufficientFunds();
@@ -23,7 +23,7 @@ error PBTickets__SaleNotStarted();
 /// @title PBTickets
 /// @author Hifi
 /// @notice Manages the mint and distribution of sale ticket NFTs.
-contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, ReentrancyGuard {
+contract PBTickets is IPBTickets, ERC721A, Pausable, Ownable, ReentrancyGuard {
     using Strings for uint256;
 
     /// PUBLIC STORAGE ///
@@ -60,13 +60,13 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
     /// @dev The merkle root of addresses eligible to mint in the private phase.
     bytes32 internal merkleRoot;
 
-    constructor(bytes32 merkleRoot_) ERC721("Pawn Bots Mint Tickets", "PBTKT") {
+    constructor(bytes32 merkleRoot_) ERC721A("Pawn Bots Mint Tickets", "PBTKT") {
         merkleRoot = merkleRoot_;
     }
 
     /// PUBLIC CONSTANT FUNCTIONS ///
 
-    /// @dev See {ERC721-tokenURI}.
+    /// @dev See {ERC721A-tokenURI}.
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         if (!_exists(tokenId)) {
             revert PBTickets__NonexistentToken();
@@ -137,7 +137,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
     }
 
     /// @inheritdoc IPBTickets
-    function setBaseURI(string memory newBaseURI) public override onlyOwner {
+    function setBaseURI(string calldata newBaseURI) public override onlyOwner {
         baseURI = newBaseURI;
         emit SetBaseURI(newBaseURI);
     }
@@ -145,19 +145,19 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
     /// @inheritdoc IPBTickets
     function setMaxPrivateMints(uint256 newMaxPrivateMints) public override onlyOwner {
         maxPrivateMints = newMaxPrivateMints;
-        emit SetMaxPrivateMints(maxPrivateMints);
+        emit SetMaxPrivateMints(newMaxPrivateMints);
     }
 
     /// @inheritdoc IPBTickets
     function setMaxPublicMintsPerTx(uint256 newMaxPublicMintsPerTx) public override onlyOwner {
         maxPublicMintsPerTx = newMaxPublicMintsPerTx;
-        emit SetMaxPublicMintsPerTx(maxPublicMintsPerTx);
+        emit SetMaxPublicMintsPerTx(newMaxPublicMintsPerTx);
     }
 
     /// @inheritdoc IPBTickets
     function setPrice(uint256 newPrice) public override onlyOwner {
         price = newPrice;
-        emit SetPrice(price);
+        emit SetPrice(newPrice);
     }
 
     /// @inheritdoc IPBTickets
@@ -181,25 +181,21 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
 
     /// INTERNAL CONSTANT FUNCTIONS ///
 
-    /// @dev See {ERC721-_baseURI}.
+    /// @dev See {ERC721A-_baseURI}.
     function _baseURI() internal view override returns (string memory) {
         return baseURI;
     }
 
-    /// @dev See {IERC165-supportsInterface}.
-    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721Enumerable) returns (bool) {
-        return super.supportsInterface(interfaceId);
-    }
-
     /// INTERNAL NON-CONSTANT FUNCTIONS ///
 
-    /// @dev See {ERC721-_beforeTokenTransfer}.
-    function _beforeTokenTransfer(
+    /// @dev See {ERC721A-_beforeTokenTransfer}.
+    function _beforeTokenTransfers(
         address from,
         address to,
-        uint256 tokenId
-    ) internal override(ERC721Enumerable, ERC721Pausable) {
-        super._beforeTokenTransfer(from, to, tokenId);
+        uint256 startTokenId,
+        uint256 quantity
+    ) internal override whenNotPaused {
+        super._beforeTokenTransfers(from, to, startTokenId, quantity);
     }
 
     /// @dev Mint ticket NFTs in exchange for fees.
@@ -211,9 +207,7 @@ contract PBTickets is IPBTickets, ERC721Enumerable, ERC721Pausable, Ownable, Ree
         if (msg.value < mintCost) {
             revert PBTickets__InsufficientFunds();
         }
-        for (uint256 i = 0; i < mintAmount; i++) {
-            _safeMint(msg.sender, totalSupply());
-        }
+        _safeMint(msg.sender, mintAmount);
         if (msg.value > mintCost) {
             Address.sendValue(payable(msg.sender), msg.value - mintCost);
         }

@@ -142,7 +142,7 @@ interface IPawnBots {
     /// - Can only be called by the owner.
     ///
     /// @param newBaseURI The new base URI.
-    function setBaseURI(string memory newBaseURI) external;
+    function setBaseURI(string calldata newBaseURI) external;
 
     /// @notice Add new user claims.
     ///
@@ -162,7 +162,7 @@ interface IPawnBots {
     /// - Can only be called by the owner.
     ///
     /// @param newProvenanceHash The new provenance hash.
-    function setProvenanceHash(string memory newProvenanceHash) external;
+    function setProvenanceHash(string calldata newProvenanceHash) external;
 
     /// @notice Set the timestamp from which the collection metadata can be revealed.
     ///

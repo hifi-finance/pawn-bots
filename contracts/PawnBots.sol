@@ -182,7 +182,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
             revert PawnBots__UserEligibilityExceeded();
         }
         claims[msg.sender].claimedAmount += mintAmount;
-        for (uint256 i = 0; i < mintAmount; i++) {
+        for (uint256 i = 0; i < mintAmount; ++i) {
             _safeMint(msg.sender, totalSupply());
         }
         emit Mint(msg.sender, mintAmount);
@@ -194,7 +194,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
             revert PawnBots__ReserveCapExceeded();
         }
         reservedElements += reserveAmount;
-        for (uint256 i = 0; i < reserveAmount; i++) {
+        for (uint256 i = 0; i < reserveAmount; ++i) {
             _safeMint(msg.sender, totalSupply());
         }
         emit Reserve(reserveAmount);
@@ -215,14 +215,14 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     }
 
     /// @inheritdoc IPawnBots
-    function setBaseURI(string memory newBaseURI) public override onlyOwner {
+    function setBaseURI(string calldata newBaseURI) public override onlyOwner {
         baseURI = newBaseURI;
-        emit SetBaseURI(baseURI);
+        emit SetBaseURI(newBaseURI);
     }
 
     /// @inheritdoc IPawnBots
-    function setClaims(NewClaim[] memory newClaims) public override onlyOwner {
-        for (uint256 i = 0; i < newClaims.length; i++) {
+    function setClaims(NewClaim[] calldata newClaims) public override onlyOwner {
+        for (uint256 i = 0; i < newClaims.length; ++i) {
             NewClaim memory newClaim = newClaims[i];
             Claim memory claim = claims[newClaim.user];
             claim.exists = true;
@@ -233,9 +233,9 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     }
 
     /// @inheritdoc IPawnBots
-    function setProvenanceHash(string memory newProvenanceHash) public override onlyOwner {
+    function setProvenanceHash(string calldata newProvenanceHash) public override onlyOwner {
         provenanceHash = newProvenanceHash;
-        emit SetProvenanceHash(provenanceHash);
+        emit SetProvenanceHash(newProvenanceHash);
     }
 
     /// @inheritdoc IPawnBots

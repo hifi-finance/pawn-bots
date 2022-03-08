@@ -1519,6 +1519,7 @@ __metadata:
     cross-env: ^7.0.3
     cz-conventional-changelog: ^3.3.0
     dotenv: ^10.0.0
+    erc721a: ^3.0.0
     eslint: ^8.3.0
     eslint-config-prettier: ^8.3.0
     ethereum-waffle: ^3.4.0
@@ -1649,6 +1650,13 @@ __metadata:
   version: 4.4.0
   resolution: "@openzeppelin/contracts@npm:4.4.0"
   checksum: 55565943fff7b52de2e11f0095a37f14d15ed3054e7febe52cbfe86a9c1ef5e6bb45641cbb6480ef2ff2c1663e46bea7863b741b3ab417ea59c6b8aee28188d8
+  languageName: node
+  linkType: hard
+
+"@openzeppelin/contracts@npm:^4.4.2":
+  version: 4.5.0
+  resolution: "@openzeppelin/contracts@npm:4.5.0"
+  checksum: 1c9c5dff041905771d2a83ac29c64dbf0b48603de43f74a34fb1358813d7c7bf259efe2f64e2112b410c5cca7a0b41aaedd882368be5f01a6d50a3ee0740f962
   languageName: node
   linkType: hard
 
@@ -5603,6 +5611,15 @@ __metadata:
   version: 2.2.1
   resolution: "env-paths@npm:2.2.1"
   checksum: 65b5df55a8bab92229ab2b40dad3b387fad24613263d103a97f91c9fe43ceb21965cd3392b1ccb5d77088021e525c4e0481adb309625d0cb94ade1d1fb8dc17e
+  languageName: node
+  linkType: hard
+
+"erc721a@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "erc721a@npm:3.0.0"
+  dependencies:
+    "@openzeppelin/contracts": ^4.4.2
+  checksum: ebb5b33dc48e4afdff758e4a003dc350ce99402945b821f0a2039f208320439667ff63cf04b30eb2c976cd65759c7bf4ca43ed22e063142afc1856738ef7ecf9
   languageName: node
   linkType: hard
 

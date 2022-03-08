@@ -136,7 +136,7 @@ interface IPBTickets {
     /// - Can only be called by the owner.
     ///
     /// @param newBaseURI The new base URI.
-    function setBaseURI(string memory newBaseURI) external;
+    function setBaseURI(string calldata newBaseURI) external;
 
     /// @notice Set the maximum private mints.
     ///

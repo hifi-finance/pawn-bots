@@ -17,14 +17,11 @@ contract GodModePBTickets is PBTickets {
     }
 
     function __godMode_mint(uint256 mintAmount) external {
-        uint256 mintIndex = totalSupply();
         bool paused = paused();
         if (paused) {
             _unpause();
         }
-        for (uint256 i = 0; i < mintAmount; i++) {
-            _safeMint(msg.sender, mintIndex + i);
-        }
+        _safeMint(msg.sender, mintAmount);
         if (paused) {
             _pause();
         }
@@ -34,7 +31,7 @@ contract GodModePBTickets is PBTickets {
         return baseURI;
     }
 
-    function __godMode_setBaseURI(string memory newBaseURI) external {
+    function __godMode_setBaseURI(string calldata newBaseURI) external {
         baseURI = newBaseURI;
     }
 

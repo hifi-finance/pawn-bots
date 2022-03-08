@@ -23,7 +23,7 @@ contract GodModePawnBots is PawnBots {
 
     function __godMode_mint(uint256 mintAmount) external {
         uint256 mintIndex = totalSupply();
-        for (uint256 i = 0; i < mintAmount; i++) {
+        for (uint256 i = 0; i < mintAmount; ++i) {
             _safeMint(msg.sender, mintIndex + i);
         }
     }
@@ -36,7 +36,7 @@ contract GodModePawnBots is PawnBots {
         return vrfRequestId;
     }
 
-    function __godMode_setBaseURI(string memory newBaseURI) external {
+    function __godMode_setBaseURI(string calldata newBaseURI) external {
         baseURI = newBaseURI;
     }
 
@@ -52,7 +52,7 @@ contract GodModePawnBots is PawnBots {
         offset = newOffset;
     }
 
-    function __godMode_setProvenanceHash(string memory newProvenanceHash) external {
+    function __godMode_setProvenanceHash(string calldata newProvenanceHash) external {
         provenanceHash = newProvenanceHash;
     }
 
