@@ -25,13 +25,13 @@ interface IPawnBots {
     /// @notice Emitted when minting is enabled.
     event EnableMint();
 
-    /// @notice Emitted when a user mints new NFTs.
+    /// @notice Emitted when a user mints new tokens.
     /// @param minter The minter's account address.
-    /// @param mintAmount The amount of minted NFTs.
+    /// @param mintAmount The amount of minted tokens.
     event Mint(address indexed minter, uint256 mintAmount);
 
-    /// @notice Emitted when NFTs are reserved by the contract owner.
-    /// @param reserveAmount The amount of NFTs that were reserved.
+    /// @notice Emitted when tokens are reserved by the contract owner.
+    /// @param reserveAmount The amount of tokens that were reserved.
     event Reserve(uint256 reserveAmount);
 
     /// @notice Emitted when the collection metadata is revealed.
@@ -54,7 +54,7 @@ interface IPawnBots {
 
     /// PUBLIC CONSTANT FUNCTIONS ///
 
-    /// @notice The user claims that determine how many NFTs an eligible user is able to mint.
+    /// @notice The user claims that determine how many tokens an eligible user is able to mint.
     /// @param user The user account address.
     function claims(address user)
         external
@@ -68,13 +68,13 @@ interface IPawnBots {
     /// @notice Whether minting is enabled or not.
     function isMintEnabled() external view returns (bool);
 
-    /// @notice The offset that determines how each NFT corresponds to a token URI post-reveal.
+    /// @notice The offset that determines how each token id corresponds to a token URI post-reveal.
     function offset() external view returns (uint256);
 
     /// @notice The provenance hash of post-reveal art.
     function provenanceHash() external view returns (string memory);
 
-    /// @notice The total amount of NFTs that have been reserved by the contract owner.
+    /// @notice The total amount of tokens that have been reserved by the contract owner.
     function reservedElements() external view returns (uint256);
 
     /// @notice The timestamp from which the collection metadata can be revealed.
@@ -100,28 +100,28 @@ interface IPawnBots {
     /// - Minting must be disabled when called.
     function enableMint() external;
 
-    /// @notice Mint new NFTs.
+    /// @notice Mint new tokens by users with mint claims.
     ///
     /// @dev Emits a {Mint} event.
     ///
     /// @dev Requirements:
     /// - Minting must be enabled.
-    /// - `mintAmount` cannot exceed theoretical collection size limit minus `totalSupply()`.
+    /// - `mintAmount` cannot exceed theoretical collection size limit minus reserve cap minus `totalSupply()`.
     /// - Caller must have a claim to mint.
     /// - `mintAmount` cannot exceed the user's `allocatedAmount` minus `claimedAmount`.
     ///
-    /// @param mintAmount The amount of NFTs to mint.
+    /// @param mintAmount The amount of tokens to mint.
     function mint(uint256 mintAmount) external;
 
-    /// @notice Reserve a subset of the NFTs in the collection by the contract owner.
+    /// @notice Mint a subset of the collection reserve cap by the contract owner.
     ///
     /// @dev Emits a {Reserve} event.
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
-    /// - `reserveAmount` cannot exceed max reserved elements limit minus `reservedElements`.
+    /// - `reserveAmount` cannot exceed reserve cap minus `reservedElements`.
     ///
-    /// @param reserveAmount The amount of NFTs to reserve.
+    /// @param reserveAmount The amount of reserve tokens to mint.
     function reserve(uint256 reserveAmount) external;
 
     /// @notice Reveal the collection's metadata.

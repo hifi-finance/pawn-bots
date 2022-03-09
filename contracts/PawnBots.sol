@@ -139,6 +139,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         }
         string memory bURI = _baseURI();
         if (offset == 0) {
+            // TODO: live-test possible issues with multiple token IDs
             return bytes(bURI).length > 0 ? string(abi.encodePacked(bURI, "box", ".json")) : "";
         } else {
             uint256 moddedId = (tokenId + offset) % COLLECTION_SIZE;
@@ -171,7 +172,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         if (!isMintEnabled) {
             revert PawnBots__MintIsNotEnabled();
         }
-        if (mintAmount + totalSupply() > COLLECTION_SIZE) {
+        if (mintAmount + RESERVE_CAP + totalSupply() > COLLECTION_SIZE) {
             revert PawnBots__CollectionSizeExceeded();
         }
         Claim memory claim = claims[msg.sender];

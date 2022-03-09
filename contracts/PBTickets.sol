@@ -72,6 +72,7 @@ contract PBTickets is IPBTickets, ERC721A, Pausable, Ownable, ReentrancyGuard {
             revert PBTickets__NonexistentToken();
         }
         string memory bURI = _baseURI();
+        // TODO: live-test possible issues with multiple token IDs
         return bytes(bURI).length > 0 ? string(abi.encodePacked(bURI, "ticket", ".json")) : "";
     }
 

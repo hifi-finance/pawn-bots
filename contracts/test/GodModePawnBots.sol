@@ -63,4 +63,8 @@ contract GodModePawnBots is PawnBots {
     function __godMode_setRevealTime(uint256 newRevealTime) external {
         revealTime = newRevealTime;
     }
+
+    function __godMode_setVrfRequestId(bytes32 newVrfRequestId) external {
+        vrfRequestId = newVrfRequestId;
+    }
 }

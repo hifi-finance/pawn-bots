@@ -18,17 +18,17 @@ export function shouldBehaveLikePBTickets(): void {
     describe("claimedPrivateMints", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          expect(await this.contracts.pbTickets.claimedPrivateMints(this.signers.alice.address)).to.equal("0");
+          expect(await this.contracts.pbTickets.claimedPrivateMints(this.signers.alice.address)).to.equal(0);
         });
       });
 
       context("when changed", function () {
         beforeEach(async function () {
-          await this.contracts.pbTickets.__godMode_setClaimedPrivateMints(this.signers.alice.address, "20");
+          await this.contracts.pbTickets.__godMode_setClaimedPrivateMints(this.signers.alice.address, 20);
         });
 
         it("returns the correct value", async function () {
-          expect(await this.contracts.pbTickets.claimedPrivateMints(this.signers.alice.address)).to.equal("20");
+          expect(await this.contracts.pbTickets.claimedPrivateMints(this.signers.alice.address)).to.equal(20);
         });
       });
     });
@@ -36,17 +36,17 @@ export function shouldBehaveLikePBTickets(): void {
     describe("maxPrivateMints", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          expect(await this.contracts.pbTickets.maxPrivateMints()).to.equal("0");
+          expect(await this.contracts.pbTickets.maxPrivateMints()).to.equal(0);
         });
       });
 
       context("when changed", function () {
         beforeEach(async function () {
-          await this.contracts.pbTickets.__godMode_setMaxPrivateMints("20");
+          await this.contracts.pbTickets.__godMode_setMaxPrivateMints(20);
         });
 
         it("returns the correct value", async function () {
-          expect(await this.contracts.pbTickets.maxPrivateMints()).to.equal("20");
+          expect(await this.contracts.pbTickets.maxPrivateMints()).to.equal(20);
         });
       });
     });
@@ -54,17 +54,17 @@ export function shouldBehaveLikePBTickets(): void {
     describe("maxPublicMintsPerTx", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          expect(await this.contracts.pbTickets.maxPublicMintsPerTx()).to.equal("0");
+          expect(await this.contracts.pbTickets.maxPublicMintsPerTx()).to.equal(0);
         });
       });
 
       context("when changed", function () {
         beforeEach(async function () {
-          await this.contracts.pbTickets.__godMode_setMaxPublicMintsPerTx("20");
+          await this.contracts.pbTickets.__godMode_setMaxPublicMintsPerTx(20);
         });
 
         it("returns the correct value", async function () {
-          expect(await this.contracts.pbTickets.maxPublicMintsPerTx()).to.equal("20");
+          expect(await this.contracts.pbTickets.maxPublicMintsPerTx()).to.equal(20);
         });
       });
     });
@@ -78,17 +78,17 @@ export function shouldBehaveLikePBTickets(): void {
     describe("price", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          expect(await this.contracts.pbTickets.price()).to.equal("0");
+          expect(await this.contracts.pbTickets.price()).to.equal(0);
         });
       });
 
       context("when changed", function () {
         beforeEach(async function () {
-          await this.contracts.pbTickets.__godMode_setPrice("25000000000000000");
+          await this.contracts.pbTickets.__godMode_setPrice(250000000000000);
         });
 
         it("returns the correct value", async function () {
-          expect(await this.contracts.pbTickets.price()).to.equal("25000000000000000");
+          expect(await this.contracts.pbTickets.price()).to.equal(250000000000000);
         });
       });
     });
@@ -173,7 +173,8 @@ export function shouldBehaveLikePBTickets(): void {
     describe("burnUnsold", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pbTickets.connect(this.signers.alice).burnUnsold(0)).to.be.revertedWith(
+          const signer = this.signers.alice;
+          await expect(this.contracts.pbTickets.connect(signer).burnUnsold(0)).to.be.revertedWith(
             ImportedErrors.CALLER_NOT_OWNER,
           );
         });
@@ -188,7 +189,7 @@ export function shouldBehaveLikePBTickets(): void {
 
         context("when tickets are paused", function () {
           beforeEach(async function () {
-            await this.contracts.pbTickets.pauseTickets(true);
+            await this.contracts.pbTickets.__godMode_pause();
           });
 
           context("when `burnAmount` is 0", function () {
@@ -210,7 +211,7 @@ export function shouldBehaveLikePBTickets(): void {
               it("succeeds", async function () {
                 const contractCall = await this.contracts.pbTickets.burnUnsold(this.maxTickets);
                 expect(contractCall).to.emit(this.contracts.pbTickets, "BurnUnsold").withArgs(this.maxTickets);
-                expect(await this.contracts.pbTickets.saleCap()).to.be.equal("0");
+                expect(await this.contracts.pbTickets.saleCap()).to.be.equal(0);
               });
             });
 
@@ -233,14 +234,13 @@ export function shouldBehaveLikePBTickets(): void {
     describe("mintPrivate", function () {
       context("when tickets are paused", function () {
         beforeEach(async function () {
-          await this.contracts.pbTickets.pauseTickets(true);
+          await this.contracts.pbTickets.__godMode_pause();
         });
 
         it("reverts", async function () {
+          const signer = this.signers.alice;
           await expect(
-            this.contracts.pbTickets
-              .connect(this.signers.alice)
-              .mintPrivate(1, this.getMerkleProof(this.signers.alice.address)),
+            this.contracts.pbTickets.connect(signer).mintPrivate(1, this.getMerkleProof(signer.address)),
           ).to.be.revertedWith(ImportedErrors.PAUSED);
         });
       });
@@ -248,10 +248,9 @@ export function shouldBehaveLikePBTickets(): void {
       context("when tickets are not paused", function () {
         context("when sale is not started", function () {
           it("reverts", async function () {
+            const signer = this.signers.alice;
             await expect(
-              this.contracts.pbTickets
-                .connect(this.signers.alice)
-                .mintPrivate(0, this.getMerkleProof(this.signers.alice.address)),
+              this.contracts.pbTickets.connect(signer).mintPrivate(0, this.getMerkleProof(signer.address)),
             ).to.be.revertedWith(PBTicketsErrors.SALE_NOT_STARTED);
           });
         });
@@ -261,32 +260,38 @@ export function shouldBehaveLikePBTickets(): void {
             const currentTime = (await ethers.provider.getBlock("latest")).timestamp;
             await this.contracts.pbTickets.__godMode_setSaleStartTime(currentTime);
             await this.contracts.pbTickets.__godMode_setPrice(parseEther("0.04"));
-            await this.contracts.pbTickets.__godMode_setMaxPrivateMints("5");
-            await this.contracts.pbTickets.__godMode_setClaimedPrivateMints(this.signers.alice.address, "1");
+            await this.contracts.pbTickets.__godMode_setMaxPrivateMints(5);
           });
 
           context("when called within the first 24 hours of the sale", function () {
             context("when minter is not whitelisted", function () {
               it("reverts", async function () {
+                const signer = this.signers.alice;
                 await expect(
                   this.contracts.pbTickets
                     .connect(this.signers.bob)
-                    .mintPrivate(1, this.getMerkleProof(this.signers.alice.address)),
+                    .mintPrivate(1, this.getMerkleProof(signer.address)),
                 ).to.be.revertedWith(PBTicketsErrors.MINT_NOT_AUTHORIZED);
               });
             });
 
             context("when minter is whitelisted", function () {
+              beforeEach(async function () {
+                const signer = this.signers.alice;
+                await this.contracts.pbTickets.__godMode_setClaimedPrivateMints(signer.address, 1);
+              });
+
               context("`mintAmount` is greater than `maxPrivateMints` minus `claimedPrivateMints(user)`", function () {
                 beforeEach(async function () {
                   this.mintAmount = await this.contracts.pbTickets.maxPrivateMints();
                 });
 
                 it("reverts", async function () {
+                  const signer = this.signers.alice;
                   await expect(
                     this.contracts.pbTickets
-                      .connect(this.signers.alice)
-                      .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address)),
+                      .connect(signer)
+                      .mintPrivate(this.mintAmount, this.getMerkleProof(signer.address)),
                   ).to.be.revertedWith(PBTicketsErrors.MAX_PRIVATE_MINTS_EXCEEDED);
                 });
               });
@@ -295,8 +300,9 @@ export function shouldBehaveLikePBTickets(): void {
                 "`mintAmount` is less than or equal to `maxPrivateMints` minus `claimedPrivateMints(user)`",
                 function () {
                   beforeEach(async function () {
+                    const signer = this.signers.alice;
                     this.mintAmount = (await this.contracts.pbTickets.maxPrivateMints()).sub(
-                      await this.contracts.pbTickets.claimedPrivateMints(this.signers.alice.address),
+                      await this.contracts.pbTickets.claimedPrivateMints(signer.address),
                     );
                   });
 
@@ -306,10 +312,11 @@ export function shouldBehaveLikePBTickets(): void {
                     });
 
                     it("reverts", async function () {
+                      const signer = this.signers.alice;
                       await expect(
                         this.contracts.pbTickets
-                          .connect(this.signers.alice)
-                          .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address)),
+                          .connect(signer)
+                          .mintPrivate(this.mintAmount, this.getMerkleProof(signer.address)),
                       ).to.be.revertedWith(PBTicketsErrors.SALE_CAP_EXCEEDED);
                     });
                   });
@@ -321,10 +328,11 @@ export function shouldBehaveLikePBTickets(): void {
                       });
 
                       it("reverts", async function () {
+                        const signer = this.signers.alice;
                         await expect(
                           this.contracts.pbTickets
-                            .connect(this.signers.alice)
-                            .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address), {
+                            .connect(signer)
+                            .mintPrivate(this.mintAmount, this.getMerkleProof(signer.address), {
                               value: this.funds,
                             }),
                         ).to.be.revertedWith(PBTicketsErrors.INSUFFICIENT_FUNDS);
@@ -337,22 +345,16 @@ export function shouldBehaveLikePBTickets(): void {
                       });
 
                       it("succeeds", async function () {
+                        const signer = this.signers.alice;
                         const contractCall = await this.contracts.pbTickets
-                          .connect(this.signers.alice)
-                          .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address), {
+                          .connect(signer)
+                          .mintPrivate(this.mintAmount, this.getMerkleProof(signer.address), {
                             value: this.funds,
                           });
                         expect(contractCall)
                           .to.emit(this.contracts.pbTickets, "Mint")
-                          .withArgs(
-                            this.signers.alice.address,
-                            this.mintAmount,
-                            await this.contracts.pbTickets.price(),
-                            0,
-                          );
-                        expect(await this.contracts.pbTickets.balanceOf(this.signers.alice.address)).to.be.equal(
-                          this.mintAmount,
-                        );
+                          .withArgs(signer.address, this.mintAmount, await this.contracts.pbTickets.price(), 0);
+                        expect(await this.contracts.pbTickets.balanceOf(signer.address)).to.be.equal(this.mintAmount);
                         expect(await ethers.provider.getBalance(this.contracts.pbTickets.address)).to.be.equal(
                           this.funds,
                         );
@@ -361,28 +363,23 @@ export function shouldBehaveLikePBTickets(): void {
 
                     context("when user sends more than the needed value", function () {
                       beforeEach(async function () {
-                        this.funds = (await this.contracts.pbTickets.price()).mul(this.mintAmount).add(parseEther("1"));
+                        this.change = parseEther("1");
+                        this.funds = (await this.contracts.pbTickets.price()).mul(this.mintAmount).add(this.change);
                       });
 
                       it("succeeds", async function () {
+                        const signer = this.signers.alice;
                         const contractCall = await this.contracts.pbTickets
-                          .connect(this.signers.alice)
-                          .mintPrivate(this.mintAmount, this.getMerkleProof(this.signers.alice.address), {
+                          .connect(signer)
+                          .mintPrivate(this.mintAmount, this.getMerkleProof(signer.address), {
                             value: this.funds,
                           });
                         expect(contractCall)
                           .to.emit(this.contracts.pbTickets, "Mint")
-                          .withArgs(
-                            this.signers.alice.address,
-                            this.mintAmount,
-                            await this.contracts.pbTickets.price(),
-                            0,
-                          );
-                        expect(await this.contracts.pbTickets.balanceOf(this.signers.alice.address)).to.be.equal(
-                          this.mintAmount,
-                        );
+                          .withArgs(signer.address, this.mintAmount, await this.contracts.pbTickets.price(), 0);
+                        expect(await this.contracts.pbTickets.balanceOf(signer.address)).to.be.equal(this.mintAmount);
                         expect(await ethers.provider.getBalance(this.contracts.pbTickets.address)).to.be.equal(
-                          this.funds.sub(parseEther("1")),
+                          this.funds.sub(this.change),
                         );
                       });
                     });
@@ -394,10 +391,9 @@ export function shouldBehaveLikePBTickets(): void {
 
           timeContext("when called after the first 24 hours of the sale", 86401, function () {
             it("reverts", async function () {
+              const signer = this.signers.alice;
               await expect(
-                this.contracts.pbTickets
-                  .connect(this.signers.alice)
-                  .mintPrivate(0, this.getMerkleProof(this.signers.alice.address)),
+                this.contracts.pbTickets.connect(signer).mintPrivate(0, this.getMerkleProof(signer.address)),
               ).to.be.revertedWith(PBTicketsErrors.PRIVATE_PHASE_EXPIRED);
             });
           });
@@ -408,11 +404,12 @@ export function shouldBehaveLikePBTickets(): void {
     describe("mintPublic", function () {
       context("when tickets are paused", function () {
         beforeEach(async function () {
-          await this.contracts.pbTickets.pauseTickets(true);
+          await this.contracts.pbTickets.__godMode_pause();
         });
 
         it("reverts", async function () {
-          await expect(this.contracts.pbTickets.connect(this.signers.alice).mintPublic(0)).to.be.revertedWith(
+          const signer = this.signers.alice;
+          await expect(this.contracts.pbTickets.connect(signer).mintPublic(0)).to.be.revertedWith(
             ImportedErrors.PAUSED,
           );
         });
@@ -421,7 +418,8 @@ export function shouldBehaveLikePBTickets(): void {
       context("when tickets are not paused", function () {
         context("when sale is not started", function () {
           it("reverts", async function () {
-            await expect(this.contracts.pbTickets.connect(this.signers.alice).mintPublic(0)).to.be.revertedWith(
+            const signer = this.signers.alice;
+            await expect(this.contracts.pbTickets.connect(signer).mintPublic(0)).to.be.revertedWith(
               PBTicketsErrors.SALE_NOT_STARTED,
             );
           });
@@ -432,12 +430,13 @@ export function shouldBehaveLikePBTickets(): void {
             const currentTime = (await ethers.provider.getBlock("latest")).timestamp;
             await this.contracts.pbTickets.__godMode_setSaleStartTime(currentTime);
             await this.contracts.pbTickets.__godMode_setPrice(parseEther("0.04"));
-            await this.contracts.pbTickets.__godMode_setMaxPublicMintsPerTx("5");
+            await this.contracts.pbTickets.__godMode_setMaxPublicMintsPerTx(5);
           });
 
           timeContext("when called within the first 24 hours of the sale", 86397, function () {
             it("reverts", async function () {
-              await expect(this.contracts.pbTickets.connect(this.signers.alice).mintPublic(0)).to.be.revertedWith(
+              const signer = this.signers.alice;
+              await expect(this.contracts.pbTickets.connect(signer).mintPublic(0)).to.be.revertedWith(
                 PBTicketsErrors.PUBLIC_PHASE_NOT_STARTED,
               );
             });
@@ -450,9 +449,10 @@ export function shouldBehaveLikePBTickets(): void {
               });
 
               it("reverts", async function () {
-                await expect(
-                  this.contracts.pbTickets.connect(this.signers.alice).mintPublic(this.mintAmount),
-                ).to.be.revertedWith(PBTicketsErrors.MAX_PUBLIC_MINTS_PER_TX_EXCEEDED);
+                const signer = this.signers.alice;
+                await expect(this.contracts.pbTickets.connect(signer).mintPublic(this.mintAmount)).to.be.revertedWith(
+                  PBTicketsErrors.MAX_PUBLIC_MINTS_PER_TX_EXCEEDED,
+                );
               });
             });
 
@@ -464,13 +464,13 @@ export function shouldBehaveLikePBTickets(): void {
               context("when `mintAmount` is greater than `saleCap` minus `totalSupply()`", function () {
                 beforeEach(async function () {
                   await this.contracts.pbTickets.__godMode_setSaleCap(this.mintAmount.sub(1));
-                  await this.contracts.pbTickets.__godMode_setMaxPublicMintsPerTx(this.mintAmount);
                 });
 
                 it("reverts", async function () {
-                  await expect(
-                    this.contracts.pbTickets.connect(this.signers.alice).mintPublic(this.mintAmount),
-                  ).to.be.revertedWith(PBTicketsErrors.SALE_CAP_EXCEEDED);
+                  const signer = this.signers.alice;
+                  await expect(this.contracts.pbTickets.connect(signer).mintPublic(this.mintAmount)).to.be.revertedWith(
+                    PBTicketsErrors.SALE_CAP_EXCEEDED,
+                  );
                 });
               });
 
@@ -481,10 +481,9 @@ export function shouldBehaveLikePBTickets(): void {
                   });
 
                   it("reverts", async function () {
+                    const signer = this.signers.alice;
                     await expect(
-                      this.contracts.pbTickets
-                        .connect(this.signers.alice)
-                        .mintPublic(this.mintAmount, { value: this.funds }),
+                      this.contracts.pbTickets.connect(signer).mintPublic(this.mintAmount, { value: this.funds }),
                     ).to.be.revertedWith(PBTicketsErrors.INSUFFICIENT_FUNDS);
                   });
                 });
@@ -495,36 +494,35 @@ export function shouldBehaveLikePBTickets(): void {
                   });
 
                   it("succeeds", async function () {
+                    const signer = this.signers.alice;
                     const contractCall = await this.contracts.pbTickets
-                      .connect(this.signers.alice)
+                      .connect(signer)
                       .mintPublic(this.mintAmount, { value: this.funds });
                     expect(contractCall)
                       .to.emit(this.contracts.pbTickets, "Mint")
-                      .withArgs(this.signers.alice.address, this.mintAmount, await this.contracts.pbTickets.price(), 1);
-                    expect(await this.contracts.pbTickets.balanceOf(this.signers.alice.address)).to.be.equal(
-                      this.mintAmount,
-                    );
+                      .withArgs(signer.address, this.mintAmount, await this.contracts.pbTickets.price(), 1);
+                    expect(await this.contracts.pbTickets.balanceOf(signer.address)).to.be.equal(this.mintAmount);
                     expect(await ethers.provider.getBalance(this.contracts.pbTickets.address)).to.be.equal(this.funds);
                   });
                 });
 
                 context("when user sends more than the needed value", function () {
                   beforeEach(async function () {
-                    this.funds = (await this.contracts.pbTickets.price()).mul(this.mintAmount).add(parseEther("1"));
+                    this.change = parseEther("1");
+                    this.funds = (await this.contracts.pbTickets.price()).mul(this.mintAmount).add(this.change);
                   });
 
                   it("succeeds", async function () {
+                    const signer = this.signers.alice;
                     const contractCall = await this.contracts.pbTickets
-                      .connect(this.signers.alice)
+                      .connect(signer)
                       .mintPublic(this.mintAmount, { value: this.funds });
                     expect(contractCall)
                       .to.emit(this.contracts.pbTickets, "Mint")
-                      .withArgs(this.signers.alice.address, this.mintAmount, await this.contracts.pbTickets.price(), 1);
-                    expect(await this.contracts.pbTickets.balanceOf(this.signers.alice.address)).to.be.equal(
-                      this.mintAmount,
-                    );
+                      .withArgs(signer.address, this.mintAmount, await this.contracts.pbTickets.price(), 1);
+                    expect(await this.contracts.pbTickets.balanceOf(signer.address)).to.be.equal(this.mintAmount);
                     expect(await ethers.provider.getBalance(this.contracts.pbTickets.address)).to.be.equal(
-                      this.funds.sub(parseEther("1")),
+                      this.funds.sub(this.change),
                     );
                   });
                 });
@@ -538,7 +536,8 @@ export function shouldBehaveLikePBTickets(): void {
     describe("pauseTickets", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pbTickets.connect(this.signers.alice).pauseTickets(true)).to.be.revertedWith(
+          const signer = this.signers.alice;
+          await expect(this.contracts.pbTickets.connect(signer).pauseTickets(true)).to.be.revertedWith(
             ImportedErrors.CALLER_NOT_OWNER,
           );
         });
@@ -548,7 +547,7 @@ export function shouldBehaveLikePBTickets(): void {
         context("when state given is `true`", function () {
           context("when tickets are already paused", function () {
             beforeEach(async function () {
-              await this.contracts.pbTickets.pauseTickets(true);
+              await this.contracts.pbTickets.__godMode_pause();
             });
 
             it("reverts", async function () {
@@ -568,7 +567,7 @@ export function shouldBehaveLikePBTickets(): void {
         context("when state given is `false`", function () {
           context("when tickets are paused", function () {
             beforeEach(async function () {
-              await this.contracts.pbTickets.pauseTickets(true);
+              await this.contracts.pbTickets.__godMode_pause();
             });
 
             it("succeeds", async function () {
@@ -672,7 +671,8 @@ export function shouldBehaveLikePBTickets(): void {
     describe("startSale", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pbTickets.connect(this.signers.alice).startSale()).to.be.revertedWith(
+          const signer = this.signers.alice;
+          await expect(this.contracts.pbTickets.connect(signer).startSale()).to.be.revertedWith(
             ImportedErrors.CALLER_NOT_OWNER,
           );
         });
@@ -705,9 +705,10 @@ export function shouldBehaveLikePBTickets(): void {
     describe("withdraw", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(
-            this.contracts.pbTickets.connect(this.signers.alice).withdraw(this.signers.alice.address),
-          ).to.be.revertedWith(ImportedErrors.CALLER_NOT_OWNER);
+          const signer = this.signers.alice;
+          await expect(this.contracts.pbTickets.connect(signer).withdraw(signer.address)).to.be.revertedWith(
+            ImportedErrors.CALLER_NOT_OWNER,
+          );
         });
       });
 
@@ -727,12 +728,11 @@ export function shouldBehaveLikePBTickets(): void {
           });
 
           it("succeeds", async function () {
-            const recipient = this.signers.alice.address;
-
-            const balanceBefore = await this.signers.alice.getBalance();
-            const contractCall = await this.contracts.pbTickets.withdraw(recipient);
-            expect(contractCall).to.emit(this.contracts.pbTickets, "Withdraw").withArgs(recipient, this.amount);
-            const balanceAfter = await this.signers.alice.getBalance();
+            const signer = this.signers.alice;
+            const balanceBefore = await signer.getBalance();
+            const contractCall = await this.contracts.pbTickets.withdraw(signer.address);
+            expect(contractCall).to.emit(this.contracts.pbTickets, "Withdraw").withArgs(signer.address, this.amount);
+            const balanceAfter = await signer.getBalance();
             expect(balanceAfter.sub(balanceBefore)).to.be.equal(this.amount);
           });
         });

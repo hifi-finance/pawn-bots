@@ -27,6 +27,14 @@ contract GodModePBTickets is PBTickets {
         }
     }
 
+    function __godMode_pause() external {
+        _pause();
+    }
+
+    function __godMode_unpause() external {
+        _unpause();
+    }
+
     function __godMode_returnBaseURI() external view returns (string memory) {
         return baseURI;
     }

@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { ethers, network } from "hardhat";
 
 import { VRF_FEE } from "../constants";
+import { timeContext } from "../contexts";
 import { ImportedErrors, PawnBotsErrors } from "../errors";
 
 export function shouldBehaveLikePawnBots(): void {
@@ -21,8 +22,8 @@ export function shouldBehaveLikePawnBots(): void {
           );
 
           expect(exists).to.equal(false);
-          expect(allocatedAmount).to.equal("0");
-          expect(claimedAmount).to.equal("0");
+          expect(allocatedAmount).to.equal(0);
+          expect(claimedAmount).to.equal(0);
         });
       });
 
@@ -30,8 +31,8 @@ export function shouldBehaveLikePawnBots(): void {
         beforeEach(async function () {
           this.claim = {
             exists: true,
-            allocatedAmount: "10",
-            claimedAmount: "7",
+            allocatedAmount: 10,
+            claimedAmount: 7,
           };
           await this.contracts.pawnBots.__godMode_setClaim(this.signers.alice.address, this.claim);
         });
@@ -75,17 +76,17 @@ export function shouldBehaveLikePawnBots(): void {
     describe("offset", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.offset()).to.equal("0");
+          expect(await this.contracts.pawnBots.offset()).to.equal(0);
         });
       });
 
       context("when changed", function () {
         beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setOffset("1479");
+          await this.contracts.pawnBots.__godMode_setOffset(1479);
         });
 
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.offset()).to.equal("1479");
+          expect(await this.contracts.pawnBots.offset()).to.equal(1479);
         });
       });
     });
@@ -133,17 +134,17 @@ export function shouldBehaveLikePawnBots(): void {
     describe("revealTime", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.revealTime()).to.equal("0");
+          expect(await this.contracts.pawnBots.revealTime()).to.equal(0);
         });
       });
 
       context("when changed", function () {
         beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setRevealTime("1640641278");
+          await this.contracts.pawnBots.__godMode_setRevealTime(1640641278);
         });
 
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.revealTime()).to.equal("1640641278");
+          expect(await this.contracts.pawnBots.revealTime()).to.equal(1640641278);
         });
       });
     });
@@ -225,7 +226,8 @@ export function shouldBehaveLikePawnBots(): void {
           });
 
           it("succeeds", async function () {
-            await this.contracts.pawnBots.disableMint();
+            const contractCall = await this.contracts.pawnBots.disableMint();
+            expect(contractCall).to.emit(this.contracts.pawnBots, "DisableMint");
             expect(await this.contracts.pawnBots.isMintEnabled()).to.be.equal(false);
           });
         });
@@ -260,7 +262,8 @@ export function shouldBehaveLikePawnBots(): void {
           });
 
           it("succeeds", async function () {
-            await this.contracts.pawnBots.enableMint();
+            const contractCall = await this.contracts.pawnBots.enableMint();
+            expect(contractCall).to.emit(this.contracts.pawnBots, "EnableMint");
             expect(await this.contracts.pawnBots.isMintEnabled()).to.be.equal(true);
           });
         });
@@ -270,7 +273,8 @@ export function shouldBehaveLikePawnBots(): void {
     describe("mint", function () {
       context("when minting is not enabled", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).mint(0)).to.be.revertedWith(
+          const signer = this.signers.alice;
+          await expect(this.contracts.pawnBots.connect(signer).mint(0)).to.be.revertedWith(
             PawnBotsErrors.MINT_IS_NOT_ENABLED,
           );
         });
@@ -279,66 +283,92 @@ export function shouldBehaveLikePawnBots(): void {
       context("when minting is enabled", function () {
         beforeEach(async function () {
           await this.contracts.pawnBots.__godMode_setIsMintEnabled(true);
+          await this.contracts.pawnBots.__godMode_mint(10);
         });
 
-        context("when `mintAmount` plus `totalSupply()` exceeds theoretical collection size", function () {
+        context("when `mintAmount` exceeds collection size minus reserve cap minus `totalSupply()`", function () {
           beforeEach(async function () {
-            this.mintAmount = (await this.contracts.pawnBots.COLLECTION_SIZE()).add(1);
+            this.mintAmount = (await this.contracts.pawnBots.COLLECTION_SIZE())
+              .sub(await this.contracts.pawnBots.RESERVE_CAP())
+              .sub(await this.contracts.pawnBots.totalSupply())
+              .add(1);
           });
 
           it("reverts", async function () {
-            await expect(this.contracts.pawnBots.connect(this.signers.alice).mint(this.mintAmount)).to.be.revertedWith(
+            const signer = this.signers.alice;
+            await expect(this.contracts.pawnBots.connect(signer).mint(this.mintAmount)).to.be.revertedWith(
               PawnBotsErrors.COLLECTION_SIZE_EXCEEDED,
             );
           });
         });
 
-        context("when `mintAmount` plus `totalSupply()` does not exceed theoretical collection size", function () {
-          beforeEach(async function () {
-            this.mintAmount = 10;
-          });
-
-          context("when caller does not have a claim to mint", function () {
-            it("reverts", async function () {
-              await expect(
-                this.contracts.pawnBots.connect(this.signers.alice).mint(this.mintAmount),
-              ).to.be.revertedWith(PawnBotsErrors.USER_IS_NOT_ELIGIBLE);
-            });
-          });
-
-          context("when caller has a claim to mint", function () {
-            beforeEach(async function () {
-              const claim = {
-                exists: true,
-                allocatedAmount: this.mintAmount,
-                claimedAmount: "0",
-              };
-
-              await this.contracts.pawnBots.__godMode_setClaim(this.signers.alice.address, claim);
+        context(
+          "when `mintAmount` does not exceed collection size minus reserve cap minus `totalSupply()",
+          function () {
+            context("when caller does not have a claim to mint", function () {
+              it("reverts", async function () {
+                const signer = this.signers.alice;
+                await expect(this.contracts.pawnBots.connect(signer).mint(0)).to.be.revertedWith(
+                  PawnBotsErrors.USER_IS_NOT_ELIGIBLE,
+                );
+              });
             });
 
-            it("succeeds", async function () {
-              await this.contracts.pawnBots.connect(this.signers.alice).mint(this.mintAmount);
-              expect(await this.contracts.pawnBots.balanceOf(this.signers.alice.address)).to.be.equal(this.mintAmount);
+            context("when caller has a claim to mint", function () {
+              beforeEach(async function () {
+                this.claim = {
+                  exists: true,
+                  allocatedAmount: 10,
+                  claimedAmount: 0,
+                };
+                await this.contracts.pawnBots.__godMode_setClaim(this.signers.alice.address, this.claim);
+              });
+
+              context("when caller exceeds allocated amount", function () {
+                it("reverts", async function () {
+                  const signer = this.signers.alice;
+                  await expect(
+                    this.contracts.pawnBots.connect(signer).mint(this.claim.allocatedAmount + 1),
+                  ).to.be.revertedWith(PawnBotsErrors.USER_ELIGIBILITY_EXCEEDED);
+                });
+              });
+
+              context("when caller does not exceed allocated amount", function () {
+                it("succeeds", async function () {
+                  const signer = this.signers.alice;
+                  const contractCall = await this.contracts.pawnBots.connect(signer).mint(this.claim.allocatedAmount);
+                  expect(contractCall)
+                    .to.emit(this.contracts.pawnBots, "Mint")
+                    .withArgs(signer.address, this.claim.allocatedAmount);
+                  expect(await this.contracts.pawnBots.balanceOf(signer.address)).to.be.equal(
+                    this.claim.allocatedAmount,
+                  );
+                });
+              });
             });
-          });
-        });
+          },
+        );
       });
     });
 
     describe("reserve", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).reserve(0)).to.be.revertedWith(
+          const signer = this.signers.alice;
+          await expect(this.contracts.pawnBots.connect(signer).reserve(0)).to.be.revertedWith(
             ImportedErrors.CALLER_NOT_OWNER,
           );
         });
       });
 
       context("when called by owner", function () {
-        context("when `reserveAmount` exceeds max reserve limit minus `totalSupply()`", function () {
+        context("when `reserveAmount` exceeds reserve cap minus `reservedElements`", function () {
           beforeEach(async function () {
-            this.reserveAmount = (await this.contracts.pawnBots.COLLECTION_SIZE()).add(1);
+            const reservedElements = 10;
+            await this.contracts.pawnBots.__godMode_setReservedElements(reservedElements);
+            this.reserveAmount = (await this.contracts.pawnBots.RESERVE_CAP())
+              .sub(await this.contracts.pawnBots.reservedElements())
+              .add(1);
           });
 
           it("reverts", async function () {
@@ -348,28 +378,12 @@ export function shouldBehaveLikePawnBots(): void {
           });
         });
 
-        context("when `reserveAmount` does not exceed max reserve limit minus `totalSupply()`", function () {
-          context("when reserving in one call", function () {
-            it("succeeds", async function () {
-              const reservedElements = 1;
-
-              await this.contracts.pawnBots.reserve(reservedElements);
-              expect(await this.contracts.pawnBots.balanceOf(this.signers.admin.address)).to.be.equal(reservedElements);
-            });
-          });
-
-          context("when reserving through multiple calls", function () {
-            it("succeeds", async function () {
-              const numberOfCalls = 10;
-              const reservedElements = (await this.contracts.pawnBots.COLLECTION_SIZE()).div(100);
-
-              for (let i = 0; i < numberOfCalls; i++) {
-                await this.contracts.pawnBots.reserve(reservedElements);
-              }
-              expect(await this.contracts.pawnBots.balanceOf(this.signers.admin.address)).to.be.equal(
-                reservedElements.mul(numberOfCalls),
-              );
-            });
+        context("when `reserveAmount` does not exceed reserve cap minus `reservedElements`", function () {
+          it("succeeds", async function () {
+            const reserveAmount = 10;
+            const contractCall = await this.contracts.pawnBots.reserve(reserveAmount);
+            expect(contractCall).to.emit(this.contracts.pawnBots, "Reserve").withArgs(reserveAmount);
+            expect(await this.contracts.pawnBots.balanceOf(this.signers.admin.address)).to.be.equal(reserveAmount);
           });
         });
       });
@@ -386,11 +400,11 @@ export function shouldBehaveLikePawnBots(): void {
         beforeEach(async function () {
           // Send the VRF fee to the contract
           const linkTeam = "0x6f61507F902e1c22BCd7aa2C0452cd2212009B61";
+          const signer = await ethers.getSigner(linkTeam);
           await network.provider.request({
             method: "hardhat_impersonateAccount",
             params: [linkTeam],
           });
-          const signer = await ethers.getSigner(linkTeam);
           await this.contracts.link.connect(signer).transfer(this.contracts.pawnBots.address, VRF_FEE);
           await network.provider.request({
             method: "hardhat_stopImpersonatingAccount",
@@ -400,21 +414,30 @@ export function shouldBehaveLikePawnBots(): void {
 
         context("when not called by owner", function () {
           it("reverts", async function () {
-            await expect(this.contracts.pawnBots.connect(this.signers.alice).reveal()).to.be.revertedWith(
+            const signer = this.signers.alice;
+            await expect(this.contracts.pawnBots.connect(signer).reveal()).to.be.revertedWith(
               ImportedErrors.CALLER_NOT_OWNER,
             );
           });
         });
 
         context("when called by owner", function () {
-          context("when called again after the first time", function () {
-            beforeEach(async function () {
-              await this.contracts.pawnBots.reveal();
-            });
+          beforeEach(async function () {
+            const currentTime = (await ethers.provider.getBlock("latest")).timestamp;
+            await this.contracts.pawnBots.__godMode_setRevealTime(currentTime + 2000000);
+          });
 
-            context("when offset is already set", function () {
+          timeContext("when called too early", 1999998, function () {
+            it("reverts", async function () {
+              await expect(this.contracts.pawnBots.reveal()).to.be.revertedWith(PawnBotsErrors.TOO_EARLY_TO_REVEAL);
+            });
+          });
+
+          timeContext("when called after `revealTime`", 2000001, function () {
+            context("when called after offset is already set", function () {
               beforeEach(async function () {
-                await this.contracts.pawnBots.__godMode_setOffset("1456");
+                const offset = 1456;
+                await this.contracts.pawnBots.__godMode_setOffset(offset);
               });
 
               it("reverts", async function () {
@@ -422,29 +445,77 @@ export function shouldBehaveLikePawnBots(): void {
               });
             });
 
-            context("when offset is not yet set", function () {
-              beforeEach(async function () {
-                await this.contracts.pawnBots.__godMode_setOffset("0");
+            context("when offset has not yet been set", function () {
+              context("when randomness is already requested", function () {
+                beforeEach(async function () {
+                  const requestId = "0x0000000000000000000000000000000000000000000000000000000000000001";
+                  await this.contracts.pawnBots.__godMode_setVrfRequestId(requestId);
+                });
+
+                it("reverts", async function () {
+                  await expect(this.contracts.pawnBots.reveal()).to.be.revertedWith(
+                    PawnBotsErrors.RANDOMNESS_ALREADY_REQUESTED,
+                  );
+                });
               });
 
-              it("reverts", async function () {
-                await expect(this.contracts.pawnBots.reveal()).to.be.revertedWith(
-                  PawnBotsErrors.RANDOMNESS_ALREADY_REQUESTED,
-                );
+              context("when randomness has not been requested", function () {
+                context("when vrf coordinator miraculously fails", function () {
+                  context("when vrf coordinator tries to fullfill randomness more than once", function () {
+                    it("reverts", async function () {
+                      const randomNumber = 10450;
+                      const initialRequestId = "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+                      await this.contracts.pawnBots.reveal();
+                      const requestId = await this.contracts.pawnBots.__godMode_returnVrfRequestId();
+                      expect(requestId).to.not.be.equal(initialRequestId);
+                      await this.contracts.pawnBots.__godMode_fulfillRandomness(requestId, randomNumber);
+
+                      await expect(
+                        this.contracts.pawnBots.__godMode_fulfillRandomness(requestId, randomNumber),
+                      ).to.be.revertedWith(PawnBotsErrors.OFFSET_ALREADY_SET);
+                    });
+                  });
+
+                  context("when vrf coordinator returns randomness with different request id", function () {
+                    it("reverts", async function () {
+                      const randomNumber = 10450;
+                      const initialRequestId = "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+                      await this.contracts.pawnBots.reveal();
+                      const requestId = await this.contracts.pawnBots.__godMode_returnVrfRequestId();
+                      expect(requestId).to.not.be.equal(initialRequestId);
+
+                      await expect(
+                        this.contracts.pawnBots.__godMode_fulfillRandomness(
+                          "0x0000000000000000000000000000000000000000000000000000000000c0ffee",
+                          randomNumber,
+                        ),
+                      ).to.be.revertedWith(PawnBotsErrors.VRF_REQUEST_ID_MISMATCH);
+                    });
+                  });
+                });
+
+                context("when vrf coordinator works as expected", function () {
+                  it("succeeds", async function () {
+                    const randomNumber = 10450;
+                    const initialRequestId = "0x0000000000000000000000000000000000000000000000000000000000000000";
+                    const collectionSize = Number(await this.contracts.pawnBots.COLLECTION_SIZE());
+
+                    await this.contracts.pawnBots.reveal();
+                    const requestId = await this.contracts.pawnBots.__godMode_returnVrfRequestId();
+                    expect(requestId).to.not.be.equal(initialRequestId);
+                    const contractCall = await this.contracts.pawnBots.__godMode_fulfillRandomness(
+                      requestId,
+                      randomNumber,
+                    );
+                    expect(contractCall).to.emit(this.contracts.pawnBots, "Reveal");
+                    expect(await this.contracts.pawnBots.offset()).to.be.equal(
+                      (randomNumber % (collectionSize - 1)) + 1,
+                    );
+                  });
+                });
               });
-            });
-          });
-
-          context("when called for the first time", function () {
-            it("succeeds", async function () {
-              const randomNumber = 10450;
-              const initialRequestId = "0x0000000000000000000000000000000000000000000000000000000000000000";
-
-              await this.contracts.pawnBots.reveal();
-              const requestId = await this.contracts.pawnBots.__godMode_returnVrfRequestId();
-              expect(requestId).to.not.be.equal(initialRequestId);
-              await this.contracts.pawnBots.__godMode_fulfillRandomness(requestId, randomNumber);
-              expect(await this.contracts.pawnBots.offset()).to.be.equal((randomNumber % 9999) + 1);
             });
           });
         });
@@ -454,7 +525,8 @@ export function shouldBehaveLikePawnBots(): void {
     describe("setBaseURI", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).setBaseURI("")).to.be.revertedWith(
+          const signer = this.signers.alice;
+          await expect(this.contracts.pawnBots.connect(signer).setBaseURI("")).to.be.revertedWith(
             ImportedErrors.CALLER_NOT_OWNER,
           );
         });
@@ -463,8 +535,8 @@ export function shouldBehaveLikePawnBots(): void {
       context("when called by owner", function () {
         it("succeeds", async function () {
           const baseURI = "ipfs://QmYAXgX8ARiriupMQsbGXtKdDyGzWry1YV3sycKw1qqmgH/";
-
-          await this.contracts.pawnBots.setBaseURI(baseURI);
+          const contractCall = await this.contracts.pawnBots.setBaseURI(baseURI);
+          expect(contractCall).to.emit(this.contracts.pawnBots, "SetBaseURI").withArgs(baseURI);
           expect(await this.contracts.pawnBots.__godMode_returnBaseURI()).to.be.equal(baseURI);
         });
       });
@@ -473,7 +545,8 @@ export function shouldBehaveLikePawnBots(): void {
     describe("setClaims", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).setClaims([])).to.be.revertedWith(
+          const signer = this.signers.alice;
+          await expect(this.contracts.pawnBots.connect(signer).setClaims([])).to.be.revertedWith(
             ImportedErrors.CALLER_NOT_OWNER,
           );
         });
@@ -487,21 +560,21 @@ export function shouldBehaveLikePawnBots(): void {
           });
         });
 
-        context("when only 1 claim is given", function () {
+        context("when only one claim is given", function () {
           context("when given claim is new", function () {
             beforeEach(async function () {
               this.claim = {
                 user: this.signers.alice.address,
-                allocatedAmount: "10",
+                allocatedAmount: 10,
               };
             });
 
             it("succeeds", async function () {
               const contractCall = await this.contracts.pawnBots.setClaims([this.claim]);
               expect(contractCall).to.emit(this.contracts.pawnBots, "SetClaims");
-              const claim = await this.contracts.pawnBots.claims(this.signers.alice.address);
-              expect(claim.claimedAmount).to.be.equal("0");
+              const claim = await this.contracts.pawnBots.claims(this.claim.user);
               expect(claim.allocatedAmount).to.be.equal(this.claim.allocatedAmount);
+              expect(claim.claimedAmount).to.be.equal(0);
             });
           });
 
@@ -510,12 +583,12 @@ export function shouldBehaveLikePawnBots(): void {
               this.claim = {
                 user: this.signers.alice.address,
                 exists: true,
-                claimedAmount: "5",
-                allocatedAmount: "10",
+                claimedAmount: 5,
+                allocatedAmount: 10,
               };
               this.newClaim = {
                 user: this.signers.alice.address,
-                allocatedAmount: "12",
+                allocatedAmount: 12,
               };
               await this.contracts.pawnBots.__godMode_setClaim(this.claim.user, this.claim);
             });
@@ -524,8 +597,8 @@ export function shouldBehaveLikePawnBots(): void {
               const contractCall = await this.contracts.pawnBots.setClaims([this.newClaim]);
               expect(contractCall).to.emit(this.contracts.pawnBots, "SetClaims");
               const claim = await this.contracts.pawnBots.claims(this.claim.user);
-              expect(claim.claimedAmount).to.be.equal(this.claim.claimedAmount);
               expect(claim.allocatedAmount).to.be.equal(this.newClaim.allocatedAmount);
+              expect(claim.claimedAmount).to.be.equal(this.claim.claimedAmount);
             });
           });
         });
@@ -535,15 +608,15 @@ export function shouldBehaveLikePawnBots(): void {
             this.claims = [
               {
                 user: this.signers.alice.address,
-                allocatedAmount: "10",
+                allocatedAmount: 10,
               },
               {
                 user: this.signers.bob.address,
-                allocatedAmount: "3",
+                allocatedAmount: 3,
               },
               {
                 user: this.signers.carol.address,
-                allocatedAmount: "5",
+                allocatedAmount: 5,
               },
             ];
           });
@@ -553,7 +626,7 @@ export function shouldBehaveLikePawnBots(): void {
             expect(contractCall).to.emit(this.contracts.pawnBots, "SetClaims");
             for (let i = 0; i < this.claims.length; i++) {
               const claim = await this.contracts.pawnBots.claims(this.claims[i].user);
-              expect(claim.claimedAmount).to.be.equal("0");
+              expect(claim.claimedAmount).to.be.equal(0);
               expect(claim.allocatedAmount).to.be.equal(this.claims[i].allocatedAmount);
             }
           });
@@ -564,7 +637,8 @@ export function shouldBehaveLikePawnBots(): void {
     describe("setProvenanceHash", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).setProvenanceHash("")).to.be.revertedWith(
+          const signer = this.signers.alice;
+          await expect(this.contracts.pawnBots.connect(signer).setProvenanceHash("")).to.be.revertedWith(
             ImportedErrors.CALLER_NOT_OWNER,
           );
         });
@@ -573,8 +647,8 @@ export function shouldBehaveLikePawnBots(): void {
       context("when called by owner", function () {
         it("succeeds", async function () {
           const provenanceHash = "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f";
-
-          await this.contracts.pawnBots.setProvenanceHash(provenanceHash);
+          const contractCall = await this.contracts.pawnBots.setProvenanceHash(provenanceHash);
+          expect(contractCall).to.emit(this.contracts.pawnBots, "SetProvenanceHash").withArgs(provenanceHash);
           expect(await this.contracts.pawnBots.provenanceHash()).to.be.equal(provenanceHash);
         });
       });
@@ -583,7 +657,8 @@ export function shouldBehaveLikePawnBots(): void {
     describe("setRevealTime", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).setRevealTime("0")).to.be.revertedWith(
+          const signer = this.signers.alice;
+          await expect(this.contracts.pawnBots.connect(signer).setRevealTime(0)).to.be.revertedWith(
             ImportedErrors.CALLER_NOT_OWNER,
           );
         });
@@ -591,9 +666,10 @@ export function shouldBehaveLikePawnBots(): void {
 
       context("when called by owner", function () {
         it("succeeds", async function () {
-          const contractCall = await this.contracts.pawnBots.setRevealTime("1640641278");
-          expect(contractCall).to.emit(this.contracts.pawnBots, "SetRevealTime").withArgs("1640641278");
-          expect(await this.contracts.pawnBots.revealTime()).to.be.equal("1640641278");
+          const revealTime = 1640641278;
+          const contractCall = await this.contracts.pawnBots.setRevealTime(revealTime);
+          expect(contractCall).to.emit(this.contracts.pawnBots, "SetRevealTime").withArgs(revealTime);
+          expect(await this.contracts.pawnBots.revealTime()).to.be.equal(revealTime);
         });
       });
     });
