@@ -142,10 +142,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
             // TODO: live-test possible issues with multiple token IDs
             return bytes(bURI).length > 0 ? string(abi.encodePacked(bURI, "box", ".json")) : "";
         } else {
-            uint256 moddedId;
-            unchecked {
-                moddedId = (tokenId + offset) % COLLECTION_SIZE;
-            }
+            uint256 moddedId = (tokenId + offset) % COLLECTION_SIZE;
             return bytes(bURI).length > 0 ? string(abi.encodePacked(bURI, moddedId.toString(), ".json")) : "";
         }
     }
