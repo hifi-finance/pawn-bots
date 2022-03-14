@@ -74,8 +74,8 @@ interface IPawnBots {
     /// @notice The provenance hash of post-reveal art.
     function provenanceHash() external view returns (string memory);
 
-    /// @notice The total amount of tokens that have been reserved by the contract owner.
-    function reservedElements() external view returns (uint256);
+    /// @notice The total amount of reserved tokens that have been minted by the contract owner.
+    function reserveMinted() external view returns (uint256);
 
     /// @notice The timestamp from which the collection metadata can be revealed.
     function revealTime() external view returns (uint256);
@@ -119,7 +119,7 @@ interface IPawnBots {
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
-    /// - `reserveAmount` cannot exceed reserve cap minus `reservedElements`.
+    /// - `reserveAmount` cannot exceed reserve cap minus `reserveMinted`.
     ///
     /// @param reserveAmount The amount of reserve tokens to mint.
     function reserve(uint256 reserveAmount) external;

@@ -56,8 +56,8 @@ contract GodModePawnBots is PawnBots {
         provenanceHash = newProvenanceHash;
     }
 
-    function __godMode_setReservedElements(uint256 newReservedElements) external {
-        reservedElements = newReservedElements;
+    function __godMode_setReserveMinted(uint256 newReserveMinted) external {
+        reserveMinted = newReserveMinted;
     }
 
     function __godMode_setRevealTime(uint256 newRevealTime) external {

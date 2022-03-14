@@ -45,7 +45,7 @@ export interface PawnBotsInterface extends utils.Interface {
     "rawFulfillRandomness(bytes32,uint256)": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "reserve(uint256)": FunctionFragment;
-    "reservedElements()": FunctionFragment;
+    "reserveMinted()": FunctionFragment;
     "reveal()": FunctionFragment;
     "revealTime()": FunctionFragment;
     "safeTransferFrom(address,address,uint256)": FunctionFragment;
@@ -123,7 +123,7 @@ export interface PawnBotsInterface extends utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "reservedElements",
+    functionFragment: "reserveMinted",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "reveal", values?: undefined): string;
@@ -229,7 +229,7 @@ export interface PawnBotsInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "reserve", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "reservedElements",
+    functionFragment: "reserveMinted",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "reveal", data: BytesLike): Result;
@@ -492,7 +492,7 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    reservedElements(overrides?: CallOverrides): Promise<[BigNumber]>;
+    reserveMinted(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     reveal(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -653,7 +653,7 @@ export interface PawnBots extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  reservedElements(overrides?: CallOverrides): Promise<BigNumber>;
+  reserveMinted(overrides?: CallOverrides): Promise<BigNumber>;
 
   reveal(
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -802,7 +802,7 @@ export interface PawnBots extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    reservedElements(overrides?: CallOverrides): Promise<BigNumber>;
+    reserveMinted(overrides?: CallOverrides): Promise<BigNumber>;
 
     reveal(overrides?: CallOverrides): Promise<void>;
 
@@ -1026,7 +1026,7 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    reservedElements(overrides?: CallOverrides): Promise<BigNumber>;
+    reserveMinted(overrides?: CallOverrides): Promise<BigNumber>;
 
     reveal(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -1188,7 +1188,7 @@ export interface PawnBots extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    reservedElements(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    reserveMinted(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     reveal(
       overrides?: Overrides & { from?: string | Promise<string> }

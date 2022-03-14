@@ -113,20 +113,20 @@ export function shouldBehaveLikePawnBots(): void {
       });
     });
 
-    describe("reservedElements", function () {
+    describe("reserveMinted", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.reservedElements()).to.equal(0);
+          expect(await this.contracts.pawnBots.reserveMinted()).to.equal(0);
         });
       });
 
       context("when changed", function () {
         beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setReservedElements(1000);
+          await this.contracts.pawnBots.__godMode_setReserveMinted(1000);
         });
 
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.reservedElements()).to.equal(1000);
+          expect(await this.contracts.pawnBots.reserveMinted()).to.equal(1000);
         });
       });
     });
@@ -357,12 +357,12 @@ export function shouldBehaveLikePawnBots(): void {
       });
 
       context("when called by owner", function () {
-        context("when `reserveAmount` exceeds reserve cap minus `reservedElements`", function () {
+        context("when `reserveAmount` exceeds reserve cap minus `reserveMinted`", function () {
           beforeEach(async function () {
-            const reservedElements = 10;
-            await this.contracts.pawnBots.__godMode_setReservedElements(reservedElements);
+            const reserveMinted = 10;
+            await this.contracts.pawnBots.__godMode_setReserveMinted(reserveMinted);
             this.reserveAmount = (await this.contracts.pawnBots.RESERVE_CAP())
-              .sub(await this.contracts.pawnBots.reservedElements())
+              .sub(await this.contracts.pawnBots.reserveMinted())
               .add(1);
           });
 
@@ -373,7 +373,7 @@ export function shouldBehaveLikePawnBots(): void {
           });
         });
 
-        context("when `reserveAmount` does not exceed reserve cap minus `reservedElements`", function () {
+        context("when `reserveAmount` does not exceed reserve cap minus `reserveMinted`", function () {
           it("succeeds", async function () {
             const reserveAmount = 10;
             const contractCall = await this.contracts.pawnBots.reserve(reserveAmount);

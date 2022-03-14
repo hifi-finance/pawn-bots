@@ -85,7 +85,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     /// @dev The theoretical collection size.
     uint256 public constant COLLECTION_SIZE = 10_000;
 
-    /// @dev The maximum amount of NFTs that can be reserved by the contract owner.
+    /// @dev The token reserve allocated for contract owner.
     uint256 public constant RESERVE_CAP = 1_000;
 
     /// @inheritdoc IPawnBots
@@ -101,7 +101,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     string public override provenanceHash;
 
     /// @inheritdoc IPawnBots
-    uint256 public override reservedElements;
+    uint256 public override reserveMinted;
 
     /// @inheritdoc IPawnBots
     uint256 public override revealTime;
@@ -175,7 +175,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         if (!isMintEnabled) {
             revert PawnBots__MintIsNotEnabled();
         }
-        if (mintAmount + RESERVE_CAP + totalSupply() > COLLECTION_SIZE + reservedElements) {
+        if (mintAmount + RESERVE_CAP + totalSupply() > COLLECTION_SIZE + reserveMinted) {
             revert PawnBots__CollectionSizeExceeded();
         }
         Claim memory claim = claims[msg.sender];
@@ -196,11 +196,11 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
 
     /// @inheritdoc IPawnBots
     function reserve(uint256 reserveAmount) external override onlyOwner nonReentrant {
-        if (reserveAmount + reservedElements > RESERVE_CAP) {
+        if (reserveAmount + reserveMinted > RESERVE_CAP) {
             revert PawnBots__ReserveCapExceeded();
         }
         unchecked {
-            reservedElements += reserveAmount;
+            reserveMinted += reserveAmount;
         }
         for (uint256 i = 0; i < reserveAmount; ++i) {
             _safeMint(msg.sender, totalSupply());
