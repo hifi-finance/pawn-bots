@@ -20,6 +20,7 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
 export interface PBTicketsInterface extends utils.Interface {
   functions: {
+    "MAX_PRICE()": FunctionFragment;
     "MAX_TICKETS()": FunctionFragment;
     "PRIVATE_DURATION()": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
@@ -57,6 +58,7 @@ export interface PBTicketsInterface extends utils.Interface {
     "withdraw(address)": FunctionFragment;
   };
 
+  encodeFunctionData(functionFragment: "MAX_PRICE", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "MAX_TICKETS",
     values?: undefined
@@ -168,6 +170,7 @@ export interface PBTicketsInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "withdraw", values: [string]): string;
 
+  decodeFunctionResult(functionFragment: "MAX_PRICE", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "MAX_TICKETS",
     data: BytesLike
@@ -413,6 +416,8 @@ export interface PBTickets extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
+    MAX_PRICE(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     MAX_TICKETS(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     PRIVATE_DURATION(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -564,6 +569,8 @@ export interface PBTickets extends BaseContract {
     ): Promise<ContractTransaction>;
   };
 
+  MAX_PRICE(overrides?: CallOverrides): Promise<BigNumber>;
+
   MAX_TICKETS(overrides?: CallOverrides): Promise<BigNumber>;
 
   PRIVATE_DURATION(overrides?: CallOverrides): Promise<BigNumber>;
@@ -709,6 +716,8 @@ export interface PBTickets extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
+    MAX_PRICE(overrides?: CallOverrides): Promise<BigNumber>;
+
     MAX_TICKETS(overrides?: CallOverrides): Promise<BigNumber>;
 
     PRIVATE_DURATION(overrides?: CallOverrides): Promise<BigNumber>;
@@ -935,6 +944,8 @@ export interface PBTickets extends BaseContract {
   };
 
   estimateGas: {
+    MAX_PRICE(overrides?: CallOverrides): Promise<BigNumber>;
+
     MAX_TICKETS(overrides?: CallOverrides): Promise<BigNumber>;
 
     PRIVATE_DURATION(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1087,6 +1098,8 @@ export interface PBTickets extends BaseContract {
   };
 
   populateTransaction: {
+    MAX_PRICE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     MAX_TICKETS(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     PRIVATE_DURATION(overrides?: CallOverrides): Promise<PopulatedTransaction>;

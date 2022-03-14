@@ -142,7 +142,10 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
             // TODO: live-test possible issues with multiple token IDs
             return bytes(bURI).length > 0 ? string(abi.encodePacked(bURI, "box", ".json")) : "";
         } else {
-            uint256 moddedId = (tokenId + offset) % COLLECTION_SIZE;
+            uint256 moddedId;
+            unchecked {
+                moddedId = (tokenId + offset) % COLLECTION_SIZE;
+            }
             return bytes(bURI).length > 0 ? string(abi.encodePacked(bURI, moddedId.toString(), ".json")) : "";
         }
     }
@@ -150,7 +153,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     /// PUBLIC NON-CONSTANT FUNCTIONS ///
 
     /// @inheritdoc IPawnBots
-    function disableMint() public override onlyOwner {
+    function disableMint() external override onlyOwner {
         if (!isMintEnabled) {
             revert PawnBots__MintIsNotEnabled();
         }
@@ -159,7 +162,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     }
 
     /// @inheritdoc IPawnBots
-    function enableMint() public override onlyOwner {
+    function enableMint() external override onlyOwner {
         if (isMintEnabled) {
             revert PawnBots__MintIsAlreadyEnabled();
         }
@@ -168,11 +171,11 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     }
 
     /// @inheritdoc IPawnBots
-    function mint(uint256 mintAmount) public override nonReentrant {
+    function mint(uint256 mintAmount) external override nonReentrant {
         if (!isMintEnabled) {
             revert PawnBots__MintIsNotEnabled();
         }
-        if (mintAmount + RESERVE_CAP + totalSupply() > COLLECTION_SIZE) {
+        if (mintAmount + RESERVE_CAP + totalSupply() > COLLECTION_SIZE + reservedElements) {
             revert PawnBots__CollectionSizeExceeded();
         }
         Claim memory claim = claims[msg.sender];
@@ -182,7 +185,9 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         if (mintAmount + claim.claimedAmount > claim.allocatedAmount) {
             revert PawnBots__UserEligibilityExceeded();
         }
-        claims[msg.sender].claimedAmount += mintAmount;
+        unchecked {
+            claims[msg.sender].claimedAmount += mintAmount;
+        }
         for (uint256 i = 0; i < mintAmount; ++i) {
             _safeMint(msg.sender, totalSupply());
         }
@@ -190,11 +195,13 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     }
 
     /// @inheritdoc IPawnBots
-    function reserve(uint256 reserveAmount) public override onlyOwner {
+    function reserve(uint256 reserveAmount) external override onlyOwner nonReentrant {
         if (reserveAmount + reservedElements > RESERVE_CAP) {
             revert PawnBots__ReserveCapExceeded();
         }
-        reservedElements += reserveAmount;
+        unchecked {
+            reservedElements += reserveAmount;
+        }
         for (uint256 i = 0; i < reserveAmount; ++i) {
             _safeMint(msg.sender, totalSupply());
         }
@@ -202,7 +209,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     }
 
     /// @inheritdoc IPawnBots
-    function reveal() public override onlyOwner {
+    function reveal() external override onlyOwner {
         if (block.timestamp < revealTime) {
             revert PawnBots__TooEarlyToReveal();
         }
@@ -216,13 +223,13 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     }
 
     /// @inheritdoc IPawnBots
-    function setBaseURI(string calldata newBaseURI) public override onlyOwner {
+    function setBaseURI(string calldata newBaseURI) external override onlyOwner {
         baseURI = newBaseURI;
         emit SetBaseURI(newBaseURI);
     }
 
     /// @inheritdoc IPawnBots
-    function setClaims(NewClaim[] calldata newClaims) public override onlyOwner {
+    function setClaims(NewClaim[] calldata newClaims) external override onlyOwner {
         for (uint256 i = 0; i < newClaims.length; ++i) {
             NewClaim memory newClaim = newClaims[i];
             Claim memory claim = claims[newClaim.user];
@@ -234,13 +241,13 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     }
 
     /// @inheritdoc IPawnBots
-    function setProvenanceHash(string calldata newProvenanceHash) public override onlyOwner {
+    function setProvenanceHash(string calldata newProvenanceHash) external override onlyOwner {
         provenanceHash = newProvenanceHash;
         emit SetProvenanceHash(newProvenanceHash);
     }
 
     /// @inheritdoc IPawnBots
-    function setRevealTime(uint256 newRevealTime) public override onlyOwner {
+    function setRevealTime(uint256 newRevealTime) external override onlyOwner {
         revealTime = newRevealTime;
         emit SetRevealTime(newRevealTime);
     }
@@ -262,7 +269,9 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         if (vrfRequestId != requestId) {
             revert PawnBots__VrfRequestIdMismatch();
         }
-        offset = (randomness % (COLLECTION_SIZE - 1)) + 1;
+        unchecked {
+            offset = (randomness % (COLLECTION_SIZE - 1)) + 1;
+        }
         emit Reveal();
     }
 }

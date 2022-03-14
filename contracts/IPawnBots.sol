@@ -106,7 +106,7 @@ interface IPawnBots {
     ///
     /// @dev Requirements:
     /// - Minting must be enabled.
-    /// - `mintAmount` cannot exceed theoretical collection size limit minus reserve cap minus `totalSupply()`.
+    /// - `mintAmount` cannot overflow collection size.
     /// - Caller must have a claim to mint.
     /// - `mintAmount` cannot exceed the user's `allocatedAmount` minus `claimedAmount`.
     ///

@@ -9,6 +9,7 @@ import { ImportedErrors, PBTicketsErrors } from "../errors";
 export function shouldBehaveLikePBTickets(): void {
   describe("Deployment", function () {
     it("should contain the correct constants", async function () {
+      expect(await this.contracts.pbTickets.MAX_PRICE()).to.equal(parseEther("1000000"));
       expect(await this.contracts.pbTickets.MAX_TICKETS()).to.equal(9000);
       expect(await this.contracts.pbTickets.PRIVATE_DURATION()).to.equal(24 * 60 * 60);
     });
@@ -658,12 +659,28 @@ export function shouldBehaveLikePBTickets(): void {
       });
 
       context("when called by owner", function () {
-        it("succeeds", async function () {
-          const price = parseEther("0.1");
+        context("when `newPrice` exceeds max price limit", function () {
+          beforeEach(async function () {
+            this.newPrice = (await this.contracts.pbTickets.MAX_PRICE()).add(1);
+          });
 
-          const contractCall = await this.contracts.pbTickets.setPrice(price);
-          expect(contractCall).to.emit(this.contracts.pbTickets, "SetPrice").withArgs(price);
-          expect(await this.contracts.pbTickets.price()).to.be.equal(price);
+          it("reverts", async function () {
+            await expect(this.contracts.pbTickets.setPrice(this.newPrice)).to.be.revertedWith(
+              PBTicketsErrors.MAX_PRICE_EXCEEDED,
+            );
+          });
+        });
+
+        context("when `newPrice` does not exceed max price limit", function () {
+          beforeEach(async function () {
+            this.newPrice = await this.contracts.pbTickets.MAX_PRICE();
+          });
+
+          it("succeeds", async function () {
+            const contractCall = await this.contracts.pbTickets.setPrice(this.newPrice);
+            expect(contractCall).to.emit(this.contracts.pbTickets, "SetPrice").withArgs(this.newPrice);
+            expect(await this.contracts.pbTickets.price()).to.be.equal(this.newPrice);
+          });
         });
       });
     });

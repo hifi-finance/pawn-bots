@@ -10,6 +10,7 @@ import "./IPBTickets.sol";
 
 error PBTickets__InsufficientFunds();
 error PBTickets__InvalidRecipient();
+error PBTickets__MaxPriceExceeded();
 error PBTickets__MaxPrivateMintsExceeded();
 error PBTickets__MaxPublicMintsPerTxExceeded();
 error PBTickets__MintNotAuthorized();
@@ -30,6 +31,9 @@ contract PBTickets is IPBTickets, ERC721A, Pausable, Ownable, ReentrancyGuard {
 
     /// @dev The number of tickets on sale.
     uint256 public constant MAX_TICKETS = 9_000;
+
+    /// @dev The maximum possible sale price.
+    uint256 public constant MAX_PRICE = 1_000_000 ether;
 
     /// @dev The private sale duration from the sale start timestamp.
     uint256 public constant PRIVATE_DURATION = 24 hours;
@@ -79,17 +83,19 @@ contract PBTickets is IPBTickets, ERC721A, Pausable, Ownable, ReentrancyGuard {
     /// PUBLIC NON-CONSTANT FUNCTIONS ///
 
     /// @inheritdoc IPBTickets
-    function burnUnsold(uint256 burnAmount) public override onlyOwner whenPaused {
+    function burnUnsold(uint256 burnAmount) external override onlyOwner whenPaused {
         if (burnAmount + totalSupply() > saleCap) {
             revert PBTickets__SaleCapExceeded();
         }
-        saleCap -= burnAmount;
+        unchecked {
+            saleCap -= burnAmount;
+        }
         emit BurnUnsold(burnAmount);
     }
 
     /// @inheritdoc IPBTickets
     function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof)
-        public
+        external
         payable
         override
         nonReentrant
@@ -107,13 +113,15 @@ contract PBTickets is IPBTickets, ERC721A, Pausable, Ownable, ReentrancyGuard {
         if (mintAmount + claimedPrivateMints[msg.sender] > maxPrivateMints) {
             revert PBTickets__MaxPrivateMintsExceeded();
         }
-        claimedPrivateMints[msg.sender] += mintAmount;
+        unchecked {
+            claimedPrivateMints[msg.sender] += mintAmount;
+        }
         mintInternal(mintAmount);
         emit Mint(msg.sender, mintAmount, price, MintPhase.PRIVATE);
     }
 
     /// @inheritdoc IPBTickets
-    function mintPublic(uint256 mintAmount) public payable override nonReentrant whenNotPaused {
+    function mintPublic(uint256 mintAmount) external payable override nonReentrant whenNotPaused {
         if (saleStartTime == 0) {
             revert PBTickets__SaleNotStarted();
         }
@@ -128,7 +136,7 @@ contract PBTickets is IPBTickets, ERC721A, Pausable, Ownable, ReentrancyGuard {
     }
 
     /// @inheritdoc IPBTickets
-    function pauseTickets(bool state) public override onlyOwner {
+    function pauseTickets(bool state) external override onlyOwner {
         if (state) {
             _pause();
         } else {
@@ -138,31 +146,34 @@ contract PBTickets is IPBTickets, ERC721A, Pausable, Ownable, ReentrancyGuard {
     }
 
     /// @inheritdoc IPBTickets
-    function setBaseURI(string calldata newBaseURI) public override onlyOwner {
+    function setBaseURI(string calldata newBaseURI) external override onlyOwner {
         baseURI = newBaseURI;
         emit SetBaseURI(newBaseURI);
     }
 
     /// @inheritdoc IPBTickets
-    function setMaxPrivateMints(uint256 newMaxPrivateMints) public override onlyOwner {
+    function setMaxPrivateMints(uint256 newMaxPrivateMints) external override onlyOwner {
         maxPrivateMints = newMaxPrivateMints;
         emit SetMaxPrivateMints(newMaxPrivateMints);
     }
 
     /// @inheritdoc IPBTickets
-    function setMaxPublicMintsPerTx(uint256 newMaxPublicMintsPerTx) public override onlyOwner {
+    function setMaxPublicMintsPerTx(uint256 newMaxPublicMintsPerTx) external override onlyOwner {
         maxPublicMintsPerTx = newMaxPublicMintsPerTx;
         emit SetMaxPublicMintsPerTx(newMaxPublicMintsPerTx);
     }
 
     /// @inheritdoc IPBTickets
-    function setPrice(uint256 newPrice) public override onlyOwner {
+    function setPrice(uint256 newPrice) external override onlyOwner {
+        if (newPrice > MAX_PRICE) {
+            revert PBTickets__MaxPriceExceeded();
+        }
         price = newPrice;
         emit SetPrice(newPrice);
     }
 
     /// @inheritdoc IPBTickets
-    function startSale() public override onlyOwner {
+    function startSale() external override onlyOwner {
         if (saleStartTime != 0) {
             revert PBTickets__SaleAlreadyStarted();
         }
@@ -171,7 +182,7 @@ contract PBTickets is IPBTickets, ERC721A, Pausable, Ownable, ReentrancyGuard {
     }
 
     /// @inheritdoc IPBTickets
-    function withdraw(address recipient) public override onlyOwner {
+    function withdraw(address recipient) external override onlyOwner {
         if (recipient == address(0)) {
             revert PBTickets__InvalidRecipient();
         }
@@ -204,7 +215,10 @@ contract PBTickets is IPBTickets, ERC721A, Pausable, Ownable, ReentrancyGuard {
         if (mintAmount + totalSupply() > saleCap) {
             revert PBTickets__SaleCapExceeded();
         }
-        uint256 mintCost = price * mintAmount;
+        uint256 mintCost;
+        unchecked {
+            mintCost = price * mintAmount;
+        }
         if (msg.value < mintCost) {
             revert PBTickets__InsufficientFunds();
         }

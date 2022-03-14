@@ -286,7 +286,7 @@ export function shouldBehaveLikePawnBots(): void {
           await this.contracts.pawnBots.__godMode_mint(10);
         });
 
-        context("when `mintAmount` exceeds collection size minus reserve cap minus `totalSupply()`", function () {
+        context("when `mintAmount` overflows collection size`", function () {
           beforeEach(async function () {
             this.mintAmount = (await this.contracts.pawnBots.COLLECTION_SIZE())
               .sub(await this.contracts.pawnBots.RESERVE_CAP())
@@ -302,52 +302,47 @@ export function shouldBehaveLikePawnBots(): void {
           });
         });
 
-        context(
-          "when `mintAmount` does not exceed collection size minus reserve cap minus `totalSupply()",
-          function () {
-            context("when caller does not have a claim to mint", function () {
+        context("when `mintAmount` does not overflow collection size", function () {
+          context("when caller does not have a claim to mint", function () {
+            it("reverts", async function () {
+              const signer = this.signers.alice;
+              await expect(this.contracts.pawnBots.connect(signer).mint(0)).to.be.revertedWith(
+                PawnBotsErrors.USER_IS_NOT_ELIGIBLE,
+              );
+            });
+          });
+
+          context("when caller has a claim to mint", function () {
+            beforeEach(async function () {
+              this.claim = {
+                exists: true,
+                allocatedAmount: 10,
+                claimedAmount: 0,
+              };
+              await this.contracts.pawnBots.__godMode_setClaim(this.signers.alice.address, this.claim);
+            });
+
+            context("when caller exceeds allocated amount", function () {
               it("reverts", async function () {
                 const signer = this.signers.alice;
-                await expect(this.contracts.pawnBots.connect(signer).mint(0)).to.be.revertedWith(
-                  PawnBotsErrors.USER_IS_NOT_ELIGIBLE,
-                );
+                await expect(
+                  this.contracts.pawnBots.connect(signer).mint(this.claim.allocatedAmount + 1),
+                ).to.be.revertedWith(PawnBotsErrors.USER_ELIGIBILITY_EXCEEDED);
               });
             });
 
-            context("when caller has a claim to mint", function () {
-              beforeEach(async function () {
-                this.claim = {
-                  exists: true,
-                  allocatedAmount: 10,
-                  claimedAmount: 0,
-                };
-                await this.contracts.pawnBots.__godMode_setClaim(this.signers.alice.address, this.claim);
-              });
-
-              context("when caller exceeds allocated amount", function () {
-                it("reverts", async function () {
-                  const signer = this.signers.alice;
-                  await expect(
-                    this.contracts.pawnBots.connect(signer).mint(this.claim.allocatedAmount + 1),
-                  ).to.be.revertedWith(PawnBotsErrors.USER_ELIGIBILITY_EXCEEDED);
-                });
-              });
-
-              context("when caller does not exceed allocated amount", function () {
-                it("succeeds", async function () {
-                  const signer = this.signers.alice;
-                  const contractCall = await this.contracts.pawnBots.connect(signer).mint(this.claim.allocatedAmount);
-                  expect(contractCall)
-                    .to.emit(this.contracts.pawnBots, "Mint")
-                    .withArgs(signer.address, this.claim.allocatedAmount);
-                  expect(await this.contracts.pawnBots.balanceOf(signer.address)).to.be.equal(
-                    this.claim.allocatedAmount,
-                  );
-                });
+            context("when caller does not exceed allocated amount", function () {
+              it("succeeds", async function () {
+                const signer = this.signers.alice;
+                const contractCall = await this.contracts.pawnBots.connect(signer).mint(this.claim.allocatedAmount);
+                expect(contractCall)
+                  .to.emit(this.contracts.pawnBots, "Mint")
+                  .withArgs(signer.address, this.claim.allocatedAmount);
+                expect(await this.contracts.pawnBots.balanceOf(signer.address)).to.be.equal(this.claim.allocatedAmount);
               });
             });
-          },
-        );
+          });
+        });
       });
     });
 

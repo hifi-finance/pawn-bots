@@ -82,7 +82,7 @@ interface IPBTickets {
     /// @dev Requirements:
     /// - Can only be called by the owner.
     /// - Can only be called when tickets are paused.
-    /// - `burnAmount` cannot exceed `saleCap` - `totalSupply()`.
+    /// - `burnAmount` cannot exceed `saleCap - totalSupply()`.
     ///
     /// @param burnAmount The amount of tickets to burn.
     function burnUnsold(uint256 burnAmount) external;
@@ -96,8 +96,8 @@ interface IPBTickets {
     /// - Can only be called after sale is started.
     /// - Can only be called within the first 24 hours of the sale.
     /// - Caller must be eligible to mint in the private phase.
-    /// - `mintAmount` cannot exceed `maxPrivateMints` minus `claimedPrivateMints(user)`.
-    /// - `mintAmount` cannot exceed `saleCap` minus `totalSupply()`.
+    /// - `mintAmount` cannot exceed `maxPrivateMints - claimedPrivateMints(user)`.
+    /// - `mintAmount` cannot exceed `saleCap - totalSupply()`.
     /// - Can only be called when caller has placed at least `price * mintAmount` ETH as the transaction value.
     ///
     /// @param mintAmount The amount of tickets to mint.
@@ -113,7 +113,7 @@ interface IPBTickets {
     /// - Can only be called after sale is started.
     /// - Can only be called after the first 24 hours of the sale.
     /// - `mintAmount` cannot exceed `maxPublicMintsPerTx`.
-    /// - `mintAmount` cannot exceed `saleCap` minus `totalSupply()`.
+    /// - `mintAmount` cannot exceed `saleCap - totalSupply()`.
     /// - Can only be called when caller has placed at least `price * mintAmount` ETH as the transaction value.
     ///
     /// @param mintAmount The amount of tickets to mint.
@@ -164,6 +164,7 @@ interface IPBTickets {
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
+    /// - `newPrice` cannot exceed maximum price limit.
     ///
     /// @param newPrice The new ticket mint price.
     function setPrice(uint256 newPrice) external;
