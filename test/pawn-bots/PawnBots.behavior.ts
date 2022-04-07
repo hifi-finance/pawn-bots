@@ -7,69 +7,49 @@ import { ImportedErrors, PawnBotsErrors } from "../errors";
 
 export function shouldBehaveLikePawnBots(): void {
   describe("Deployment", function () {
-    it("should contain the correct constants", async function () {
-      expect(await this.contracts.pawnBots.COLLECTION_SIZE()).to.equal(10000);
-      expect(await this.contracts.pawnBots.RESERVE_CAP()).to.equal(1000);
+    it("should deploy with the correct values", async function () {
+      // TODO
+      // expect(await this.contracts.pawnBots.COLLECTION_SIZE()).to.equal(10000);
+      // expect(await this.contracts.pawnBots.RESERVE_CAP()).to.equal(1000);
+      expect(await this.contracts.pawnBots.name()).to.equal("Pawn Bots");
+      expect(await this.contracts.pawnBots.symbol()).to.equal("BOTS");
     });
   });
 
   describe("View Functions", function () {
-    describe("claims", function () {
+    describe("maxPrivatePerAccount", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          const { exists, allocatedAmount, claimedAmount } = await this.contracts.pawnBots.claims(
-            this.signers.alice.address,
-          );
-
-          expect(exists).to.equal(false);
-          expect(allocatedAmount).to.equal(0);
-          expect(claimedAmount).to.equal(0);
+          expect(await this.contracts.pawnBots.maxPrivatePerAccount()).to.equal(0);
         });
       });
 
       context("when changed", function () {
         beforeEach(async function () {
-          this.claim = {
-            exists: true,
-            allocatedAmount: 10,
-            claimedAmount: 7,
-          };
-          await this.contracts.pawnBots.__godMode_setClaim(this.signers.alice.address, this.claim);
+          await this.contracts.pawnBots.__godMode_setMaxPrivatePerAccount(20);
         });
 
         it("returns the correct value", async function () {
-          const { exists, allocatedAmount, claimedAmount } = await this.contracts.pawnBots.claims(
-            this.signers.alice.address,
-          );
-
-          expect(exists).to.equal(this.claim.exists);
-          expect(allocatedAmount).to.equal(this.claim.allocatedAmount);
-          expect(claimedAmount).to.equal(this.claim.claimedAmount);
+          expect(await this.contracts.pawnBots.maxPrivatePerAccount()).to.equal(20);
         });
       });
     });
 
-    describe("isMintEnabled", function () {
+    describe("maxPublicPerTx", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.isMintEnabled()).to.equal(false);
+          expect(await this.contracts.pawnBots.maxPublicPerTx()).to.equal(0);
         });
       });
 
       context("when changed", function () {
         beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setIsMintEnabled(true);
+          await this.contracts.pawnBots.__godMode_setMaxPublicPerTx(20);
         });
 
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.isMintEnabled()).to.equal(true);
+          expect(await this.contracts.pawnBots.maxPublicPerTx()).to.equal(20);
         });
-      });
-    });
-
-    describe("name", function () {
-      it("returns the correct token name", async function () {
-        expect(await this.contracts.pawnBots.name()).to.equal("Pawn Bots");
       });
     });
 
@@ -87,6 +67,42 @@ export function shouldBehaveLikePawnBots(): void {
 
         it("returns the correct value", async function () {
           expect(await this.contracts.pawnBots.offset()).to.equal(1479);
+        });
+      });
+    });
+
+    describe("price", function () {
+      context("when not changed", function () {
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.price()).to.equal(0);
+        });
+      });
+
+      context("when changed", function () {
+        beforeEach(async function () {
+          await this.contracts.pawnBots.__godMode_setPrice(250000000000000);
+        });
+
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.price()).to.equal(250000000000000);
+        });
+      });
+    });
+
+    describe("privateMinted", function () {
+      context("when not changed", function () {
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.privateMinted(this.signers.alice.address)).to.equal(0);
+        });
+      });
+
+      context("when changed", function () {
+        beforeEach(async function () {
+          await this.contracts.pawnBots.__godMode_setPrivateMinted(this.signers.alice.address, 20);
+        });
+
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.privateMinted(this.signers.alice.address)).to.equal(20);
         });
       });
     });
@@ -149,9 +165,58 @@ export function shouldBehaveLikePawnBots(): void {
       });
     });
 
-    describe("symbol", function () {
-      it("returns the correct token symbol", async function () {
-        expect(await this.contracts.pawnBots.symbol()).to.equal("BOTS");
+    describe("saleCap", function () {
+      context("when not changed", function () {
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.saleCap()).to.equal(9000);
+        });
+      });
+
+      context("when changed", function () {
+        beforeEach(async function () {
+          await this.contracts.pawnBots.__godMode_setSaleCap(8000);
+        });
+
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.saleCap()).to.equal(8000);
+        });
+      });
+    });
+
+    describe("saleActive", function () {
+      context("when not changed", function () {
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.saleActive()).to.equal(false);
+        });
+      });
+
+      context("when changed", function () {
+        beforeEach(async function () {
+          await this.contracts.pawnBots.__godMode_setSaleActive(true);
+        });
+
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.saleActive()).to.equal(true);
+        });
+      });
+    });
+
+    describe("salePhase", function () {
+      context("when not changed", function () {
+        it("returns the correct value", async function () {
+          // TODO: define js type
+          expect(await this.contracts.pawnBots.salePhase()).to.equal("0");
+        });
+      });
+
+      context("when changed", function () {
+        beforeEach(async function () {
+          await this.contracts.pawnBots.__godMode_setSalePhase("1");
+        });
+
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.salePhase()).to.equal("1");
+        });
       });
     });
 
