@@ -78,6 +78,9 @@ interface IPawnBots {
 
     /// PUBLIC CONSTANT FUNCTIONS ///
 
+    /// @notice The maximum supply of tokens.
+    function collectionSize() external view returns (uint256);
+    
     /// @notice The per-account private mint limit.
     function maxPrivatePerAccount() external view returns (uint256);
 
@@ -108,7 +111,7 @@ interface IPawnBots {
 
     /// @notice The state of the sale.
     function saleActive() external view returns (bool);
-
+    
     /// @notice The current sale phase.
     function salePhase() external view returns (SalePhase);
 
@@ -287,5 +290,5 @@ interface IPawnBots {
     ///
     /// @param token The token contract address.
     /// @param withdrawAmount The amount of tokens to withdraw.
-    function withdraw(address token, address withdrawAmount) external;
+    function withdraw(address token, uint256 withdrawAmount) external;
 }
