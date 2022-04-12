@@ -141,10 +141,10 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
     bytes32 internal merkleRoot;
 
     /// @dev The Chainlink VRF fee in LINK.
-    uint256 internal vrfFee;
+    uint256 internal immutable vrfFee;
 
     /// @dev The Chainlink VRF key hash.
-    bytes32 internal vrfKeyHash;
+    bytes32 internal immutable vrfKeyHash;
 
     /// @dev The Chainlink VRF request ID.
     bytes32 internal vrfRequestId;

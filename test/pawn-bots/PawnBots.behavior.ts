@@ -1,4 +1,4 @@
-import { AddressZero, HashZero } from "@ethersproject/constants";
+import { HashZero } from "@ethersproject/constants";
 import { expect } from "chai";
 import { parseEther } from "ethers/lib/utils";
 import { ethers, network } from "hardhat";
@@ -321,7 +321,7 @@ export function shouldBehaveLikePawnBots(): void {
 
             it("succeeds", async function () {
               const contractCall0 = await this.contracts.pawnBots.burnUnsold(this.burnAmount);
-              expect(contractCall0).to.emit(this.contracts.pawnBots, "BurnUnsold").withArgs("100");
+              await expect(contractCall0).to.emit(this.contracts.pawnBots, "BurnUnsold").withArgs("100");
               expect(await this.contracts.pawnBots.saleCap()).to.be.equal("200");
             });
           });
@@ -450,7 +450,7 @@ export function shouldBehaveLikePawnBots(): void {
                       .mintPrivate("2", this.getMerkleProof(this.signers.alice.address), {
                         value: this.funds,
                       });
-                    expect(contractCall)
+                    await expect(contractCall)
                       .to.emit(this.contracts.pawnBots, "Mint")
                       .withArgs(
                         this.signers.alice.address,
@@ -475,7 +475,7 @@ export function shouldBehaveLikePawnBots(): void {
                       .mintPrivate("2", this.getMerkleProof(this.signers.alice.address), {
                         value: this.funds,
                       });
-                    expect(contractCall)
+                    await expect(contractCall)
                       .to.emit(this.contracts.pawnBots, "Mint")
                       .withArgs(
                         this.signers.alice.address,
@@ -592,7 +592,7 @@ export function shouldBehaveLikePawnBots(): void {
                   const contractCall = await this.contracts.pawnBots.connect(this.signers.alice).mintPublic("2", {
                     value: this.funds,
                   });
-                  expect(contractCall)
+                  await expect(contractCall)
                     .to.emit(this.contracts.pawnBots, "Mint")
                     .withArgs(this.signers.alice.address, "2", await this.contracts.pawnBots.price(), SalePhase.PUBLIC);
                   expect(await this.contracts.pawnBots.balanceOf(this.signers.alice.address)).to.be.equal("2");
@@ -610,7 +610,7 @@ export function shouldBehaveLikePawnBots(): void {
                   const contractCall = await this.contracts.pawnBots.connect(this.signers.alice).mintPublic("2", {
                     value: this.funds,
                   });
-                  expect(contractCall)
+                  await expect(contractCall)
                     .to.emit(this.contracts.pawnBots, "Mint")
                     .withArgs(this.signers.alice.address, "2", await this.contracts.pawnBots.price(), SalePhase.PUBLIC);
                   expect(await this.contracts.pawnBots.balanceOf(this.signers.alice.address)).to.be.equal("2");
@@ -664,7 +664,7 @@ export function shouldBehaveLikePawnBots(): void {
           it("succeeds", async function () {
             const reserveAmount = 10;
             const contractCall = await this.contracts.pawnBots.reserve(reserveAmount);
-            expect(contractCall).to.emit(this.contracts.pawnBots, "Reserve").withArgs(reserveAmount);
+            await expect(contractCall).to.emit(this.contracts.pawnBots, "Reserve").withArgs(reserveAmount);
             expect(await this.contracts.pawnBots.balanceOf(this.signers.admin.address)).to.be.equal(reserveAmount);
           });
         });
@@ -786,7 +786,7 @@ export function shouldBehaveLikePawnBots(): void {
                       requestId,
                       randomNumber,
                     );
-                    expect(contractCall).to.emit(this.contracts.pawnBots, "Reveal");
+                    await expect(contractCall).to.emit(this.contracts.pawnBots, "Reveal");
                     expect(await this.contracts.pawnBots.offset()).to.be.equal(
                       (randomNumber % (collectionSize - 1)) + 1,
                     );
@@ -813,7 +813,7 @@ export function shouldBehaveLikePawnBots(): void {
         it("succeeds", async function () {
           const baseURI = "ipfs://QmYAXgX8ARiriupMQsbGXtKdDyGzWry1YV3sycKw1qqmgH/";
           const contractCall = await this.contracts.pawnBots.setBaseURI(baseURI);
-          expect(contractCall).to.emit(this.contracts.pawnBots, "SetBaseURI").withArgs(baseURI);
+          await expect(contractCall).to.emit(this.contracts.pawnBots, "SetBaseURI").withArgs(baseURI);
           expect(await this.contracts.pawnBots.__godMode_returnBaseURI()).to.be.equal(baseURI);
         });
       });
@@ -832,7 +832,7 @@ export function shouldBehaveLikePawnBots(): void {
         it("succeeds", async function () {
           const maxPrivatePerAccount = 10;
           const contractCall = await this.contracts.pawnBots.setMaxPrivatePerAccount(maxPrivatePerAccount);
-          expect(contractCall)
+          await expect(contractCall)
             .to.emit(this.contracts.pawnBots, "SetMaxPrivatePerAccount")
             .withArgs(maxPrivatePerAccount);
           expect(await this.contracts.pawnBots.maxPrivatePerAccount()).to.be.equal(maxPrivatePerAccount);
@@ -853,7 +853,7 @@ export function shouldBehaveLikePawnBots(): void {
         it("succeeds", async function () {
           const maxPublicPerTx = 10;
           const contractCall = await this.contracts.pawnBots.setMaxPublicPerTx(maxPublicPerTx);
-          expect(contractCall).to.emit(this.contracts.pawnBots, "SetMaxPublicPerTx").withArgs(maxPublicPerTx);
+          await expect(contractCall).to.emit(this.contracts.pawnBots, "SetMaxPublicPerTx").withArgs(maxPublicPerTx);
           expect(await this.contracts.pawnBots.maxPublicPerTx()).to.be.equal(maxPublicPerTx);
         });
       });
@@ -873,7 +873,7 @@ export function shouldBehaveLikePawnBots(): void {
         it("succeeds", async function () {
           const merkleRoot = "0xdffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f";
           const contractCall = await this.contracts.pawnBots.setMerkleRoot(merkleRoot);
-          expect(contractCall).to.emit(this.contracts.pawnBots, "SetMerkleRoot").withArgs(merkleRoot);
+          await expect(contractCall).to.emit(this.contracts.pawnBots, "SetMerkleRoot").withArgs(merkleRoot);
           expect(await this.contracts.pawnBots.__godMode_returnMerkleRoot()).to.be.equal(merkleRoot);
         });
       });
@@ -908,7 +908,7 @@ export function shouldBehaveLikePawnBots(): void {
 
           it("succeeds", async function () {
             const contractCall = await this.contracts.pawnBots.setPrice(this.newPrice);
-            expect(contractCall).to.emit(this.contracts.pawnBots, "SetPrice").withArgs(this.newPrice);
+            await expect(contractCall).to.emit(this.contracts.pawnBots, "SetPrice").withArgs(this.newPrice);
             expect(await this.contracts.pawnBots.price()).to.be.equal(this.newPrice);
           });
         });
@@ -929,7 +929,7 @@ export function shouldBehaveLikePawnBots(): void {
         it("succeeds", async function () {
           const provenanceHash = "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f";
           const contractCall = await this.contracts.pawnBots.setProvenanceHash(provenanceHash);
-          expect(contractCall).to.emit(this.contracts.pawnBots, "SetProvenanceHash").withArgs(provenanceHash);
+          await expect(contractCall).to.emit(this.contracts.pawnBots, "SetProvenanceHash").withArgs(provenanceHash);
           expect(await this.contracts.pawnBots.provenanceHash()).to.be.equal(provenanceHash);
         });
       });
@@ -949,7 +949,7 @@ export function shouldBehaveLikePawnBots(): void {
         it("succeeds", async function () {
           const revealTime = 1640641278;
           const contractCall = await this.contracts.pawnBots.setRevealTime(revealTime);
-          expect(contractCall).to.emit(this.contracts.pawnBots, "SetRevealTime").withArgs(revealTime);
+          await expect(contractCall).to.emit(this.contracts.pawnBots, "SetRevealTime").withArgs(revealTime);
           expect(await this.contracts.pawnBots.revealTime()).to.be.equal(revealTime);
         });
       });
@@ -968,7 +968,7 @@ export function shouldBehaveLikePawnBots(): void {
         it("succeeds", async function () {
           const saleActive = true;
           const contractCall = await this.contracts.pawnBots.setSaleActive(saleActive);
-          expect(contractCall).to.emit(this.contracts.pawnBots, "SetSaleActive").withArgs(saleActive);
+          await expect(contractCall).to.emit(this.contracts.pawnBots, "SetSaleActive").withArgs(saleActive);
           expect(await this.contracts.pawnBots.saleActive()).to.be.equal(saleActive);
         });
       });
@@ -988,7 +988,7 @@ export function shouldBehaveLikePawnBots(): void {
           it("succeeds", async function () {
             const salePhase = SalePhase.PUBLIC;
             const contractCall = await this.contracts.pawnBots.setSalePhase(salePhase);
-            expect(contractCall).to.emit(this.contracts.pawnBots, "SetSalePhase").withArgs(salePhase);
+            await expect(contractCall).to.emit(this.contracts.pawnBots, "SetSalePhase").withArgs(salePhase);
             expect(await this.contracts.pawnBots.salePhase()).to.be.equal(salePhase);
           });
         });
@@ -1015,7 +1015,7 @@ export function shouldBehaveLikePawnBots(): void {
           const signer = this.signers.admin;
           const balanceBefore = await signer.getBalance();
           const contractCall = await this.contracts.pawnBots.withdraw(this.amount);
-          expect(contractCall).to.emit(this.contracts.pawnBots, "Withdraw").withArgs(this.amount);
+          await expect(contractCall).to.emit(this.contracts.pawnBots, "Withdraw").withArgs(this.amount);
           const balanceAfter = await signer.getBalance();
           const tx = await contractCall.wait();
           const gas = tx.gasUsed.mul(tx.effectiveGasPrice);
@@ -1055,7 +1055,7 @@ export function shouldBehaveLikePawnBots(): void {
           const signer = this.signers.admin;
           const balanceBefore = await this.contracts.link.balanceOf(signer.address);
           const contractCall = await this.contracts.pawnBots.withdrawErc20(this.contracts.link.address, this.amount);
-          expect(contractCall)
+          await expect(contractCall)
             .to.emit(this.contracts.pawnBots, "WithdrawErc20")
             .withArgs(this.contracts.link.address, this.amount);
           const balanceAfter = await this.contracts.link.balanceOf(signer.address);
