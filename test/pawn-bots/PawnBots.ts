@@ -28,8 +28,8 @@ describe("Tests", function () {
     beforeEach(async function () {
       const linkToken: string = "0xb0897686c545045aFc77CF20eC7A532E3120E0F1";
 
-      const whitelist: string[] = [this.signers.alice.address, this.signers.carol.address, this.signers.eve.address];
-      const merkleLeaves: Buffer[] = whitelist.map(keccak256);
+      const allowlist: string[] = [this.signers.alice.address, this.signers.carol.address, this.signers.eve.address];
+      const merkleLeaves: Buffer[] = allowlist.map(keccak256);
       const merkleTree: MerkleTree = new MerkleTree(merkleLeaves, keccak256, { sortPairs: true, sortLeaves: true });
       const merkleRoot: string = merkleTree.getHexRoot();
 
