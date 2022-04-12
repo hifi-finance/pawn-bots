@@ -45,7 +45,7 @@ interface IPawnBots {
 
     /// @notice Emitted when Merkle root is set.
     /// @param newMerkleRoot The new Merkle root.
-    event SetMerkleRoot(string newMerkleRoot);
+    event SetMerkleRoot(bytes32 newMerkleRoot);
 
     /// @notice Emitted when mint price is set.
     /// @param newPrice The new mint price.
@@ -74,13 +74,10 @@ interface IPawnBots {
     /// @notice Emitted when ERC-20 tokens are withdrawn from the contract.
     /// @param token The token contract address.
     /// @param withdrawAmount The amount of tokens withdrawn.
-    event Withdraw(address indexed token, uint256 withdrawAmount);
+    event WithdrawErc20(address indexed token, uint256 withdrawAmount);
 
     /// PUBLIC CONSTANT FUNCTIONS ///
 
-    /// @notice The maximum supply of tokens.
-    function collectionSize() external view returns (uint256);
-    
     /// @notice The per-account private mint limit.
     function maxPrivatePerAccount() external view returns (uint256);
 
@@ -106,12 +103,12 @@ interface IPawnBots {
     /// @notice The timestamp from which the collection metadata can be revealed.
     function revealTime() external view returns (uint256);
 
+    /// @notice The state of the sale.
+    function saleActive() external view returns (bool);
+
     /// @notice The token sale cap.
     function saleCap() external view returns (uint256);
 
-    /// @notice The state of the sale.
-    function saleActive() external view returns (bool);
-    
     /// @notice The current sale phase.
     function salePhase() external view returns (SalePhase);
 
@@ -124,7 +121,7 @@ interface IPawnBots {
     /// @dev Requirements:
     /// - Can only be called by the owner.
     /// - Can only be called when token sale is paused.
-    /// - `burnAmount` cannot exceed TODO.
+    /// - `burnAmount` cannot exceed remaining sale.
     ///
     /// @param burnAmount The amount of tokens to burn.
     function burnUnsold(uint256 burnAmount) external;
@@ -137,8 +134,8 @@ interface IPawnBots {
     /// - Can only be called when token sale is active.
     /// - Can only be called during private sale phase.
     /// - Caller must be eligible to mint during the private phase.
-    /// - `mintAmount` cannot exceed TODO.
-    /// - `mintAmount` cannot exceed TODO.
+    /// - `mintAmount` cannot exceed caller's private mint limit.
+    /// - `mintAmount` cannot exceed remaining sale.
     /// - Can only be called when caller has placed enough ethers in the transaction value.
     ///
     /// @param mintAmount The amount of tokens to mint.
@@ -152,8 +149,8 @@ interface IPawnBots {
     /// @dev Requirements:
     /// - Can only be called when token sale is active.
     /// - Can only be called during public sale phase.
-    /// - `mintAmount` cannot exceed TODO.
-    /// - `mintAmount` cannot exceed TODO.
+    /// - `mintAmount` cannot exceed public mint limit.
+    /// - `mintAmount` cannot exceed remaining sale.
     /// - Can only be called when caller has placed enough ethers in the transaction value.
     ///
     /// @param mintAmount The amount of tokens to mint.
@@ -165,7 +162,7 @@ interface IPawnBots {
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
-    /// - `reserveAmount` cannot exceed TODO.
+    /// - `reserveAmount` cannot exceed remaining reserve.
     ///
     /// @param reserveAmount The amount of reserved tokens to mint.
     function reserve(uint256 reserveAmount) external;
@@ -218,7 +215,7 @@ interface IPawnBots {
     /// - Can only be called by the owner.
     ///
     /// @param newMerkleRoot The new Merkle root.
-    function setMerkleRoot(string calldata newMerkleRoot) external;
+    function setMerkleRoot(bytes32 newMerkleRoot) external;
 
     /// @notice Set the mint price.
     ///
@@ -226,7 +223,7 @@ interface IPawnBots {
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
-    /// - `newPrice` cannot exceed TODO.
+    /// - `newPrice` cannot exceed max price limit.
     ///
     /// @param newPrice The new mint price in ethers.
     function setPrice(uint256 newPrice) external;
@@ -271,7 +268,7 @@ interface IPawnBots {
     /// @param newSalePhase The new sale phase.
     function setSalePhase(SalePhase newSalePhase) external;
 
-    /// @notice Withdraw the accumulated ether balance in the contract.
+    /// @notice Withdraw from the accumulated ether balance in the contract.
     ///
     /// @dev Emits a {Withdraw} event.
     ///
@@ -283,12 +280,12 @@ interface IPawnBots {
 
     /// @notice Withdraw any ERC-20 token balances in the contract.
     ///
-    /// @dev Emits a {Withdraw} event.
+    /// @dev Emits a {WithdrawErc20} event.
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
     ///
     /// @param token The token contract address.
     /// @param withdrawAmount The amount of tokens to withdraw.
-    function withdraw(address token, uint256 withdrawAmount) external;
+    function withdrawErc20(address token, uint256 withdrawAmount) external;
 }

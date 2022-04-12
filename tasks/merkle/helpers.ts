@@ -1,5 +1,4 @@
 import { readFileSync } from "fs";
-
 import { parse } from "papaparse";
 
 export function loadEntries(file: string) {

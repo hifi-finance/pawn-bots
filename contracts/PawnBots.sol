@@ -4,28 +4,27 @@ pragma solidity >=0.8.4;
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "@openzeppelin/contracts/token/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "erc721a/contracts/ERC721A.sol";
 
 import "./IPawnBots.sol";
 
-error PawnBots__CollectionSizeExceeded();
+error PawnBots__InsufficientFundsSent();
+error PawnBots__MaxPriceExceeded();
+error PawnBots__MaxPrivatePerAccountExceeded();
+error PawnBots__MaxPublicPerTxExceeded();
 error PawnBots__NonexistentToken();
 error PawnBots__OffsetAlreadySet();
 error PawnBots__RandomnessAlreadyRequested();
-error PawnBots__ReserveCapExceeded();
-error PawnBots__TooEarlyToReveal();
-error PawnBots__UserIsNotEligible();
-error PawnBots__VrfRequestIdMismatch();
-error PawnBots__SaleIsActive();
-error PawnBots__SaleIsNotActive();
+error PawnBots__RemainingReserveExceeded();
+error PawnBots__RemainingSaleExceeded();
+error PawnBots__SaleNotActive();
+error PawnBots__SaleNotPaused();
 error PawnBots__SalePhaseMismatch();
-error PawnBots__MaxPrivateMintsExceeded();
-error PawnBots__MaxPublicMintsExceeded();
-error PawnBots__InsufficientFundsSent();
-error PawnBots__MaxSaleExceeded();
-error PawnBots__WithdrawExceedsBalance();
+error PawnBots__TooEarlyToReveal();
+error PawnBots__UserNotEligible();
+error PawnBots__VrfRequestIdMismatch();
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -85,16 +84,19 @@ error PawnBots__WithdrawExceedsBalance();
 /// @title PawnBots
 /// @author Hifi
 /// @notice Manages the mint and distribution of the Pawn Bots collection NFTs.
-contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFConsumerBase {
+contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBase {
     using Strings for uint256;
 
     /// PUBLIC STORAGE ///
 
+    /// @dev The theoretical collection size.
+    uint256 public COLLECTION_SIZE = 10_000;
+
+    /// @dev The maximum possible mint price.
+    uint256 public constant MAX_PRICE = 1_000_000 ether;
+
     /// @dev The token reserve allocated for contract owner.
     uint256 public constant RESERVE_CAP = 1_000;
-
-    /// @dev The theoretical collection size.
-    uint256 public collectionSize = 10_000;
 
     /// @inheritdoc IPawnBots
     uint256 public override maxPrivatePerAccount;
@@ -108,6 +110,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     /// @inheritdoc IPawnBots
     uint256 public override price;
 
+    /// @inheritdoc IPawnBots
     mapping(address => uint256) public override privateMinted;
 
     /// @inheritdoc IPawnBots
@@ -120,15 +123,21 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     uint256 public override revealTime;
 
     /// @inheritdoc IPawnBots
+    bool public override saleActive;
+
+    /// @inheritdoc IPawnBots
     uint256 public override saleCap;
 
     /// @inheritdoc IPawnBots
-    bool public override saleActive;
+    SalePhase public override salePhase;
 
     /// INTERNAL STORAGE ///
 
     /// @dev The base token URI.
     string internal baseURI;
+
+    /// @dev The merkle root of private phase allow list.
+    bytes32 internal merkleRoot;
 
     /// @dev The Chainlink VRF fee in LINK.
     uint256 internal vrfFee;
@@ -139,15 +148,17 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     /// @dev The Chainlink VRF request ID.
     bytes32 internal vrfRequestId;
 
-    /// @dev The merkle root of addresses eligible to mint in the private phase.
-    bytes32 internal merkleRoot;
-
     constructor(
         address chainlinkToken_,
+        bytes32 merkleRoot_,
         address vrfCoordinator_,
         uint256 vrfFee_,
         bytes32 vrfKeyHash_
-    ) ERC721("Pawn Bots", "BOTS") VRFConsumerBase(vrfCoordinator_, chainlinkToken_) {
+    ) ERC721A("Pawn Bots", "BOTS") VRFConsumerBase(vrfCoordinator_, chainlinkToken_) {
+        merkleRoot = merkleRoot_;
+
+        saleCap = COLLECTION_SIZE - RESERVE_CAP;
+
         vrfFee = vrfFee_;
         vrfKeyHash = vrfKeyHash_;
     }
@@ -164,7 +175,7 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
             // TODO: live-test possible issues with multiple token IDs
             return bytes(bURI).length > 0 ? string(abi.encodePacked(bURI, "box", ".json")) : "";
         } else {
-            uint256 moddedId = (tokenId + offset) % collectionSize;
+            uint256 moddedId = (tokenId + offset) % COLLECTION_SIZE;
             return bytes(bURI).length > 0 ? string(abi.encodePacked(bURI, moddedId.toString(), ".json")) : "";
         }
     }
@@ -174,13 +185,13 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     /// @inheritdoc IPawnBots
     function burnUnsold(uint256 burnAmount) external override onlyOwner {
         if (saleActive) {
-            revert PawnBots__SaleIsActive();
+            revert PawnBots__SaleNotPaused();
         }
-        if (burnAmount + RESERVE_CAP + totalSupply > collectionSize + reserveMinted) {
-            revert PawnBots__CollectionSizeExceeded();
+        if (burnAmount + totalSupply() > saleCap + reserveMinted) {
+            revert PawnBots__RemainingSaleExceeded();
         }
         unchecked {
-            collectionSize -= burnAmount;
+            saleCap -= burnAmount;
         }
         emit BurnUnsold(burnAmount);
     }
@@ -188,19 +199,19 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     /// @inheritdoc IPawnBots
     function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) external payable nonReentrant {
         if (!saleActive) {
-            revert PawnBots__SaleIsNotActive();
+            revert PawnBots__SaleNotActive();
         }
         if (salePhase != SalePhase.PRIVATE) {
             revert PawnBots__SalePhaseMismatch();
         }
         if (!MerkleProof.verify(merkleProof, merkleRoot, keccak256(abi.encodePacked(msg.sender)))) {
-            revert PawnBots__UserIsNotEligible();
+            revert PawnBots__UserNotEligible();
         }
         if (mintAmount + privateMinted[msg.sender] > maxPrivatePerAccount) {
-            revert PawnBots__MaxPrivateMintsExceeded();
+            revert PawnBots__MaxPrivatePerAccountExceeded();
         }
-        if (mintAmount + RESERVE_CAP + totalSupply > collectionSize + reserveMinted) {
-            revert PawnBots__MaxSaleExceeded();
+        if (mintAmount + totalSupply() > saleCap + reserveMinted) {
+            revert PawnBots__RemainingSaleExceeded();
         }
 
         uint256 mintCost;
@@ -212,10 +223,11 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         }
 
         unchecked {
-            claimedPrivateMap[msg.sender] += mintAmount;
+            privateMinted[msg.sender] += mintAmount;
         }
 
         mintInternal(mintAmount, msg.sender);
+        // TODO: replace ">" by "!=" for gas efficiency.
         if (msg.value > mintCost) {
             Address.sendValue(payable(msg.sender), msg.value - mintCost);
         }
@@ -225,16 +237,16 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     /// @inheritdoc IPawnBots
     function mintPublic(uint256 mintAmount) external payable nonReentrant {
         if (!saleActive) {
-            revert PawnBots__SaleIsNotActive();
+            revert PawnBots__SaleNotActive();
         }
         if (salePhase != SalePhase.PUBLIC) {
             revert PawnBots__SalePhaseMismatch();
         }
         if (mintAmount > maxPublicPerTx) {
-            revert PawnBots__MaxPublicMintsExceeded();
+            revert PawnBots__MaxPublicPerTxExceeded();
         }
-        if (mintAmount + RESERVE_CAP + totalSupply > collectionSize + reserveMinted) {
-            revert PawnBots__MaxSaleExceeded();
+        if (mintAmount + totalSupply() > saleCap + reserveMinted) {
+            revert PawnBots__RemainingSaleExceeded();
         }
 
         uint256 mintCost;
@@ -246,16 +258,17 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
         }
 
         mintInternal(mintAmount, msg.sender);
+        // TODO: replace ">" by "!=" for gas efficiency.
         if (msg.value > mintCost) {
             Address.sendValue(payable(msg.sender), msg.value - mintCost);
         }
-        emit Mint(msg.sender, mintAmount, price, SalePhase.PRIVATE);
+        emit Mint(msg.sender, mintAmount, price, SalePhase.PUBLIC);
     }
 
     /// @inheritdoc IPawnBots
     function reserve(uint256 reserveAmount) external override onlyOwner nonReentrant {
         if (reserveAmount + reserveMinted > RESERVE_CAP) {
-            revert PawnBots__ReserveCapExceeded();
+            revert PawnBots__RemainingReserveExceeded();
         }
         unchecked {
             reserveMinted += reserveAmount;
@@ -276,7 +289,6 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
             revert PawnBots__RandomnessAlreadyRequested();
         }
         vrfRequestId = requestRandomness(vrfKeyHash, vrfFee);
-        emit Reveal();
     }
 
     /// @inheritdoc IPawnBots
@@ -298,13 +310,16 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
     }
 
     /// @inheritdoc IPawnBots
-    function setMerkleRoot(string calldata newMerkleRoot) external override onlyOwner {
+    function setMerkleRoot(bytes32 newMerkleRoot) external override onlyOwner {
         merkleRoot = newMerkleRoot;
         emit SetMerkleRoot(newMerkleRoot);
     }
 
     /// @inheritdoc IPawnBots
     function setPrice(uint256 newPrice) external override onlyOwner {
+        if (newPrice > MAX_PRICE) {
+            revert PawnBots__MaxPriceExceeded();
+        }
         price = newPrice;
         emit SetPrice(newPrice);
     }
@@ -335,20 +350,14 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
 
     /// @inheritdoc IPawnBots
     function withdraw(uint256 withdrawAmount) external override onlyOwner {
-        if (address(this).balance < withdrawAmount) {
-            revert PawnBots__WithdrawExceedsBalance();
-        }
-        Address.sendValue(owner(), payment);
+        Address.sendValue(payable(owner()), withdrawAmount);
         emit Withdraw(withdrawAmount);
     }
 
     /// @inheritdoc IPawnBots
-    function withdraw(address token, uint256 withdrawAmount) external override onlyOwner {
-        if (token.balanceOf(address(this)) < withdrawAmount) {
-            revert PawnBots__WithdrawExceedsBalance();
-        }
-        SafeERC20.safeTransfer(token, owner(), withdrawAmount);
-        emit Withdraw(token, withdrawAmount);
+    function withdrawErc20(address token, uint256 withdrawAmount) external override onlyOwner {
+        IERC20(token).transfer(owner(), withdrawAmount);
+        emit WithdrawErc20(token, withdrawAmount);
     }
 
     /// INTERNAL CONSTANT FUNCTIONS ///
@@ -369,15 +378,13 @@ contract PawnBots is IPawnBots, ERC721Enumerable, Ownable, ReentrancyGuard, VRFC
             revert PawnBots__VrfRequestIdMismatch();
         }
         unchecked {
-            offset = (randomness % (collectionSize - 1)) + 1;
+            offset = (randomness % (COLLECTION_SIZE - 1)) + 1;
         }
         emit Reveal();
     }
 
     /// @dev Mint a given amount of tokens.
     function mintInternal(uint256 mintAmount, address to) internal {
-        for (uint256 i = 0; i < mintAmount; ++i) {
-            _safeMint(to, totalSupply());
-        }
+        _safeMint(to, mintAmount);
     }
 }

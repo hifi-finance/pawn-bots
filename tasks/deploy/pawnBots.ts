@@ -6,6 +6,7 @@ import { PawnBots__factory } from "../../src/types/factories/PawnBots__factory";
 
 task("deploy:PawnBots")
   .addParam("chainlinkToken", "Chainlink token address")
+  .addParam("merkleRoot", "Merkle root hash of private phase allow list")
   .addParam("vrfCoordinator", "Chainlink VRF coordinator")
   .addParam("vrfFee", "Chainlink VRF fee")
   .addParam("vrfKeyHash", "Chainlink VRF key hash")
@@ -14,6 +15,7 @@ task("deploy:PawnBots")
     const pawnBots: PawnBots = <PawnBots>(
       await pawnBotsFactory.deploy(
         taskArguments.chainlinkToken,
+        taskArguments.merkleRoot,
         taskArguments.vrfCoordinator,
         taskArguments.vrfFee,
         taskArguments.vrfKeyHash,

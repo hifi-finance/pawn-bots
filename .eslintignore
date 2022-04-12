@@ -15,7 +15,6 @@
 *.env
 *.log
 .pnp.*
-claims.json
 coverage.json
 npm-debug.log*
 whitelist.csv

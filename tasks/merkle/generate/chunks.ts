@@ -1,5 +1,4 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "fs";
-
 import { task } from "hardhat/config";
 import { TaskArguments } from "hardhat/types";
 import keccak256 from "keccak256";

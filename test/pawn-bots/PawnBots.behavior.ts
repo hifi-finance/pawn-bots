@@ -316,7 +316,7 @@ export function shouldBehaveLikePawnBots(): void {
 
               it("reverts", async function () {
                 await expect(this.contracts.pawnBots.burnUnsold(this.maxTickets)).to.be.revertedWith(
-                  PBTicketsErrors.SALE_CAP_EXCEEDED,
+                  PawnBotsErrors.SALE_CAP_EXCEEDED,
                 );
               });
             });
@@ -604,7 +604,7 @@ export function shouldBehaveLikePawnBots(): void {
 
           it("reverts", async function () {
             await expect(this.contracts.pawnBots.setPrice(this.newPrice)).to.be.revertedWith(
-              PBTicketsErrors.MAX_PRICE_EXCEEDED,
+              PawnBotsErrors.MAX_PRICE_EXCEEDED,
             );
           });
         });
@@ -695,7 +695,7 @@ export function shouldBehaveLikePawnBots(): void {
       context("when not called by owner", function () {
         it("reverts", async function () {
           const signer = this.signers.alice;
-          await expect(this.contracts.pbTickets.connect(signer).withdraw(signer.address)).to.be.revertedWith(
+          await expect(this.contracts.pawnBots.connect(signer).withdraw(signer.address)).to.be.revertedWith(
             ImportedErrors.CALLER_NOT_OWNER,
           );
         });
@@ -704,8 +704,8 @@ export function shouldBehaveLikePawnBots(): void {
       context("when called by owner", function () {
         context("when recipient is the 0 address", function () {
           it("reverts", async function () {
-            await expect(this.contracts.pbTickets.withdraw(ZERO_ADDRESS)).to.be.revertedWith(
-              PBTicketsErrors.INVALID_RECIPIENT,
+            await expect(this.contracts.pawnBots.withdraw(ZERO_ADDRESS)).to.be.revertedWith(
+              PawnBotsErrors.INVALID_RECIPIENT,
             );
           });
         });
@@ -713,14 +713,14 @@ export function shouldBehaveLikePawnBots(): void {
         context("when recipient is a valid address", function () {
           beforeEach(async function () {
             this.amount = parseEther("0.1");
-            await this.contracts.pbTickets.__godMode_addEther({ value: this.amount });
+            await this.contracts.pawnBots.__godMode_addEther({ value: this.amount });
           });
 
           it("succeeds", async function () {
             const signer = this.signers.alice;
             const balanceBefore = await signer.getBalance();
-            const contractCall = await this.contracts.pbTickets.withdraw(signer.address);
-            expect(contractCall).to.emit(this.contracts.pbTickets, "Withdraw").withArgs(signer.address, this.amount);
+            const contractCall = await this.contracts.pawnBots.withdraw(signer.address);
+            expect(contractCall).to.emit(this.contracts.pawnBots, "Withdraw").withArgs(signer.address, this.amount);
             const balanceAfter = await signer.getBalance();
             expect(balanceAfter.sub(balanceBefore)).to.be.equal(this.amount);
           });
