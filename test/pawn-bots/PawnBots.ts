@@ -6,7 +6,7 @@ import { MerkleTree } from "merkletreejs";
 
 import type { GodModePawnBots } from "../../src/types/GodModePawnBots";
 import { LinkTokenInterface } from "../../src/types/LinkTokenInterface";
-import { VRF_FEE as vrfFee } from "../constants";
+import { vrfFee } from "../constants";
 import { Contracts, Signers } from "../types";
 import { shouldBehaveLikePawnBots } from "./PawnBots.behavior";
 
@@ -26,21 +26,21 @@ describe("Tests", function () {
 
   describe("PawnBots", async function () {
     beforeEach(async function () {
-      const linkToken: string = "0xb0897686c545045aFc77CF20eC7A532E3120E0F1";
-
       const allowlist: string[] = [this.signers.alice.address, this.signers.carol.address, this.signers.eve.address];
+      const linkToken: string = "0xb0897686c545045aFc77CF20eC7A532E3120E0F1";
       const merkleLeaves: Buffer[] = allowlist.map(keccak256);
       const merkleTree: MerkleTree = new MerkleTree(merkleLeaves, keccak256, { sortPairs: true, sortLeaves: true });
       const merkleRoot: string = merkleTree.getHexRoot();
 
       this.getMerkleProof = (address: string) => merkleTree.getHexProof(keccak256(address));
 
-      const pawnBotsArtifact: Artifact = await artifacts.readArtifact("GodModePawnBots");
-      const linkArtifact: Artifact = await artifacts.readArtifact("LinkTokenInterface");
-
       const vrfCoordinator: string = "0x3d2341ADb2D31f1c5530cDC622016af293177AE0";
       const vrfKeyHash: string = "0xf86195cf7690c55907b2b611ebb7343a6f649bff128701cc542f0569e2c549da";
 
+      const linkArtifact: Artifact = await artifacts.readArtifact("LinkTokenInterface");
+      const pawnBotsArtifact: Artifact = await artifacts.readArtifact("GodModePawnBots");
+
+      this.contracts.link = <LinkTokenInterface>new ethers.Contract(linkToken, linkArtifact.abi, this.signers.admin);
       this.contracts.pawnBots = <GodModePawnBots>(
         await waffle.deployContract(this.signers.admin, pawnBotsArtifact, [
           linkToken,
@@ -50,7 +50,6 @@ describe("Tests", function () {
           vrfKeyHash,
         ])
       );
-      this.contracts.link = <LinkTokenInterface>new ethers.Contract(linkToken, linkArtifact.abi, this.signers.admin);
     });
 
     shouldBehaveLikePawnBots();

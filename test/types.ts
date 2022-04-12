@@ -1,5 +1,4 @@
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import type { Fixture } from "ethereum-waffle";
 
 import type { GodModePawnBots } from "../src/types/GodModePawnBots";
 import type { LinkTokenInterface } from "../src/types/LinkTokenInterface";

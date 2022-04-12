@@ -26,12 +26,16 @@ contract GodModePawnBots is PawnBots {
         fulfillRandomness(requestId, randomness);
     }
 
-    function __godMode_mint(uint256 mintAmount) external {
-        _safeMint(msg.sender, mintAmount);
+    function __godMode_mint(address to, uint256 mintAmount) external {
+        _safeMint(to, mintAmount);
     }
 
     function __godMode_returnBaseURI() external view returns (string memory) {
         return baseURI;
+    }
+
+    function __godMode_returnMerkleRoot() external view returns (bytes32) {
+        return merkleRoot;
     }
 
     function __godMode_returnVrfRequestId() external view returns (bytes32) {

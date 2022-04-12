@@ -1,17 +1,26 @@
+import { AddressZero, HashZero } from "@ethersproject/constants";
 import { expect } from "chai";
+import { parseEther } from "ethers/lib/utils";
 import { ethers, network } from "hardhat";
 
-import { VRF_FEE } from "../constants";
+import { SalePhase, vrfFee } from "../constants";
 import { timeContext } from "../contexts";
 import { ImportedErrors, PawnBotsErrors } from "../errors";
 
 export function shouldBehaveLikePawnBots(): void {
   describe("Deployment", function () {
     it("should deploy with the correct values", async function () {
-      // TODO
-      // expect(await this.contracts.pawnBots.COLLECTION_SIZE()).to.equal(10000);
-      // expect(await this.contracts.pawnBots.RESERVE_CAP()).to.equal(1000);
+      const COLLECTION_SIZE = await this.contracts.pawnBots.COLLECTION_SIZE();
+      const MAX_PRICE = await this.contracts.pawnBots.MAX_PRICE();
+      const RESERVE_CAP = await this.contracts.pawnBots.RESERVE_CAP();
+
+      expect(COLLECTION_SIZE).to.equal("10000");
+      expect(MAX_PRICE).to.equal(parseEther("1000000"));
+      expect(RESERVE_CAP).to.equal("1000");
+
       expect(await this.contracts.pawnBots.name()).to.equal("Pawn Bots");
+      expect(await this.contracts.pawnBots.price()).to.equal(parseEther("0.02"));
+      expect(await this.contracts.pawnBots.saleCap()).to.equal(COLLECTION_SIZE.sub(RESERVE_CAP));
       expect(await this.contracts.pawnBots.symbol()).to.equal("BOTS");
     });
   });
@@ -74,17 +83,17 @@ export function shouldBehaveLikePawnBots(): void {
     describe("price", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.price()).to.equal(0);
+          expect(await this.contracts.pawnBots.price()).to.equal(parseEther("0.02"));
         });
       });
 
       context("when changed", function () {
         beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setPrice(250000000000000);
+          await this.contracts.pawnBots.__godMode_setPrice(parseEther("1.234"));
         });
 
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.price()).to.equal(250000000000000);
+          expect(await this.contracts.pawnBots.price()).to.equal(parseEther("1.234"));
         });
       });
     });
@@ -165,24 +174,6 @@ export function shouldBehaveLikePawnBots(): void {
       });
     });
 
-    describe("saleCap", function () {
-      context("when not changed", function () {
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.saleCap()).to.equal(9000);
-        });
-      });
-
-      context("when changed", function () {
-        beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setSaleCap(8000);
-        });
-
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.saleCap()).to.equal(8000);
-        });
-      });
-    });
-
     describe("saleActive", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
@@ -201,21 +192,38 @@ export function shouldBehaveLikePawnBots(): void {
       });
     });
 
-    describe("salePhase", function () {
+    describe("saleCap", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          // TODO: define js type
-          expect(await this.contracts.pawnBots.salePhase()).to.equal("0");
+          expect(await this.contracts.pawnBots.saleCap()).to.equal(9000);
         });
       });
 
       context("when changed", function () {
         beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setSalePhase("1");
+          await this.contracts.pawnBots.__godMode_setSaleCap(8000);
         });
 
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.salePhase()).to.equal("1");
+          expect(await this.contracts.pawnBots.saleCap()).to.equal(8000);
+        });
+      });
+    });
+
+    describe("salePhase", function () {
+      context("when not changed", function () {
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.salePhase()).to.equal(SalePhase.PRIVATE);
+        });
+      });
+
+      context("when changed", function () {
+        beforeEach(async function () {
+          await this.contracts.pawnBots.__godMode_setSalePhase(SalePhase.PUBLIC);
+        });
+
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.salePhase()).to.be.equal(SalePhase.PUBLIC);
         });
       });
     });
@@ -229,7 +237,7 @@ export function shouldBehaveLikePawnBots(): void {
 
       context("when token exists", function () {
         beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_mint(1);
+          await this.contracts.pawnBots.__godMode_mint(this.signers.admin.address, 1);
         });
 
         context("when `baseURI` is not set", function () {
@@ -252,11 +260,11 @@ export function shouldBehaveLikePawnBots(): void {
 
           context("when offset is changed", function () {
             beforeEach(async function () {
-              await this.contracts.pawnBots.__godMode_setOffset(4856);
+              await this.contracts.pawnBots.__godMode_setOffset("4856");
             });
 
             it("returns the correct value", async function () {
-              expect(await this.contracts.pawnBots.tokenURI(0)).to.be.equal(this.baseURI + "4856.json");
+              expect(await this.contracts.pawnBots.tokenURI(0)).to.be.equal(this.baseURI + "4856" + ".json");
             });
           });
         });
@@ -277,48 +285,44 @@ export function shouldBehaveLikePawnBots(): void {
 
       context("when called by owner", function () {
         context("when sale is not paused", function () {
+          beforeEach(async function () {
+            await this.contracts.pawnBots.__godMode_setSaleActive(true);
+          });
+
           it("reverts", async function () {
-            await expect(this.contracts.pawnBots.burnUnsold(0)).to.be.revertedWith(ImportedErrors.NOT_PAUSED);
+            await expect(this.contracts.pawnBots.burnUnsold(0)).to.be.revertedWith(PawnBotsErrors.SALE_NOT_PAUSED);
           });
         });
 
         context("when sale is paused", function () {
           beforeEach(async function () {
             await this.contracts.pawnBots.__godMode_setSaleActive(false);
+            await this.contracts.pawnBots.__godMode_setSaleCap("300");
+            await this.contracts.pawnBots.__godMode_mint(this.signers.admin.address, "900");
+            await this.contracts.pawnBots.__godMode_setReserveMinted("700");
           });
 
-          context("when `burnAmount` is 0", function () {
-            it("succeeds", async function () {
-              const contractCall = await this.contracts.pawnBots.burnUnsold(0);
-              expect(contractCall).to.emit(this.contracts.pawnBots, "BurnUnsold").withArgs(0);
-              // TODO: replace `MAX_TICKETS`
-              expect(await this.contracts.pawnBots.saleCap()).to.be.equal(await this.contracts.pawnBots.MAX_TICKETS());
-            });
-          });
-
-          context("when `burnAmount` is `MAX_TICKETS`", function () {
+          context("when `burnAmount` exceeds remaining sale mints", function () {
             beforeEach(async function () {
-              this.maxTickets = await this.contracts.pawnBots.MAX_TICKETS();
+              this.burnAmount = "101";
             });
 
-            context("if `totalSupply` is 0", function () {
-              it("succeeds", async function () {
-                const contractCall = await this.contracts.pawnBots.burnUnsold(this.maxTickets);
-                expect(contractCall).to.emit(this.contracts.pawnBots, "BurnUnsold").withArgs(this.maxTickets);
-                expect(await this.contracts.pawnBots.saleCap()).to.be.equal(0);
-              });
+            it("reverts", async function () {
+              await expect(this.contracts.pawnBots.burnUnsold(this.burnAmount)).to.be.revertedWith(
+                PawnBotsErrors.REMAINING_SALE_EXCEEDED,
+              );
+            });
+          });
+
+          context("when `burnAmount` does not exceed remaining sale mints", function () {
+            beforeEach(async function () {
+              this.burnAmount = "100";
             });
 
-            context("if `totalSupply` is greater than 0", function () {
-              beforeEach(async function () {
-                await this.contracts.pawnBots.__godMode_mint(1);
-              });
-
-              it("reverts", async function () {
-                await expect(this.contracts.pawnBots.burnUnsold(this.maxTickets)).to.be.revertedWith(
-                  PawnBotsErrors.SALE_CAP_EXCEEDED,
-                );
-              });
+            it("succeeds", async function () {
+              const contractCall0 = await this.contracts.pawnBots.burnUnsold(this.burnAmount);
+              expect(contractCall0).to.emit(this.contracts.pawnBots, "BurnUnsold").withArgs("100");
+              expect(await this.contracts.pawnBots.saleCap()).to.be.equal("200");
             });
           });
         });
@@ -326,25 +330,313 @@ export function shouldBehaveLikePawnBots(): void {
     });
 
     describe("mintPrivate", function () {
-      // TODO
+      context("when sale is paused", function () {
+        beforeEach(async function () {
+          await this.contracts.pawnBots.__godMode_setSaleActive(false);
+        });
+
+        it("reverts", async function () {
+          await expect(
+            this.contracts.pawnBots
+              .connect(this.signers.alice)
+              .mintPrivate("0", this.getMerkleProof(this.signers.alice.address)),
+          ).to.be.revertedWith(PawnBotsErrors.SALE_NOT_ACTIVE);
+        });
+      });
+
+      context("when sale is active", function () {
+        beforeEach(async function () {
+          await this.contracts.pawnBots.__godMode_setSaleActive(true);
+        });
+
+        context("when called while sale is set to public", function () {
+          beforeEach(async function () {
+            await this.contracts.pawnBots.__godMode_setSalePhase(SalePhase.PUBLIC);
+          });
+
+          it("reverts", async function () {
+            await expect(
+              this.contracts.pawnBots
+                .connect(this.signers.alice)
+                .mintPrivate("0", this.getMerkleProof(this.signers.alice.address)),
+            ).to.be.revertedWith(PawnBotsErrors.SALE_PHASE_MISMATCH);
+          });
+        });
+
+        context("when called while sale is set to private", function () {
+          beforeEach(async function () {
+            await this.contracts.pawnBots.__godMode_setSalePhase(SalePhase.PRIVATE);
+          });
+
+          context("when minter is not whitelisted", function () {
+            it("reverts", async function () {
+              await expect(
+                this.contracts.pawnBots
+                  .connect(this.signers.bob)
+                  .mintPrivate("0", this.getMerkleProof(this.signers.alice.address)),
+              ).to.be.revertedWith(PawnBotsErrors.USER_NOT_ELIGIBLE);
+            });
+          });
+
+          context("when minter is whitelisted", function () {
+            context("when `mintAmount` exceeds minter's private mint limit", function () {
+              beforeEach(async function () {
+                await this.contracts.pawnBots.__godMode_setMaxPrivatePerAccount("2");
+                await this.contracts.pawnBots.__godMode_setPrivateMinted(this.signers.alice.address, "2");
+              });
+
+              it("reverts", async function () {
+                await expect(
+                  this.contracts.pawnBots
+                    .connect(this.signers.alice)
+                    .mintPrivate("1", this.getMerkleProof(this.signers.alice.address)),
+                ).to.be.revertedWith(PawnBotsErrors.MAX_PRIVATE_PER_ACCOUNT_EXCEEDED);
+              });
+            });
+
+            context("when `mintAmount` does not exceed minter's private mint limit", function () {
+              beforeEach(async function () {
+                await this.contracts.pawnBots.__godMode_setMaxPrivatePerAccount("2");
+                await this.contracts.pawnBots.__godMode_setPrivateMinted(this.signers.alice.address, "0");
+              });
+
+              context("when `mintAmount` exceeds remaining sale mints", function () {
+                beforeEach(async function () {
+                  await this.contracts.pawnBots.__godMode_setSaleCap("201");
+                  await this.contracts.pawnBots.__godMode_mint(this.signers.admin.address, "900");
+                  await this.contracts.pawnBots.__godMode_setReserveMinted("700");
+                });
+
+                it("reverts", async function () {
+                  await expect(
+                    this.contracts.pawnBots
+                      .connect(this.signers.alice)
+                      .mintPrivate("2", this.getMerkleProof(this.signers.alice.address)),
+                  ).to.be.revertedWith(PawnBotsErrors.REMAINING_SALE_EXCEEDED);
+                });
+              });
+
+              context("when `mintAmount` does not exceed remaining sale mints", function () {
+                beforeEach(async function () {
+                  await this.contracts.pawnBots.__godMode_setSaleCap("202");
+                  await this.contracts.pawnBots.__godMode_mint(this.signers.admin.address, "900");
+                  await this.contracts.pawnBots.__godMode_setReserveMinted("700");
+                });
+
+                context("when user sends less funds than the needed value", function () {
+                  beforeEach(async function () {
+                    this.funds = (await this.contracts.pawnBots.price()).mul("2").sub("1");
+                  });
+
+                  it("reverts", async function () {
+                    await expect(
+                      this.contracts.pawnBots
+                        .connect(this.signers.alice)
+                        .mintPrivate("2", this.getMerkleProof(this.signers.alice.address), {
+                          value: this.funds,
+                        }),
+                    ).to.be.revertedWith(PawnBotsErrors.INSUFFICIENT_FUNDS_SENT);
+                  });
+                });
+
+                context("when user sends the exact needed value", function () {
+                  beforeEach(async function () {
+                    this.funds = (await this.contracts.pawnBots.price()).mul("2");
+                  });
+
+                  it("succeeds", async function () {
+                    const contractCall = await this.contracts.pawnBots
+                      .connect(this.signers.alice)
+                      .mintPrivate("2", this.getMerkleProof(this.signers.alice.address), {
+                        value: this.funds,
+                      });
+                    expect(contractCall)
+                      .to.emit(this.contracts.pawnBots, "Mint")
+                      .withArgs(
+                        this.signers.alice.address,
+                        "2",
+                        await this.contracts.pawnBots.price(),
+                        SalePhase.PRIVATE,
+                      );
+                    expect(await this.contracts.pawnBots.balanceOf(this.signers.alice.address)).to.be.equal("2");
+                    expect(await ethers.provider.getBalance(this.contracts.pawnBots.address)).to.be.equal(this.funds);
+                  });
+                });
+
+                context("when user sends more than the needed value", function () {
+                  beforeEach(async function () {
+                    this.change = parseEther("1");
+                    this.funds = (await this.contracts.pawnBots.price()).mul("2").add(this.change);
+                  });
+
+                  it("succeeds", async function () {
+                    const contractCall = await this.contracts.pawnBots
+                      .connect(this.signers.alice)
+                      .mintPrivate("2", this.getMerkleProof(this.signers.alice.address), {
+                        value: this.funds,
+                      });
+                    expect(contractCall)
+                      .to.emit(this.contracts.pawnBots, "Mint")
+                      .withArgs(
+                        this.signers.alice.address,
+                        "2",
+                        await this.contracts.pawnBots.price(),
+                        SalePhase.PRIVATE,
+                      );
+                    expect(await this.contracts.pawnBots.balanceOf(this.signers.alice.address)).to.be.equal("2");
+                    expect(await ethers.provider.getBalance(this.contracts.pawnBots.address)).to.be.equal(
+                      this.funds.sub(this.change),
+                    );
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
     });
 
     describe("mintPublic", function () {
-      // TODO
+      context("when sale is paused", function () {
+        beforeEach(async function () {
+          await this.contracts.pawnBots.__godMode_setSaleActive(false);
+        });
+
+        it("reverts", async function () {
+          await expect(this.contracts.pawnBots.connect(this.signers.alice).mintPublic("0")).to.be.revertedWith(
+            PawnBotsErrors.SALE_NOT_ACTIVE,
+          );
+        });
+      });
+
+      context("when sale is active", function () {
+        beforeEach(async function () {
+          await this.contracts.pawnBots.__godMode_setSaleActive(true);
+        });
+
+        context("when called while sale is set to private", function () {
+          beforeEach(async function () {
+            await this.contracts.pawnBots.__godMode_setSalePhase(SalePhase.PRIVATE);
+          });
+
+          it("reverts", async function () {
+            await expect(this.contracts.pawnBots.connect(this.signers.alice).mintPublic("0")).to.be.revertedWith(
+              PawnBotsErrors.SALE_PHASE_MISMATCH,
+            );
+          });
+        });
+
+        context("when called while sale is set to public", function () {
+          beforeEach(async function () {
+            await this.contracts.pawnBots.__godMode_setSalePhase(SalePhase.PUBLIC);
+          });
+
+          context("when `mintAmount` exceeds public mint limit", function () {
+            beforeEach(async function () {
+              await this.contracts.pawnBots.__godMode_setMaxPublicPerTx("2");
+            });
+
+            it("reverts", async function () {
+              await expect(this.contracts.pawnBots.connect(this.signers.alice).mintPublic("3")).to.be.revertedWith(
+                PawnBotsErrors.MAX_PUBLIC_PER_TX_EXCEEDED,
+              );
+            });
+          });
+
+          context("when `mintAmount` does not exceed public mint limit", function () {
+            beforeEach(async function () {
+              await this.contracts.pawnBots.__godMode_setMaxPublicPerTx("2");
+            });
+
+            context("when `mintAmount` exceeds remaining sale mints", function () {
+              beforeEach(async function () {
+                await this.contracts.pawnBots.__godMode_setSaleCap("201");
+                await this.contracts.pawnBots.__godMode_mint(this.signers.admin.address, "900");
+                await this.contracts.pawnBots.__godMode_setReserveMinted("700");
+              });
+
+              it("reverts", async function () {
+                await expect(this.contracts.pawnBots.connect(this.signers.alice).mintPublic("2")).to.be.revertedWith(
+                  PawnBotsErrors.REMAINING_SALE_EXCEEDED,
+                );
+              });
+            });
+
+            context("when `mintAmount` does not exceed remaining sale mints", function () {
+              beforeEach(async function () {
+                await this.contracts.pawnBots.__godMode_setSaleCap("202");
+                await this.contracts.pawnBots.__godMode_mint(this.signers.admin.address, "900");
+                await this.contracts.pawnBots.__godMode_setReserveMinted("700");
+              });
+
+              context("when user sends less funds than the needed value", function () {
+                beforeEach(async function () {
+                  this.funds = (await this.contracts.pawnBots.price()).mul("2").sub("1");
+                });
+
+                it("reverts", async function () {
+                  await expect(
+                    this.contracts.pawnBots.connect(this.signers.alice).mintPublic("2", {
+                      value: this.funds,
+                    }),
+                  ).to.be.revertedWith(PawnBotsErrors.INSUFFICIENT_FUNDS_SENT);
+                });
+              });
+
+              context("when user sends the exact needed value", function () {
+                beforeEach(async function () {
+                  this.funds = (await this.contracts.pawnBots.price()).mul("2");
+                });
+
+                it("succeeds", async function () {
+                  const contractCall = await this.contracts.pawnBots.connect(this.signers.alice).mintPublic("2", {
+                    value: this.funds,
+                  });
+                  expect(contractCall)
+                    .to.emit(this.contracts.pawnBots, "Mint")
+                    .withArgs(this.signers.alice.address, "2", await this.contracts.pawnBots.price(), SalePhase.PUBLIC);
+                  expect(await this.contracts.pawnBots.balanceOf(this.signers.alice.address)).to.be.equal("2");
+                  expect(await ethers.provider.getBalance(this.contracts.pawnBots.address)).to.be.equal(this.funds);
+                });
+              });
+
+              context("when user sends more than the needed value", function () {
+                beforeEach(async function () {
+                  this.change = parseEther("1");
+                  this.funds = (await this.contracts.pawnBots.price()).mul("2").add(this.change);
+                });
+
+                it("succeeds", async function () {
+                  const contractCall = await this.contracts.pawnBots.connect(this.signers.alice).mintPublic("2", {
+                    value: this.funds,
+                  });
+                  expect(contractCall)
+                    .to.emit(this.contracts.pawnBots, "Mint")
+                    .withArgs(this.signers.alice.address, "2", await this.contracts.pawnBots.price(), SalePhase.PUBLIC);
+                  expect(await this.contracts.pawnBots.balanceOf(this.signers.alice.address)).to.be.equal("2");
+                  expect(await ethers.provider.getBalance(this.contracts.pawnBots.address)).to.be.equal(
+                    this.funds.sub(this.change),
+                  );
+                });
+              });
+            });
+          });
+        });
+      });
     });
 
     describe("reserve", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
           const signer = this.signers.alice;
-          await expect(this.contracts.pawnBots.connect(signer).reserve(0)).to.be.revertedWith(
+          await expect(this.contracts.pawnBots.connect(signer).reserve("0")).to.be.revertedWith(
             ImportedErrors.CALLER_NOT_OWNER,
           );
         });
       });
 
       context("when called by owner", function () {
-        context("when `reserveAmount` exceeds reserve cap minus `reserveMinted`", function () {
+        context("when `reserveAmount` exceeds remaining reserve", function () {
           beforeEach(async function () {
             const reserveMinted = 10;
             await this.contracts.pawnBots.__godMode_setReserveMinted(reserveMinted);
@@ -355,12 +647,20 @@ export function shouldBehaveLikePawnBots(): void {
 
           it("reverts", async function () {
             await expect(this.contracts.pawnBots.reserve(this.reserveAmount)).to.be.revertedWith(
-              PawnBotsErrors.RESERVE_CAP_EXCEEDED,
+              PawnBotsErrors.REMAINING_RESERVE_EXCEEDED,
             );
           });
         });
 
-        context("when `reserveAmount` does not exceed reserve cap minus `reserveMinted`", function () {
+        context("when `reserveAmount` does not exceed remaining reserve", function () {
+          beforeEach(async function () {
+            const reserveMinted = 10;
+            await this.contracts.pawnBots.__godMode_setReserveMinted(reserveMinted);
+            this.reserveAmount = (await this.contracts.pawnBots.RESERVE_CAP()).sub(
+              await this.contracts.pawnBots.reserveMinted(),
+            );
+          });
+
           it("succeeds", async function () {
             const reserveAmount = 10;
             const contractCall = await this.contracts.pawnBots.reserve(reserveAmount);
@@ -387,7 +687,7 @@ export function shouldBehaveLikePawnBots(): void {
             method: "hardhat_impersonateAccount",
             params: [linkTeam],
           });
-          await this.contracts.link.connect(signer).transfer(this.contracts.pawnBots.address, VRF_FEE);
+          await this.contracts.link.connect(signer).transfer(this.contracts.pawnBots.address, vrfFee);
           await network.provider.request({
             method: "hardhat_stopImpersonatingAccount",
             params: [linkTeam],
@@ -447,12 +747,10 @@ export function shouldBehaveLikePawnBots(): void {
                     it("reverts", async function () {
                       const randomNumber = 10450;
                       const initialRequestId = "0x0000000000000000000000000000000000000000000000000000000000000000";
-
                       await this.contracts.pawnBots.reveal();
                       const requestId = await this.contracts.pawnBots.__godMode_returnVrfRequestId();
                       expect(requestId).to.not.be.equal(initialRequestId);
                       await this.contracts.pawnBots.__godMode_fulfillRandomness(requestId, randomNumber);
-
                       await expect(
                         this.contracts.pawnBots.__godMode_fulfillRandomness(requestId, randomNumber),
                       ).to.be.revertedWith(PawnBotsErrors.OFFSET_ALREADY_SET);
@@ -463,11 +761,9 @@ export function shouldBehaveLikePawnBots(): void {
                     it("reverts", async function () {
                       const randomNumber = 10450;
                       const initialRequestId = "0x0000000000000000000000000000000000000000000000000000000000000000";
-
                       await this.contracts.pawnBots.reveal();
                       const requestId = await this.contracts.pawnBots.__godMode_returnVrfRequestId();
                       expect(requestId).to.not.be.equal(initialRequestId);
-
                       await expect(
                         this.contracts.pawnBots.__godMode_fulfillRandomness(
                           "0x0000000000000000000000000000000000000000000000000000000000c0ffee",
@@ -483,7 +779,6 @@ export function shouldBehaveLikePawnBots(): void {
                     const randomNumber = 10450;
                     const initialRequestId = "0x0000000000000000000000000000000000000000000000000000000000000000";
                     const collectionSize = Number(await this.contracts.pawnBots.COLLECTION_SIZE());
-
                     await this.contracts.pawnBots.reveal();
                     const requestId = await this.contracts.pawnBots.__godMode_returnVrfRequestId();
                     expect(requestId).to.not.be.equal(initialRequestId);
@@ -536,7 +831,6 @@ export function shouldBehaveLikePawnBots(): void {
       context("when called by owner", function () {
         it("succeeds", async function () {
           const maxPrivatePerAccount = 10;
-
           const contractCall = await this.contracts.pawnBots.setMaxPrivatePerAccount(maxPrivatePerAccount);
           expect(contractCall)
             .to.emit(this.contracts.pawnBots, "SetMaxPrivatePerAccount")
@@ -558,7 +852,6 @@ export function shouldBehaveLikePawnBots(): void {
       context("when called by owner", function () {
         it("succeeds", async function () {
           const maxPublicPerTx = 10;
-
           const contractCall = await this.contracts.pawnBots.setMaxPublicPerTx(maxPublicPerTx);
           expect(contractCall).to.emit(this.contracts.pawnBots, "SetMaxPublicPerTx").withArgs(maxPublicPerTx);
           expect(await this.contracts.pawnBots.maxPublicPerTx()).to.be.equal(maxPublicPerTx);
@@ -570,7 +863,7 @@ export function shouldBehaveLikePawnBots(): void {
       context("when not called by owner", function () {
         it("reverts", async function () {
           const signer = this.signers.alice;
-          await expect(this.contracts.pawnBots.connect(signer).setMerkleRoot("")).to.be.revertedWith(
+          await expect(this.contracts.pawnBots.connect(signer).setMerkleRoot(HashZero)).to.be.revertedWith(
             ImportedErrors.CALLER_NOT_OWNER,
           );
         });
@@ -579,10 +872,9 @@ export function shouldBehaveLikePawnBots(): void {
       context("when called by owner", function () {
         it("succeeds", async function () {
           const merkleRoot = "0xdffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f";
-
           const contractCall = await this.contracts.pawnBots.setMerkleRoot(merkleRoot);
           expect(contractCall).to.emit(this.contracts.pawnBots, "SetMerkleRoot").withArgs(merkleRoot);
-          expect(await this.contracts.pawnBots.merkleRoot()).to.be.equal(merkleRoot);
+          expect(await this.contracts.pawnBots.__godMode_returnMerkleRoot()).to.be.equal(merkleRoot);
         });
       });
     });
@@ -673,63 +965,103 @@ export function shouldBehaveLikePawnBots(): void {
       });
 
       context("when called by owner", function () {
-        // TODO
+        it("succeeds", async function () {
+          const saleActive = true;
+          const contractCall = await this.contracts.pawnBots.setSaleActive(saleActive);
+          expect(contractCall).to.emit(this.contracts.pawnBots, "SetSaleActive").withArgs(saleActive);
+          expect(await this.contracts.pawnBots.saleActive()).to.be.equal(saleActive);
+        });
       });
     });
 
     describe("setSalePhase", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).setSalePhase("0")).to.be.revertedWith(
-            ImportedErrors.CALLER_NOT_OWNER,
-          );
+          await expect(
+            this.contracts.pawnBots.connect(this.signers.alice).setSalePhase(SalePhase.PRIVATE),
+          ).to.be.revertedWith(ImportedErrors.CALLER_NOT_OWNER);
         });
       });
 
       context("when called by owner", function () {
-        // TODO
+        context("when called by owner", function () {
+          it("succeeds", async function () {
+            const salePhase = SalePhase.PUBLIC;
+            const contractCall = await this.contracts.pawnBots.setSalePhase(salePhase);
+            expect(contractCall).to.emit(this.contracts.pawnBots, "SetSalePhase").withArgs(salePhase);
+            expect(await this.contracts.pawnBots.salePhase()).to.be.equal(salePhase);
+          });
+        });
       });
     });
 
-    describe("withdraw (ethers)", function () {
+    describe("withdraw", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
           const signer = this.signers.alice;
-          await expect(this.contracts.pawnBots.connect(signer).withdraw(signer.address)).to.be.revertedWith(
+          await expect(this.contracts.pawnBots.connect(signer).withdraw("0")).to.be.revertedWith(
             ImportedErrors.CALLER_NOT_OWNER,
           );
         });
       });
 
       context("when called by owner", function () {
-        context("when recipient is the 0 address", function () {
-          it("reverts", async function () {
-            await expect(this.contracts.pawnBots.withdraw(ZERO_ADDRESS)).to.be.revertedWith(
-              PawnBotsErrors.INVALID_RECIPIENT,
-            );
-          });
+        beforeEach(async function () {
+          this.amount = parseEther("0.1");
+          await this.contracts.pawnBots.__godMode_addEther({ value: this.amount });
         });
 
-        context("when recipient is a valid address", function () {
-          beforeEach(async function () {
-            this.amount = parseEther("0.1");
-            await this.contracts.pawnBots.__godMode_addEther({ value: this.amount });
-          });
-
-          it("succeeds", async function () {
-            const signer = this.signers.alice;
-            const balanceBefore = await signer.getBalance();
-            const contractCall = await this.contracts.pawnBots.withdraw(signer.address);
-            expect(contractCall).to.emit(this.contracts.pawnBots, "Withdraw").withArgs(signer.address, this.amount);
-            const balanceAfter = await signer.getBalance();
-            expect(balanceAfter.sub(balanceBefore)).to.be.equal(this.amount);
-          });
+        it("succeeds", async function () {
+          const signer = this.signers.admin;
+          const balanceBefore = await signer.getBalance();
+          const contractCall = await this.contracts.pawnBots.withdraw(this.amount);
+          expect(contractCall).to.emit(this.contracts.pawnBots, "Withdraw").withArgs(this.amount);
+          const balanceAfter = await signer.getBalance();
+          const tx = await contractCall.wait();
+          const gas = tx.gasUsed.mul(tx.effectiveGasPrice);
+          expect(balanceAfter.sub(balanceBefore).add(gas)).to.be.equal(this.amount);
         });
       });
     });
 
-    describe("withdraw (tokens)", function () {
-      // TODO
+    describe("withdrawErc20", function () {
+      context("when not called by owner", function () {
+        it("reverts", async function () {
+          const signer = this.signers.alice;
+          await expect(
+            this.contracts.pawnBots.connect(signer).withdrawErc20(this.contracts.link.address, "0"),
+          ).to.be.revertedWith(ImportedErrors.CALLER_NOT_OWNER);
+        });
+      });
+
+      context("when called by owner", function () {
+        beforeEach(async function () {
+          this.amount = parseEther("1.234");
+          // Send some LINK to the contract
+          const linkTeam = "0x6f61507F902e1c22BCd7aa2C0452cd2212009B61";
+          const signer = await ethers.getSigner(linkTeam);
+          await network.provider.request({
+            method: "hardhat_impersonateAccount",
+            params: [linkTeam],
+          });
+          await this.contracts.link.connect(signer).transfer(this.contracts.pawnBots.address, this.amount);
+          await network.provider.request({
+            method: "hardhat_stopImpersonatingAccount",
+            params: [linkTeam],
+          });
+        });
+
+        it("succeeds", async function () {
+          const signer = this.signers.admin;
+          const balanceBefore = await this.contracts.link.balanceOf(signer.address);
+          const contractCall = await this.contracts.pawnBots.withdrawErc20(this.contracts.link.address, this.amount);
+          expect(contractCall)
+            .to.emit(this.contracts.pawnBots, "WithdrawErc20")
+            .withArgs(this.contracts.link.address, this.amount);
+          const balanceAfter = await this.contracts.link.balanceOf(signer.address);
+          expect(balanceAfter.sub(balanceBefore)).to.be.equal(this.amount);
+        });
+      });
     });
   });
 }

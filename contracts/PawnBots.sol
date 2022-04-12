@@ -89,8 +89,9 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
 
     /// PUBLIC STORAGE ///
 
+    // TODO: finalize constant values
     /// @dev The theoretical collection size.
-    uint256 public COLLECTION_SIZE = 10_000;
+    uint256 public constant COLLECTION_SIZE = 10_000;
 
     /// @dev The maximum possible mint price.
     uint256 public constant MAX_PRICE = 1_000_000 ether;
@@ -157,6 +158,8 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
     ) ERC721A("Pawn Bots", "BOTS") VRFConsumerBase(vrfCoordinator_, chainlinkToken_) {
         merkleRoot = merkleRoot_;
 
+        // TODO: finalize initial price value
+        price = 0.02 ether;
         saleCap = COLLECTION_SIZE - RESERVE_CAP;
 
         vrfFee = vrfFee_;
