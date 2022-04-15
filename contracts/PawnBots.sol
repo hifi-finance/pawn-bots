@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 pragma solidity >=0.8.4;
 
-import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "erc721a/contracts/ERC721A.sol";
+import { VRFConsumerBase } from "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { ERC721A } from "erc721a/contracts/ERC721A.sol";
 
-import "./IPawnBots.sol";
+import { IPawnBots } from "./IPawnBots.sol";
 
 error PawnBots__InsufficientFundsSent();
 error PawnBots__MaxPriceExceeded();
