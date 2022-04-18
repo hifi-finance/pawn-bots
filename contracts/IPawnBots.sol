@@ -134,7 +134,7 @@ interface IPawnBots {
     /// - Can only be called when token sale is active.
     /// - Can only be called during private sale phase.
     /// - Caller must be eligible to mint during the private phase.
-    /// - `mintAmount` cannot exceed caller's private mint limit.
+    /// - `mintAmount` cannot exceed caller's per-account private mint limit.
     /// - `mintAmount` cannot exceed remaining sale.
     /// - Can only be called when caller has placed enough ethers in the transaction value.
     ///
@@ -149,7 +149,7 @@ interface IPawnBots {
     /// @dev Requirements:
     /// - Can only be called when token sale is active.
     /// - Can only be called during public sale phase.
-    /// - `mintAmount` cannot exceed public mint limit.
+    /// - `mintAmount` cannot exceed per-transaction public mint limit.
     /// - `mintAmount` cannot exceed remaining sale.
     /// - Can only be called when caller has placed enough ethers in the transaction value.
     ///
