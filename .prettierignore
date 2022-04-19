@@ -16,9 +16,8 @@
 *.env
 *.log
 .pnp.*
-claims.json
+allowlist.csv
 coverage.json
 npm-debug.log*
-whitelist.csv
 yarn-debug.log*
 yarn-error.log*

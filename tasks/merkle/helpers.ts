@@ -1,10 +1,9 @@
 import { readFileSync } from "fs";
-
 import { parse } from "papaparse";
 
 export function loadEntries(file: string) {
   const data = readFileSync(file).toString();
-  let entries: string[] = [];
+  const entries: string[] = [];
   parse(data, {
     header: false,
     step: entry => {

@@ -4,127 +4,170 @@ pragma solidity >=0.8.4;
 /// @title IPawnBots
 /// @author Hifi
 interface IPawnBots {
-    /// STRUCTS ///
+    /// ENUMS ///
 
-    struct Claim {
-        bool exists;
-        uint256 allocatedAmount;
-        uint256 claimedAmount;
-    }
-
-    struct NewClaim {
-        address user;
-        uint256 allocatedAmount;
+    enum SalePhase {
+        PRIVATE,
+        PUBLIC
     }
 
     /// EVENTS ///
 
-    /// @notice Emitted when minting is disabled.
-    event DisableMint();
+    /// @notice Emitted when unsold tokens are burned.
+    /// @param burnAmount The amount of tokens burned.
+    event BurnUnsold(uint256 burnAmount);
 
-    /// @notice Emitted when minting is enabled.
-    event EnableMint();
-
-    /// @notice Emitted when a user mints new tokens.
-    /// @param minter The minter's account address.
+    /// @notice Emitted when a user account mints new tokens.
+    /// @param minter The minter account address.
     /// @param mintAmount The amount of minted tokens.
-    event Mint(address indexed minter, uint256 mintAmount);
+    /// @param price The mint price paid per each minted token.
+    /// @param phase The sale phase.
+    event Mint(address indexed minter, uint256 mintAmount, uint256 price, SalePhase phase);
 
-    /// @notice Emitted when tokens are reserved by the contract owner.
-    /// @param reserveAmount The amount of tokens that were reserved.
+    /// @notice Emitted when reserved tokens are minted.
+    /// @param reserveAmount The amount of reserved tokens minted.
     event Reserve(uint256 reserveAmount);
 
     /// @notice Emitted when the collection metadata is revealed.
     event Reveal();
 
     /// @notice Emitted when base URI is set.
-    /// @param newBaseURI The new base URI that was set.
+    /// @param newBaseURI The new base URI.
     event SetBaseURI(string newBaseURI);
 
-    /// @notice Emitted when user claims are updated.
-    event SetClaims();
+    /// @notice Emitted when the per-account private mint limit is set.
+    /// @param newMaxPrivatePerAccount The new per-account private mint limit.
+    event SetMaxPrivatePerAccount(uint256 newMaxPrivatePerAccount);
+
+    /// @notice Emitted when the per-transaction public mint limit is set.
+    /// @param newMaxPublicPerTx The new per-transaction public mint limit.
+    event SetMaxPublicPerTx(uint256 newMaxPublicPerTx);
+
+    /// @notice Emitted when Merkle root is set.
+    /// @param newMerkleRoot The new Merkle root.
+    event SetMerkleRoot(bytes32 newMerkleRoot);
+
+    /// @notice Emitted when mint price is set.
+    /// @param newPrice The new mint price.
+    event SetPrice(uint256 newPrice);
 
     /// @notice Emitted when provenance hash is set.
-    /// @param newProvenanceHash The new provenance hash that was set.
+    /// @param newProvenanceHash The new provenance hash.
     event SetProvenanceHash(string newProvenanceHash);
 
     /// @notice Emitted when reveal timestamp is set.
-    /// @param newRevealTime The new reveal timestamp that was set.
+    /// @param newRevealTime The new reveal timestamp.
     event SetRevealTime(uint256 newRevealTime);
+
+    /// @notice Emitted when the sale state is set.
+    /// @param newSaleActive The new sale state.
+    event SetSaleActive(bool newSaleActive);
+
+    /// @notice Emitted when the sale phase is set.
+    /// @param newSalePhase The new sale phase.
+    event SetSalePhase(SalePhase newSalePhase);
+
+    /// @notice Emitted when ethers are withdrawn from the contract.
+    /// @param withdrawAmount The amount of ethers withdrawn.
+    event Withdraw(uint256 withdrawAmount);
+
+    /// @notice Emitted when ERC-20 tokens are withdrawn from the contract.
+    /// @param token The token contract address.
+    /// @param withdrawAmount The amount of tokens withdrawn.
+    event WithdrawErc20(address indexed token, uint256 withdrawAmount);
 
     /// PUBLIC CONSTANT FUNCTIONS ///
 
-    /// @notice The user claims that determine how many tokens an eligible user is able to mint.
-    /// @param user The user account address.
-    function claims(address user)
-        external
-        view
-        returns (
-            bool exists,
-            uint256 allocatedAmount,
-            uint256 claimedAmount
-        );
+    /// @notice The per-account private mint limit.
+    function maxPrivatePerAccount() external view returns (uint256);
 
-    /// @notice Whether minting is enabled or not.
-    function isMintEnabled() external view returns (bool);
+    /// @notice The per-transaction public mint limit.
+    function maxPublicPerTx() external view returns (uint256);
 
-    /// @notice The offset that determines how each token id corresponds to a token URI post-reveal.
+    /// @notice The offset that determines how each token ID corresponds to a token URI post-reveal.
     function offset() external view returns (uint256);
+
+    /// @notice The mint price in ethers.
+    function price() external view returns (uint256);
+
+    /// @notice The total amount of tokens minted by a given user account during the private phase.
+    /// @param account The user account address.
+    function privateMinted(address account) external view returns (uint256);
 
     /// @notice The provenance hash of post-reveal art.
     function provenanceHash() external view returns (string memory);
 
-    /// @notice The total amount of reserved tokens that have been minted by the contract owner.
+    /// @notice The total amount of reserved tokens minted.
     function reserveMinted() external view returns (uint256);
 
     /// @notice The timestamp from which the collection metadata can be revealed.
     function revealTime() external view returns (uint256);
 
+    /// @notice The state of the sale.
+    function saleActive() external view returns (bool);
+
+    /// @notice The token sale cap.
+    function saleCap() external view returns (uint256);
+
+    /// @notice The current sale phase.
+    function salePhase() external view returns (SalePhase);
+
     /// PUBLIC NON-CONSTANT FUNCTIONS ///
 
-    /// @notice Disable minting.
+    /// @notice Burn unsold tokens.
     ///
-    /// @dev Emits a {DisableMint} event.
-    ///
-    /// @dev Requirements:
-    /// - Can only be called by the owner.
-    /// - Minting must be enabled when called.
-    function disableMint() external;
-
-    /// @notice Enable minting.
-    ///
-    /// @dev Emits a {EnableMint} event.
+    /// @dev Emits a {BurnUnsold} event.
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
-    /// - Minting must be disabled when called.
-    function enableMint() external;
+    /// - Can only be called when token sale is paused.
+    /// - `burnAmount` cannot exceed remaining sale.
+    ///
+    /// @param burnAmount The amount of tokens to burn.
+    function burnUnsold(uint256 burnAmount) external;
 
-    /// @notice Mint new tokens by users with mint claims.
+    /// @notice Mint new tokens in exchange for ethers during the private phase of the sale.
     ///
     /// @dev Emits a {Mint} event.
     ///
     /// @dev Requirements:
-    /// - Minting must be enabled.
-    /// - `mintAmount` cannot overflow collection size.
-    /// - Caller must have a claim to mint.
-    /// - `mintAmount` cannot exceed the user's `allocatedAmount` minus `claimedAmount`.
+    /// - Can only be called when token sale is active.
+    /// - Can only be called during private sale phase.
+    /// - Caller must be eligible to mint during the private phase.
+    /// - `mintAmount` cannot exceed caller's per-account private mint limit.
+    /// - `mintAmount` cannot exceed remaining sale.
+    /// - Can only be called when caller has placed enough ethers in the transaction value.
     ///
     /// @param mintAmount The amount of tokens to mint.
-    function mint(uint256 mintAmount) external;
+    /// @param merkleProof The merkle proof of caller being eligible to mint.
+    function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) external payable;
 
-    /// @notice Mint a subset of the collection reserve cap by the contract owner.
+    /// @notice Mint new tokens in exchange for ethers during the public phase of the sale.
+    ///
+    /// @dev Emits a {Mint} event.
+    ///
+    /// @dev Requirements:
+    /// - Can only be called when token sale is active.
+    /// - Can only be called during public sale phase.
+    /// - `mintAmount` cannot exceed per-transaction public mint limit.
+    /// - `mintAmount` cannot exceed remaining sale.
+    /// - Can only be called when caller has placed enough ethers in the transaction value.
+    ///
+    /// @param mintAmount The amount of tokens to mint.
+    function mintPublic(uint256 mintAmount) external payable;
+
+    /// @notice Mint reserved tokens.
     ///
     /// @dev Emits a {Reserve} event.
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
-    /// - `reserveAmount` cannot exceed reserve cap minus `reserveMinted`.
+    /// - `reserveAmount` cannot exceed remaining reserve.
     ///
-    /// @param reserveAmount The amount of reserve tokens to mint.
+    /// @param reserveAmount The amount of reserved tokens to mint.
     function reserve(uint256 reserveAmount) external;
 
-    /// @notice Reveal the collection's metadata.
+    /// @notice Reveal the collection metadata.
     ///
     /// @dev Emits a {Reveal} event indirectly through a transaction initiated by the VRF Coordinator.
     ///
@@ -144,17 +187,47 @@ interface IPawnBots {
     /// @param newBaseURI The new base URI.
     function setBaseURI(string calldata newBaseURI) external;
 
-    /// @notice Add new user claims.
+    /// @notice Set the per-account private mint limit.
     ///
-    /// @dev Emits a {SetClaims} event.
+    /// @dev Emits a {SetMaxPrivatePerAccount} event.
     ///
-    /// Requirements:
+    /// @dev Requirements:
     /// - Can only be called by the owner.
     ///
-    /// @param newClaims The user claims to set.
-    function setClaims(NewClaim[] memory newClaims) external;
+    /// @param newMaxPrivatePerAccount The new per-account private mint limit.
+    function setMaxPrivatePerAccount(uint256 newMaxPrivatePerAccount) external;
 
-    /// @notice Set the provenance hash of post-reveal art once it's calculated.
+    /// @notice Set the per-transaction public mint limit.
+    ///
+    /// @dev Emits a {SetMaxPublicPerTx} event.
+    ///
+    /// @dev Requirements:
+    /// - Can only be called by the owner.
+    ///
+    /// @param newMaxPublicPerTx The new per-transaction public mint limit.
+    function setMaxPublicPerTx(uint256 newMaxPublicPerTx) external;
+
+    /// @notice Set the Merkle root of private phase allow list.
+    ///
+    /// @dev Emits a {SetMerkleRoot} event.
+    ///
+    /// @dev Requirements:
+    /// - Can only be called by the owner.
+    ///
+    /// @param newMerkleRoot The new Merkle root.
+    function setMerkleRoot(bytes32 newMerkleRoot) external;
+
+    /// @notice Set the mint price.
+    ///
+    /// @dev Emits a {SetPrice} event.
+    ///
+    /// @dev Requirements:
+    /// - Can only be called by the owner.
+    ///
+    /// @param newPrice The new mint price in ethers.
+    function setPrice(uint256 newPrice) external;
+
+    /// @notice Set the provenance hash of post-reveal art.
     ///
     /// @dev Emits a {SetProvenanceHash} event.
     ///
@@ -173,4 +246,45 @@ interface IPawnBots {
     ///
     /// @param newRevealTime The new reveal time.
     function setRevealTime(uint256 newRevealTime) external;
+
+    /// @notice Set the state of the sale.
+    ///
+    /// @dev Emits a {SetSaleActive} event.
+    ///
+    /// @dev Requirements:
+    /// - Can only be called by the owner.
+    ///
+    /// @param newSaleActive The new sale state.
+    function setSaleActive(bool newSaleActive) external;
+
+    /// @notice Set the current sale phase.
+    ///
+    /// @dev Emits a {SetSalePhase} event.
+    ///
+    /// @dev Requirements:
+    /// - Can only be called by the owner.
+    ///
+    /// @param newSalePhase The new sale phase.
+    function setSalePhase(SalePhase newSalePhase) external;
+
+    /// @notice Withdraw from the accumulated ether balance in the contract.
+    ///
+    /// @dev Emits a {Withdraw} event.
+    ///
+    /// @dev Requirements:
+    /// - Can only be called by the owner.
+    ///
+    /// @param withdrawAmount The amount of ethers to withdraw.
+    function withdraw(uint256 withdrawAmount) external;
+
+    /// @notice Withdraw any ERC-20 token balances in the contract.
+    ///
+    /// @dev Emits a {WithdrawErc20} event.
+    ///
+    /// @dev Requirements:
+    /// - Can only be called by the owner.
+    ///
+    /// @param token The token contract address.
+    /// @param withdrawAmount The amount of tokens to withdraw.
+    function withdrawErc20(address token, uint256 withdrawAmount) external;
 }

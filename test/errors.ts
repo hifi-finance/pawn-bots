@@ -1,34 +1,20 @@
 export enum PawnBotsErrors {
-  COLLECTION_SIZE_EXCEEDED = "PawnBots__CollectionSizeExceeded",
-  MINT_IS_ALREADY_ENABLED = "PawnBots__MintIsAlreadyEnabled",
-  MINT_IS_NOT_ENABLED = "PawnBots__MintIsNotEnabled",
+  INSUFFICIENT_FUNDS_SENT = "PawnBots__InsufficientFundsSent",
+  MAX_PRIVATE_PER_ACCOUNT_EXCEEDED = "PawnBots__MaxPrivatePerAccountExceeded",
+  MAX_PUBLIC_PER_TX_EXCEEDED = "PawnBots__MaxPublicPerTxExceeded",
   NONEXISTENT_TOKEN = "PawnBots__NonexistentToken",
   OFFSET_ALREADY_SET = "PawnBots__OffsetAlreadySet",
   RANDOMNESS_ALREADY_REQUESTED = "PawnBots__RandomnessAlreadyRequested",
-  RESERVE_CAP_EXCEEDED = "PawnBots__ReserveCapExceeded",
+  REMAINING_RESERVE_EXCEEDED = "PawnBots__RemainingReserveExceeded",
+  REMAINING_SALE_EXCEEDED = "PawnBots__RemainingSaleExceeded",
+  SALE_NOT_ACTIVE = "PawnBots__SaleNotActive",
+  SALE_NOT_PAUSED = "PawnBots__SaleNotPaused",
+  SALE_PHASE_MISMATCH = "PawnBots__SalePhaseMismatch",
   TOO_EARLY_TO_REVEAL = "PawnBots__TooEarlyToReveal",
-  USER_ELIGIBILITY_EXCEEDED = "PawnBots__UserEligibilityExceeded",
-  USER_IS_NOT_ELIGIBLE = "PawnBots__UserIsNotEligible",
+  USER_NOT_ELIGIBLE = "PawnBots__UserNotEligible",
   VRF_REQUEST_ID_MISMATCH = "PawnBots__VrfRequestIdMismatch",
-}
-
-export enum PBTicketsErrors {
-  INSUFFICIENT_FUNDS = "PBTickets__InsufficientFunds",
-  INVALID_RECIPIENT = "PBTickets__InvalidRecipient",
-  MAX_PRICE_EXCEEDED = "PBTickets__MaxPriceExceeded",
-  MAX_PRIVATE_MINTS_EXCEEDED = "PBTickets__MaxPrivateMintsExceeded",
-  MAX_PUBLIC_MINTS_PER_TX_EXCEEDED = "PBTickets__MaxPublicMintsPerTxExceeded",
-  MINT_NOT_AUTHORIZED = "PBTickets__MintNotAuthorized",
-  NONEXISTENT_TOKEN = "PBTickets__NonexistentToken",
-  PRIVATE_PHASE_EXPIRED = "PBTickets__PrivatePhaseExpired",
-  PUBLIC_PHASE_NOT_STARTED = "PBTickets__PublicPhaseNotStarted",
-  SALE_ALREADY_STARTED = "PBTickets__SaleAlreadyStarted",
-  SALE_CAP_EXCEEDED = "PBTickets__SaleCapExceeded",
-  SALE_NOT_STARTED = "PBTickets__SaleNotStarted",
 }
 
 export enum ImportedErrors {
   CALLER_NOT_OWNER = "Ownable: caller is not the owner",
-  NOT_PAUSED = "Pausable: not paused",
-  PAUSED = "Pausable: paused",
 }
