@@ -11,11 +11,9 @@ export function shouldBehaveLikePawnBots(): void {
   describe("Deployment", function () {
     it("should deploy with the correct values", async function () {
       const COLLECTION_SIZE = await this.contracts.pawnBots.COLLECTION_SIZE();
-      const MAX_PRICE = await this.contracts.pawnBots.MAX_PRICE();
       const RESERVE_CAP = await this.contracts.pawnBots.RESERVE_CAP();
 
       expect(COLLECTION_SIZE).to.equal("10000");
-      expect(MAX_PRICE).to.equal(parseEther("1000000"));
       expect(RESERVE_CAP).to.equal("1000");
 
       expect(await this.contracts.pawnBots.name()).to.equal("Pawn Bots");
@@ -889,28 +887,11 @@ export function shouldBehaveLikePawnBots(): void {
       });
 
       context("when called by owner", function () {
-        context("when `newPrice` exceeds max price limit", function () {
-          beforeEach(async function () {
-            this.newPrice = (await this.contracts.pawnBots.MAX_PRICE()).add(1);
-          });
-
-          it("reverts", async function () {
-            await expect(this.contracts.pawnBots.setPrice(this.newPrice)).to.be.revertedWith(
-              PawnBotsErrors.MAX_PRICE_EXCEEDED,
-            );
-          });
-        });
-
-        context("when `newPrice` does not exceed max price limit", function () {
-          beforeEach(async function () {
-            this.newPrice = await this.contracts.pawnBots.MAX_PRICE();
-          });
-
-          it("succeeds", async function () {
-            const contractCall = await this.contracts.pawnBots.setPrice(this.newPrice);
-            await expect(contractCall).to.emit(this.contracts.pawnBots, "SetPrice").withArgs(this.newPrice);
-            expect(await this.contracts.pawnBots.price()).to.be.equal(this.newPrice);
-          });
+        it("succeeds", async function () {
+          const price = parseEther("1.234");
+          const contractCall = await this.contracts.pawnBots.setPrice(price);
+          await expect(contractCall).to.emit(this.contracts.pawnBots, "SetPrice").withArgs(price);
+          expect(await this.contracts.pawnBots.price()).to.be.equal(price);
         });
       });
     });

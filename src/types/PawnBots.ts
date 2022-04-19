@@ -21,7 +21,6 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface PawnBotsInterface extends utils.Interface {
   functions: {
     "COLLECTION_SIZE()": FunctionFragment;
-    "MAX_PRICE()": FunctionFragment;
     "RESERVE_CAP()": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
@@ -73,7 +72,6 @@ export interface PawnBotsInterface extends utils.Interface {
     functionFragment: "COLLECTION_SIZE",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "MAX_PRICE", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "RESERVE_CAP",
     values?: undefined
@@ -229,7 +227,6 @@ export interface PawnBotsInterface extends utils.Interface {
     functionFragment: "COLLECTION_SIZE",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "MAX_PRICE", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "RESERVE_CAP",
     data: BytesLike
@@ -548,8 +545,6 @@ export interface PawnBots extends BaseContract {
   functions: {
     COLLECTION_SIZE(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    MAX_PRICE(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     RESERVE_CAP(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     approve(
@@ -746,8 +741,6 @@ export interface PawnBots extends BaseContract {
 
   COLLECTION_SIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
-  MAX_PRICE(overrides?: CallOverrides): Promise<BigNumber>;
-
   RESERVE_CAP(overrides?: CallOverrides): Promise<BigNumber>;
 
   approve(
@@ -934,8 +927,6 @@ export interface PawnBots extends BaseContract {
 
   callStatic: {
     COLLECTION_SIZE(overrides?: CallOverrides): Promise<BigNumber>;
-
-    MAX_PRICE(overrides?: CallOverrides): Promise<BigNumber>;
 
     RESERVE_CAP(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1228,8 +1219,6 @@ export interface PawnBots extends BaseContract {
   estimateGas: {
     COLLECTION_SIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
-    MAX_PRICE(overrides?: CallOverrides): Promise<BigNumber>;
-
     RESERVE_CAP(overrides?: CallOverrides): Promise<BigNumber>;
 
     approve(
@@ -1423,8 +1412,6 @@ export interface PawnBots extends BaseContract {
 
   populateTransaction: {
     COLLECTION_SIZE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    MAX_PRICE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     RESERVE_CAP(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

@@ -223,7 +223,6 @@ interface IPawnBots {
     ///
     /// @dev Requirements:
     /// - Can only be called by the owner.
-    /// - `newPrice` cannot exceed max price limit.
     ///
     /// @param newPrice The new mint price in ethers.
     function setPrice(uint256 newPrice) external;

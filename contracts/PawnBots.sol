@@ -13,7 +13,6 @@ import { ERC721A } from "erc721a/contracts/ERC721A.sol";
 import { IPawnBots } from "./IPawnBots.sol";
 
 error PawnBots__InsufficientFundsSent();
-error PawnBots__MaxPriceExceeded();
 error PawnBots__MaxPrivatePerAccountExceeded();
 error PawnBots__MaxPublicPerTxExceeded();
 error PawnBots__NonexistentToken();
@@ -94,9 +93,6 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
     // TODO: finalize constant values
     /// @dev The theoretical collection size.
     uint256 public constant COLLECTION_SIZE = 10_000;
-
-    /// @dev The maximum possible mint price.
-    uint256 public constant MAX_PRICE = 1_000_000 ether;
 
     /// @dev The token reserve allocated for contract owner.
     uint256 public constant RESERVE_CAP = 1_000;
@@ -204,7 +200,7 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
     }
 
     /// @inheritdoc IPawnBots
-    function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) external payable nonReentrant {
+    function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) external payable override nonReentrant {
         uint256 mPrice = price;
         if (!saleActive) {
             revert PawnBots__SaleNotActive();
@@ -241,7 +237,7 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
     }
 
     /// @inheritdoc IPawnBots
-    function mintPublic(uint256 mintAmount) external payable nonReentrant {
+    function mintPublic(uint256 mintAmount) external payable override nonReentrant {
         uint256 mPrice = price;
         if (!saleActive) {
             revert PawnBots__SaleNotActive();
@@ -325,10 +321,6 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
 
     /// @inheritdoc IPawnBots
     function setPrice(uint256 newPrice) external override onlyOwner {
-        if (newPrice > MAX_PRICE) {
-            revert PawnBots__MaxPriceExceeded();
-        }
-
         price = newPrice;
         emit SetPrice(newPrice);
     }

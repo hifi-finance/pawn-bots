@@ -1,6 +1,5 @@
 export enum PawnBotsErrors {
   INSUFFICIENT_FUNDS_SENT = "PawnBots__InsufficientFundsSent",
-  MAX_PRICE_EXCEEDED = "PawnBots__MaxPriceExceeded",
   MAX_PRIVATE_PER_ACCOUNT_EXCEEDED = "PawnBots__MaxPrivatePerAccountExceeded",
   MAX_PUBLIC_PER_TX_EXCEEDED = "PawnBots__MaxPublicPerTxExceeded",
   NONEXISTENT_TOKEN = "PawnBots__NonexistentToken",
