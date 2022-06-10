@@ -11,11 +11,10 @@ import "../PawnBots.sol";
 contract GodModePawnBots is PawnBots {
     constructor(
         address chainlinkToken_,
-        bytes32 merkleRoot_,
         address vrfCoordinator_,
         uint256 vrfFee_,
         bytes32 vrfKeyHash_
-    ) PawnBots(chainlinkToken_, merkleRoot_, vrfCoordinator_, vrfFee_, vrfKeyHash_) {
+    ) PawnBots(chainlinkToken_, vrfCoordinator_, vrfFee_, vrfKeyHash_) {
         // solhint-disable-previous-line no-empty-blocks
     }
 

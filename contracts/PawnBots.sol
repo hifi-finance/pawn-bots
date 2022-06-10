@@ -145,12 +145,10 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
 
     constructor(
         address chainlinkToken_,
-        bytes32 merkleRoot_,
         address vrfCoordinator_,
         uint256 vrfFee_,
         bytes32 vrfKeyHash_
     ) ERC721A("Pawn Bots", "BOTS") VRFConsumerBase(vrfCoordinator_, chainlinkToken_) {
-        merkleRoot = merkleRoot_;
         mintCap = COLLECTION_SIZE - RESERVE_CAP;
         vrfFee = vrfFee_;
         vrfKeyHash = vrfKeyHash_;
