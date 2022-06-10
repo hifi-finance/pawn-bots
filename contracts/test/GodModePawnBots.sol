@@ -47,24 +47,28 @@ contract GodModePawnBots is PawnBots {
         baseURI = newBaseURI;
     }
 
-    function __godMode_setMaxPrivatePerAccount(uint256 newMaxPrivatePerAccount) external {
-        maxPrivatePerAccount = newMaxPrivatePerAccount;
+    function __godMode_setMaxPerAccount(uint256 newMaxPerAccount) external {
+        maxPerAccount = newMaxPerAccount;
     }
 
-    function __godMode_setMaxPublicPerTx(uint256 newMaxPublicPerTx) external {
-        maxPublicPerTx = newMaxPublicPerTx;
+    function __godMode_setMintActive(bool newMintActive) external {
+        mintActive = newMintActive;
+    }
+
+    function __godMode_setMintCap(uint256 newMintCap) external {
+        mintCap = newMintCap;
+    }
+
+    function __godMode_setMinted(address account, uint256 newMinted) external {
+        minted[account] = newMinted;
+    }
+
+    function __godMode_setMintPhase(MintPhase newMintPhase) external {
+        mintPhase = newMintPhase;
     }
 
     function __godMode_setOffset(uint256 newOffset) external {
         offset = newOffset;
-    }
-
-    function __godMode_setPrice(uint256 newPrice) external {
-        price = newPrice;
-    }
-
-    function __godMode_setPrivateMinted(address account, uint256 newPrivateMinted) external {
-        privateMinted[account] = newPrivateMinted;
     }
 
     function __godMode_setProvenanceHash(string calldata newProvenanceHash) external {
@@ -77,18 +81,6 @@ contract GodModePawnBots is PawnBots {
 
     function __godMode_setRevealTime(uint256 newRevealTime) external {
         revealTime = newRevealTime;
-    }
-
-    function __godMode_setSaleActive(bool newSaleActive) external {
-        saleActive = newSaleActive;
-    }
-
-    function __godMode_setSaleCap(uint256 newSaleCap) external {
-        saleCap = newSaleCap;
-    }
-
-    function __godMode_setSalePhase(SalePhase newSalePhase) external {
-        salePhase = newSalePhase;
     }
 
     function __godMode_setVrfRequestId(bytes32 newVrfRequestId) external {
