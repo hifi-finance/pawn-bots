@@ -193,7 +193,7 @@ interface IPawnBots {
     /// @param newMintActive The new mint state.
     function setMintActive(bool newMintActive) external;
 
-    /// @notice Set the current mint phase.
+    /// @notice Set the mint phase.
     ///
     /// @dev Emits a {SetMintPhase} event.
     ///

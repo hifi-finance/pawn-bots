@@ -19,10 +19,6 @@ contract GodModePawnBots is PawnBots {
         // solhint-disable-previous-line no-empty-blocks
     }
 
-    function __godMode_addEther() external payable {
-        // solhint-disable-previous-line no-empty-blocks
-    }
-
     function __godMode_fulfillRandomness(bytes32 requestId, uint256 randomness) external {
         fulfillRandomness(requestId, randomness);
     }
