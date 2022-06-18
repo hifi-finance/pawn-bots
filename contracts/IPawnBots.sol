@@ -97,7 +97,7 @@ interface IPawnBots {
     /// @dev Requirements:
     /// - Can only be called by the owner.
     /// - Can only be called when token mint is paused.
-    /// - `burnAmount` cannot exceed remaining mint.
+    /// - `burnAmount` cannot exceed remaining mints.
     ///
     /// @param burnAmount The amount of tokens to burn.
     function burnUnsold(uint256 burnAmount) external;
@@ -109,9 +109,9 @@ interface IPawnBots {
     /// @dev Requirements:
     /// - Can only be called when token mint is active.
     /// - Can only be called when private mint phase is set.
-    /// - Caller must be allowed to mint.
+    /// - Caller account must be allowed to mint.
     /// - `mintAmount` cannot exceed caller's per-account mint limit.
-    /// - `mintAmount` cannot exceed remaining mint.
+    /// - `mintAmount` cannot exceed remaining mints.
     /// - Can only be called when caller has enough MFT balance to be eligible.
     ///
     /// @param mintAmount The amount of tokens to mint.
@@ -126,7 +126,7 @@ interface IPawnBots {
     /// - Can only be called when token mint is active.
     /// - Can only be called when public mint phase is set.
     /// - `mintAmount` cannot exceed caller's per-account mint limit.
-    /// - `mintAmount` cannot exceed remaining mint.
+    /// - `mintAmount` cannot exceed remaining mints.
     /// - Can only be called when caller has enough MFT balance to be eligible.
     ///
     /// @param mintAmount The amount of tokens to mint.

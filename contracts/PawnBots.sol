@@ -12,6 +12,7 @@ import { ERC721A } from "erc721a/contracts/ERC721A.sol";
 
 import { IPawnBots } from "./IPawnBots.sol";
 
+error PawnBots__AccountNotAllowed();
 error PawnBots__MaxPerAccountExceeded();
 error PawnBots__MintNotActive();
 error PawnBots__MintNotPaused();
@@ -20,10 +21,9 @@ error PawnBots__NonexistentToken();
 error PawnBots__NotEnoughMftBalance();
 error PawnBots__OffsetAlreadySet();
 error PawnBots__RandomnessAlreadyRequested();
-error PawnBots__RemainingMintExceeded();
+error PawnBots__RemainingMintsExceeded();
 error PawnBots__RemainingReserveExceeded();
 error PawnBots__TooEarlyToReveal();
-error PawnBots__UserNotEligible();
 error PawnBots__VrfRequestIdMismatch();
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -180,7 +180,7 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
             revert PawnBots__MintNotPaused();
         }
         if (burnAmount + totalSupply() > mintCap + reserveMinted) {
-            revert PawnBots__RemainingMintExceeded();
+            revert PawnBots__RemainingMintsExceeded();
         }
 
         unchecked {
@@ -198,13 +198,13 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
             revert PawnBots__MintPhaseMismatch();
         }
         if (!MerkleProof.verify(merkleProof, merkleRoot, keccak256(abi.encodePacked(msg.sender)))) {
-            revert PawnBots__UserNotEligible();
+            revert PawnBots__AccountNotAllowed();
         }
         if (mintAmount + minted[msg.sender] > maxPerAccount) {
             revert PawnBots__MaxPerAccountExceeded();
         }
         if (mintAmount + totalSupply() > mintCap + reserveMinted) {
-            revert PawnBots__RemainingMintExceeded();
+            revert PawnBots__RemainingMintsExceeded();
         }
         if (IERC20(MFT).balanceOf(msg.sender) < 1e18) {
             revert PawnBots__NotEnoughMftBalance();
@@ -230,7 +230,7 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
             revert PawnBots__MaxPerAccountExceeded();
         }
         if (mintAmount + totalSupply() > mintCap + reserveMinted) {
-            revert PawnBots__RemainingMintExceeded();
+            revert PawnBots__RemainingMintsExceeded();
         }
         if (IERC20(MFT).balanceOf(msg.sender) < 1e18) {
             revert PawnBots__NotEnoughMftBalance();
