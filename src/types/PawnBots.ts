@@ -9,7 +9,6 @@ import {
   CallOverrides,
   ContractTransaction,
   Overrides,
-  PayableOverrides,
   PopulatedTransaction,
   Signer,
   utils,
@@ -505,12 +504,12 @@ export interface PawnBots extends BaseContract {
     mintPrivate(
       mintAmount: BigNumberish,
       merkleProof: BytesLike[],
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     mintPublic(
       mintAmount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     minted(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -675,12 +674,12 @@ export interface PawnBots extends BaseContract {
   mintPrivate(
     mintAmount: BigNumberish,
     merkleProof: BytesLike[],
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
+    overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   mintPublic(
     mintAmount: BigNumberish,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
+    overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   minted(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
@@ -1086,12 +1085,12 @@ export interface PawnBots extends BaseContract {
     mintPrivate(
       mintAmount: BigNumberish,
       merkleProof: BytesLike[],
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     mintPublic(
       mintAmount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     minted(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
@@ -1260,12 +1259,12 @@ export interface PawnBots extends BaseContract {
     mintPrivate(
       mintAmount: BigNumberish,
       merkleProof: BytesLike[],
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     mintPublic(
       mintAmount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     minted(

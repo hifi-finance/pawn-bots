@@ -1,7 +1,6 @@
 /* eslint-disable */
 module.exports = [
   "CHAINLINK_TOKEN",
-  "MERKLE_ROOT",
   "VRF_COORDINATOR",
   "VRF_FEE",
   "VRF_KEY_HASH"

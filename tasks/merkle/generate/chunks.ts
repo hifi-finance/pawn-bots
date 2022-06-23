@@ -46,6 +46,4 @@ task("merkle:generate:chunks")
       );
       console.log("Generated Merkle data chunk file: " + chunkFile);
     }
-    writeFileSync(dir + "index.json", JSON.stringify(chunkIds));
-    console.log("Generated index file: " + dir + "index.json");
   });

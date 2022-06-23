@@ -116,7 +116,7 @@ interface IPawnBots {
     ///
     /// @param mintAmount The amount of tokens to mint.
     /// @param merkleProof The merkle proof of caller being allowed to mint.
-    function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) external payable;
+    function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) external;
 
     /// @notice Mint new tokens during the public phase of the mint.
     ///
@@ -130,7 +130,7 @@ interface IPawnBots {
     /// - Can only be called when caller has enough MFT balance to be eligible.
     ///
     /// @param mintAmount The amount of tokens to mint.
-    function mintPublic(uint256 mintAmount) external payable;
+    function mintPublic(uint256 mintAmount) external;
 
     /// @notice Mint reserved tokens.
     ///

@@ -190,7 +190,7 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
     }
 
     /// @inheritdoc IPawnBots
-    function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) external payable override nonReentrant {
+    function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) external override nonReentrant {
         if (!mintActive) {
             revert PawnBots__MintNotActive();
         }
@@ -219,7 +219,7 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
     }
 
     /// @inheritdoc IPawnBots
-    function mintPublic(uint256 mintAmount) external payable override nonReentrant {
+    function mintPublic(uint256 mintAmount) external override nonReentrant {
         if (!mintActive) {
             revert PawnBots__MintNotActive();
         }
