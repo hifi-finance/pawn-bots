@@ -1,7 +1,7 @@
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
 import type { GodModePawnBots } from "../src/types/GodModePawnBots";
-import type { LinkTokenInterface } from "../src/types/LinkTokenInterface";
+import type { IERC20 } from "../src/types/IERC20";
 
 declare module "mocha" {
   export interface Context {
@@ -12,7 +12,8 @@ declare module "mocha" {
 }
 
 export interface Contracts {
-  link: LinkTokenInterface;
+  link: IERC20;
+  mft: IERC20;
   pawnBots: GodModePawnBots;
 }
 

@@ -75,8 +75,8 @@ const config: HardhatUserConfig = {
       },
       chainId: chainIds.hardhat,
       forking: {
-        url: `https://polygon-mainnet.g.alchemyapi.io/v2/${alchemyApiKey}`,
-        blockNumber: 23332200,
+        url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
+        blockNumber: 14940600,
       },
     },
     goerli: getChainConfig("goerli"),

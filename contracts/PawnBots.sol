@@ -12,19 +12,18 @@ import { ERC721A } from "erc721a/contracts/ERC721A.sol";
 
 import { IPawnBots } from "./IPawnBots.sol";
 
-error PawnBots__InsufficientFundsSent();
-error PawnBots__MaxPrivatePerAccountExceeded();
-error PawnBots__MaxPublicPerTxExceeded();
+error PawnBots__AccountNotAllowed();
+error PawnBots__MaxPerAccountExceeded();
+error PawnBots__MintNotActive();
+error PawnBots__MintNotPaused();
+error PawnBots__MintPhaseMismatch();
 error PawnBots__NonexistentToken();
+error PawnBots__NotEnoughMftBalance();
 error PawnBots__OffsetAlreadySet();
 error PawnBots__RandomnessAlreadyRequested();
+error PawnBots__RemainingMintsExceeded();
 error PawnBots__RemainingReserveExceeded();
-error PawnBots__RemainingSaleExceeded();
-error PawnBots__SaleNotActive();
-error PawnBots__SaleNotPaused();
-error PawnBots__SalePhaseMismatch();
 error PawnBots__TooEarlyToReveal();
-error PawnBots__UserNotEligible();
 error PawnBots__VrfRequestIdMismatch();
 
 //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -94,23 +93,29 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
     /// @dev The theoretical collection size.
     uint256 public constant COLLECTION_SIZE = 10_000;
 
+    /// @dev The MFT token contract address.
+    address public constant MFT = 0xDF2C7238198Ad8B389666574f2d8bc411A4b7428;
+
     /// @dev The token reserve allocated for contract owner.
     uint256 public constant RESERVE_CAP = 1_000;
 
     /// @inheritdoc IPawnBots
-    uint256 public override maxPrivatePerAccount;
+    uint256 public override maxPerAccount;
 
     /// @inheritdoc IPawnBots
-    uint256 public override maxPublicPerTx;
+    bool public override mintActive;
+
+    /// @inheritdoc IPawnBots
+    uint256 public override mintCap;
+
+    /// @inheritdoc IPawnBots
+    mapping(address => uint256) public override minted;
+
+    /// @inheritdoc IPawnBots
+    MintPhase public override mintPhase;
 
     /// @inheritdoc IPawnBots
     uint256 public override offset;
-
-    /// @inheritdoc IPawnBots
-    uint256 public override price;
-
-    /// @inheritdoc IPawnBots
-    mapping(address => uint256) public override privateMinted;
 
     /// @inheritdoc IPawnBots
     string public override provenanceHash;
@@ -120,15 +125,6 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
 
     /// @inheritdoc IPawnBots
     uint256 public override revealTime;
-
-    /// @inheritdoc IPawnBots
-    bool public override saleActive;
-
-    /// @inheritdoc IPawnBots
-    uint256 public override saleCap;
-
-    /// @inheritdoc IPawnBots
-    SalePhase public override salePhase;
 
     /// INTERNAL STORAGE ///
 
@@ -149,17 +145,11 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
 
     constructor(
         address chainlinkToken_,
-        bytes32 merkleRoot_,
         address vrfCoordinator_,
         uint256 vrfFee_,
         bytes32 vrfKeyHash_
     ) ERC721A("Pawn Bots", "BOTS") VRFConsumerBase(vrfCoordinator_, chainlinkToken_) {
-        merkleRoot = merkleRoot_;
-
-        // TODO: finalize initial price value
-        price = 0.02 ether;
-        saleCap = COLLECTION_SIZE - RESERVE_CAP;
-
+        mintCap = COLLECTION_SIZE - RESERVE_CAP;
         vrfFee = vrfFee_;
         vrfKeyHash = vrfKeyHash_;
     }
@@ -186,84 +176,72 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
 
     /// @inheritdoc IPawnBots
     function burnUnsold(uint256 burnAmount) external override onlyOwner {
-        if (saleActive) {
-            revert PawnBots__SaleNotPaused();
+        if (mintActive) {
+            revert PawnBots__MintNotPaused();
         }
-        if (burnAmount + totalSupply() > saleCap + reserveMinted) {
-            revert PawnBots__RemainingSaleExceeded();
+        if (burnAmount + totalSupply() > mintCap + reserveMinted) {
+            revert PawnBots__RemainingMintsExceeded();
         }
 
         unchecked {
-            saleCap -= burnAmount;
+            mintCap -= burnAmount;
         }
         emit BurnUnsold(burnAmount);
     }
 
     /// @inheritdoc IPawnBots
-    function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) external payable override nonReentrant {
-        uint256 mPrice = price;
-        if (!saleActive) {
-            revert PawnBots__SaleNotActive();
+    function mintPrivate(uint256 mintAmount, bytes32[] calldata merkleProof) external override nonReentrant {
+        if (!mintActive) {
+            revert PawnBots__MintNotActive();
         }
-        if (salePhase != SalePhase.PRIVATE) {
-            revert PawnBots__SalePhaseMismatch();
+        if (mintPhase != MintPhase.PRIVATE) {
+            revert PawnBots__MintPhaseMismatch();
         }
         if (!MerkleProof.verify(merkleProof, merkleRoot, keccak256(abi.encodePacked(msg.sender)))) {
-            revert PawnBots__UserNotEligible();
+            revert PawnBots__AccountNotAllowed();
         }
-        if (mintAmount + privateMinted[msg.sender] > maxPrivatePerAccount) {
-            revert PawnBots__MaxPrivatePerAccountExceeded();
+        if (mintAmount + minted[msg.sender] > maxPerAccount) {
+            revert PawnBots__MaxPerAccountExceeded();
         }
-        if (mintAmount + totalSupply() > saleCap + reserveMinted) {
-            revert PawnBots__RemainingSaleExceeded();
+        if (mintAmount + totalSupply() > mintCap + reserveMinted) {
+            revert PawnBots__RemainingMintsExceeded();
         }
-        uint256 mintCost;
-        unchecked {
-            mintCost = mPrice * mintAmount;
-        }
-        if (msg.value < mintCost) {
-            revert PawnBots__InsufficientFundsSent();
+        if (IERC20(MFT).balanceOf(msg.sender) < 1e18) {
+            revert PawnBots__NotEnoughMftBalance();
         }
 
         unchecked {
-            privateMinted[msg.sender] += mintAmount;
+            minted[msg.sender] += mintAmount;
         }
 
-        if (msg.value != mintCost) {
-            Address.sendValue(payable(msg.sender), msg.value - mintCost);
-        }
         _safeMint(msg.sender, mintAmount);
-        emit Mint(msg.sender, mintAmount, mPrice, SalePhase.PRIVATE);
+        emit Mint(msg.sender, mintAmount, MintPhase.PRIVATE);
     }
 
     /// @inheritdoc IPawnBots
-    function mintPublic(uint256 mintAmount) external payable override nonReentrant {
-        uint256 mPrice = price;
-        if (!saleActive) {
-            revert PawnBots__SaleNotActive();
+    function mintPublic(uint256 mintAmount) external override nonReentrant {
+        if (!mintActive) {
+            revert PawnBots__MintNotActive();
         }
-        if (salePhase != SalePhase.PUBLIC) {
-            revert PawnBots__SalePhaseMismatch();
+        if (mintPhase != MintPhase.PUBLIC) {
+            revert PawnBots__MintPhaseMismatch();
         }
-        if (mintAmount > maxPublicPerTx) {
-            revert PawnBots__MaxPublicPerTxExceeded();
+        if (mintAmount + minted[msg.sender] > maxPerAccount) {
+            revert PawnBots__MaxPerAccountExceeded();
         }
-        if (mintAmount + totalSupply() > saleCap + reserveMinted) {
-            revert PawnBots__RemainingSaleExceeded();
+        if (mintAmount + totalSupply() > mintCap + reserveMinted) {
+            revert PawnBots__RemainingMintsExceeded();
         }
-        uint256 mintCost;
-        unchecked {
-            mintCost = mPrice * mintAmount;
-        }
-        if (msg.value < mintCost) {
-            revert PawnBots__InsufficientFundsSent();
+        if (IERC20(MFT).balanceOf(msg.sender) < 1e18) {
+            revert PawnBots__NotEnoughMftBalance();
         }
 
-        if (msg.value != mintCost) {
-            Address.sendValue(payable(msg.sender), msg.value - mintCost);
+        unchecked {
+            minted[msg.sender] += mintAmount;
         }
+
         _safeMint(msg.sender, mintAmount);
-        emit Mint(msg.sender, mintAmount, mPrice, SalePhase.PUBLIC);
+        emit Mint(msg.sender, mintAmount, MintPhase.PUBLIC);
     }
 
     /// @inheritdoc IPawnBots
@@ -302,15 +280,9 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
     }
 
     /// @inheritdoc IPawnBots
-    function setMaxPrivatePerAccount(uint256 newMaxPrivatePerAccount) external override onlyOwner {
-        maxPrivatePerAccount = newMaxPrivatePerAccount;
-        emit SetMaxPrivatePerAccount(newMaxPrivatePerAccount);
-    }
-
-    /// @inheritdoc IPawnBots
-    function setMaxPublicPerTx(uint256 newMaxPublicPerTx) external override onlyOwner {
-        maxPublicPerTx = newMaxPublicPerTx;
-        emit SetMaxPublicPerTx(newMaxPublicPerTx);
+    function setMaxPerAccount(uint256 newMaxPerAccount) external override onlyOwner {
+        maxPerAccount = newMaxPerAccount;
+        emit SetMaxPerAccount(newMaxPerAccount);
     }
 
     /// @inheritdoc IPawnBots
@@ -320,9 +292,15 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
     }
 
     /// @inheritdoc IPawnBots
-    function setPrice(uint256 newPrice) external override onlyOwner {
-        price = newPrice;
-        emit SetPrice(newPrice);
+    function setMintActive(bool newMintActive) external override onlyOwner {
+        mintActive = newMintActive;
+        emit SetMintActive(newMintActive);
+    }
+
+    /// @inheritdoc IPawnBots
+    function setMintPhase(MintPhase newMintPhase) external override onlyOwner {
+        mintPhase = newMintPhase;
+        emit SetMintPhase(newMintPhase);
     }
 
     /// @inheritdoc IPawnBots
@@ -335,30 +313,6 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
     function setRevealTime(uint256 newRevealTime) external override onlyOwner {
         revealTime = newRevealTime;
         emit SetRevealTime(newRevealTime);
-    }
-
-    /// @inheritdoc IPawnBots
-    function setSaleActive(bool newSaleActive) external override onlyOwner {
-        saleActive = newSaleActive;
-        emit SetSaleActive(newSaleActive);
-    }
-
-    /// @inheritdoc IPawnBots
-    function setSalePhase(SalePhase newSalePhase) external override onlyOwner {
-        salePhase = newSalePhase;
-        emit SetSalePhase(newSalePhase);
-    }
-
-    /// @inheritdoc IPawnBots
-    function withdraw(uint256 withdrawAmount) external override onlyOwner {
-        Address.sendValue(payable(owner()), withdrawAmount);
-        emit Withdraw(withdrawAmount);
-    }
-
-    /// @inheritdoc IPawnBots
-    function withdrawErc20(address token, uint256 withdrawAmount) external override onlyOwner {
-        IERC20(token).transfer(owner(), withdrawAmount);
-        emit WithdrawErc20(token, withdrawAmount);
     }
 
     /// INTERNAL CONSTANT FUNCTIONS ///

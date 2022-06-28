@@ -1,9 +1,8 @@
 import { HashZero } from "@ethersproject/constants";
 import { expect } from "chai";
-import { parseEther } from "ethers/lib/utils";
 import { ethers, network } from "hardhat";
 
-import { SalePhase, vrfFee } from "../constants";
+import { MintPhase, vrfFee } from "../constants";
 import { timeContext } from "../contexts";
 import { ImportedErrors, PawnBotsErrors } from "../errors";
 
@@ -17,45 +16,98 @@ export function shouldBehaveLikePawnBots(): void {
       expect(RESERVE_CAP).to.equal("1000");
 
       expect(await this.contracts.pawnBots.name()).to.equal("Pawn Bots");
-      expect(await this.contracts.pawnBots.price()).to.equal(parseEther("0.02"));
-      expect(await this.contracts.pawnBots.saleCap()).to.equal(COLLECTION_SIZE.sub(RESERVE_CAP));
+      expect(await this.contracts.pawnBots.mintCap()).to.equal(COLLECTION_SIZE.sub(RESERVE_CAP));
       expect(await this.contracts.pawnBots.symbol()).to.equal("BOTS");
     });
   });
 
   describe("View Functions", function () {
-    describe("maxPrivatePerAccount", function () {
+    describe("maxPerAccount", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.maxPrivatePerAccount()).to.equal(0);
+          expect(await this.contracts.pawnBots.maxPerAccount()).to.equal(0);
         });
       });
 
       context("when changed", function () {
         beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setMaxPrivatePerAccount(20);
+          await this.contracts.pawnBots.__godMode_setMaxPerAccount(20);
         });
 
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.maxPrivatePerAccount()).to.equal(20);
+          expect(await this.contracts.pawnBots.maxPerAccount()).to.equal(20);
         });
       });
     });
 
-    describe("maxPublicPerTx", function () {
+    describe("mintActive", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.maxPublicPerTx()).to.equal(0);
+          expect(await this.contracts.pawnBots.mintActive()).to.equal(false);
         });
       });
 
       context("when changed", function () {
         beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setMaxPublicPerTx(20);
+          await this.contracts.pawnBots.__godMode_setMintActive(true);
         });
 
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.maxPublicPerTx()).to.equal(20);
+          expect(await this.contracts.pawnBots.mintActive()).to.equal(true);
+        });
+      });
+    });
+
+    describe("mintCap", function () {
+      context("when not changed", function () {
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.mintCap()).to.equal(9000);
+        });
+      });
+
+      context("when changed", function () {
+        beforeEach(async function () {
+          await this.contracts.pawnBots.__godMode_setMintCap(8000);
+        });
+
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.mintCap()).to.equal(8000);
+        });
+      });
+    });
+
+    describe("minted", function () {
+      context("when not changed", function () {
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.minted(this.signers.alice.address)).to.equal(0);
+        });
+      });
+
+      context("when changed", function () {
+        beforeEach(async function () {
+          await this.contracts.pawnBots.__godMode_setMinted(this.signers.alice.address, 20);
+        });
+
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.minted(this.signers.alice.address)).to.equal(20);
+        });
+      });
+    });
+
+    describe("mintPhase", function () {
+      context("when not changed", function () {
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.mintPhase()).to.equal(MintPhase.PRIVATE);
+        });
+      });
+
+      context("when changed", function () {
+        beforeEach(async function () {
+          await this.contracts.pawnBots.__godMode_setMintPhase(MintPhase.PUBLIC);
+        });
+
+        it("returns the correct value", async function () {
+          expect(await this.contracts.pawnBots.mintPhase()).to.be.equal(MintPhase.PUBLIC);
         });
       });
     });
@@ -74,42 +126,6 @@ export function shouldBehaveLikePawnBots(): void {
 
         it("returns the correct value", async function () {
           expect(await this.contracts.pawnBots.offset()).to.equal(1479);
-        });
-      });
-    });
-
-    describe("price", function () {
-      context("when not changed", function () {
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.price()).to.equal(parseEther("0.02"));
-        });
-      });
-
-      context("when changed", function () {
-        beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setPrice(parseEther("1.234"));
-        });
-
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.price()).to.equal(parseEther("1.234"));
-        });
-      });
-    });
-
-    describe("privateMinted", function () {
-      context("when not changed", function () {
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.privateMinted(this.signers.alice.address)).to.equal(0);
-        });
-      });
-
-      context("when changed", function () {
-        beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setPrivateMinted(this.signers.alice.address, 20);
-        });
-
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.privateMinted(this.signers.alice.address)).to.equal(20);
         });
       });
     });
@@ -172,60 +188,6 @@ export function shouldBehaveLikePawnBots(): void {
       });
     });
 
-    describe("saleActive", function () {
-      context("when not changed", function () {
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.saleActive()).to.equal(false);
-        });
-      });
-
-      context("when changed", function () {
-        beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setSaleActive(true);
-        });
-
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.saleActive()).to.equal(true);
-        });
-      });
-    });
-
-    describe("saleCap", function () {
-      context("when not changed", function () {
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.saleCap()).to.equal(9000);
-        });
-      });
-
-      context("when changed", function () {
-        beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setSaleCap(8000);
-        });
-
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.saleCap()).to.equal(8000);
-        });
-      });
-    });
-
-    describe("salePhase", function () {
-      context("when not changed", function () {
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.salePhase()).to.equal(SalePhase.PRIVATE);
-        });
-      });
-
-      context("when changed", function () {
-        beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setSalePhase(SalePhase.PUBLIC);
-        });
-
-        it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.salePhase()).to.be.equal(SalePhase.PUBLIC);
-        });
-      });
-    });
-
     describe("tokenURI", function () {
       context("when token does not exist", function () {
         it("reverts", async function () {
@@ -282,37 +244,37 @@ export function shouldBehaveLikePawnBots(): void {
       });
 
       context("when called by owner", function () {
-        context("when sale is not paused", function () {
+        context("when mint is not paused", function () {
           beforeEach(async function () {
-            await this.contracts.pawnBots.__godMode_setSaleActive(true);
+            await this.contracts.pawnBots.__godMode_setMintActive(true);
           });
 
           it("reverts", async function () {
-            await expect(this.contracts.pawnBots.burnUnsold(0)).to.be.revertedWith(PawnBotsErrors.SALE_NOT_PAUSED);
+            await expect(this.contracts.pawnBots.burnUnsold(0)).to.be.revertedWith(PawnBotsErrors.MINT_NOT_PAUSED);
           });
         });
 
-        context("when sale is paused", function () {
+        context("when mint is paused", function () {
           beforeEach(async function () {
-            await this.contracts.pawnBots.__godMode_setSaleActive(false);
-            await this.contracts.pawnBots.__godMode_setSaleCap("300");
+            await this.contracts.pawnBots.__godMode_setMintActive(false);
+            await this.contracts.pawnBots.__godMode_setMintCap("300");
             await this.contracts.pawnBots.__godMode_mint(this.signers.admin.address, "900");
             await this.contracts.pawnBots.__godMode_setReserveMinted("700");
           });
 
-          context("when `burnAmount` exceeds remaining sale mints", function () {
+          context("when `burnAmount` exceeds remaining mints", function () {
             beforeEach(async function () {
               this.burnAmount = "101";
             });
 
             it("reverts", async function () {
               await expect(this.contracts.pawnBots.burnUnsold(this.burnAmount)).to.be.revertedWith(
-                PawnBotsErrors.REMAINING_SALE_EXCEEDED,
+                PawnBotsErrors.REMAINING_MINTS_EXCEEDED,
               );
             });
           });
 
-          context("when `burnAmount` does not exceed remaining sale mints", function () {
+          context("when `burnAmount` does not exceed remaining mints", function () {
             beforeEach(async function () {
               this.burnAmount = "100";
             });
@@ -320,7 +282,7 @@ export function shouldBehaveLikePawnBots(): void {
             it("succeeds", async function () {
               const contractCall0 = await this.contracts.pawnBots.burnUnsold(this.burnAmount);
               await expect(contractCall0).to.emit(this.contracts.pawnBots, "BurnUnsold").withArgs("100");
-              expect(await this.contracts.pawnBots.saleCap()).to.be.equal("200");
+              expect(await this.contracts.pawnBots.mintCap()).to.be.equal("200");
             });
           });
         });
@@ -328,9 +290,9 @@ export function shouldBehaveLikePawnBots(): void {
     });
 
     describe("mintPrivate", function () {
-      context("when sale is paused", function () {
+      context("when mint is paused", function () {
         beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setSaleActive(false);
+          await this.contracts.pawnBots.__godMode_setMintActive(false);
         });
 
         it("reverts", async function () {
@@ -338,18 +300,18 @@ export function shouldBehaveLikePawnBots(): void {
             this.contracts.pawnBots
               .connect(this.signers.alice)
               .mintPrivate("0", this.getMerkleProof(this.signers.alice.address)),
-          ).to.be.revertedWith(PawnBotsErrors.SALE_NOT_ACTIVE);
+          ).to.be.revertedWith(PawnBotsErrors.MINT_NOT_ACTIVE);
         });
       });
 
-      context("when sale is active", function () {
+      context("when mint is active", function () {
         beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setSaleActive(true);
+          await this.contracts.pawnBots.__godMode_setMintActive(true);
         });
 
-        context("when called while sale is set to public", function () {
+        context("when called while mint is set to public", function () {
           beforeEach(async function () {
-            await this.contracts.pawnBots.__godMode_setSalePhase(SalePhase.PUBLIC);
+            await this.contracts.pawnBots.__godMode_setMintPhase(MintPhase.PUBLIC);
           });
 
           it("reverts", async function () {
@@ -357,13 +319,13 @@ export function shouldBehaveLikePawnBots(): void {
               this.contracts.pawnBots
                 .connect(this.signers.alice)
                 .mintPrivate("0", this.getMerkleProof(this.signers.alice.address)),
-            ).to.be.revertedWith(PawnBotsErrors.SALE_PHASE_MISMATCH);
+            ).to.be.revertedWith(PawnBotsErrors.MINT_PHASE_MISMATCH);
           });
         });
 
-        context("when called while sale is set to private", function () {
+        context("when called while mint is set to private", function () {
           beforeEach(async function () {
-            await this.contracts.pawnBots.__godMode_setSalePhase(SalePhase.PRIVATE);
+            await this.contracts.pawnBots.__godMode_setMintPhase(MintPhase.PRIVATE);
           });
 
           context("when minter is not whitelisted", function () {
@@ -371,16 +333,16 @@ export function shouldBehaveLikePawnBots(): void {
               await expect(
                 this.contracts.pawnBots
                   .connect(this.signers.bob)
-                  .mintPrivate("0", this.getMerkleProof(this.signers.alice.address)),
-              ).to.be.revertedWith(PawnBotsErrors.USER_NOT_ELIGIBLE);
+                  .mintPrivate("0", this.getMerkleProof(this.signers.bob.address)),
+              ).to.be.revertedWith(PawnBotsErrors.ACCOUNT_NOT_ALLOWED);
             });
           });
 
           context("when minter is whitelisted", function () {
-            context("when `mintAmount` exceeds minter's private mint limit", function () {
+            context("when `mintAmount` exceeds minter's mint limit", function () {
               beforeEach(async function () {
-                await this.contracts.pawnBots.__godMode_setMaxPrivatePerAccount("2");
-                await this.contracts.pawnBots.__godMode_setPrivateMinted(this.signers.alice.address, "2");
+                await this.contracts.pawnBots.__godMode_setMaxPerAccount("2");
+                await this.contracts.pawnBots.__godMode_setMinted(this.signers.alice.address, "2");
               });
 
               it("reverts", async function () {
@@ -388,19 +350,19 @@ export function shouldBehaveLikePawnBots(): void {
                   this.contracts.pawnBots
                     .connect(this.signers.alice)
                     .mintPrivate("1", this.getMerkleProof(this.signers.alice.address)),
-                ).to.be.revertedWith(PawnBotsErrors.MAX_PRIVATE_PER_ACCOUNT_EXCEEDED);
+                ).to.be.revertedWith(PawnBotsErrors.MAX_PER_ACCOUNT_EXCEEDED);
               });
             });
 
-            context("when `mintAmount` does not exceed minter's private mint limit", function () {
+            context("when `mintAmount` does not exceed minter's mint limit", function () {
               beforeEach(async function () {
-                await this.contracts.pawnBots.__godMode_setMaxPrivatePerAccount("2");
-                await this.contracts.pawnBots.__godMode_setPrivateMinted(this.signers.alice.address, "0");
+                await this.contracts.pawnBots.__godMode_setMaxPerAccount("2");
+                await this.contracts.pawnBots.__godMode_setMinted(this.signers.alice.address, "0");
               });
 
-              context("when `mintAmount` exceeds remaining sale mints", function () {
+              context("when `mintAmount` exceeds remaining mints", function () {
                 beforeEach(async function () {
-                  await this.contracts.pawnBots.__godMode_setSaleCap("201");
+                  await this.contracts.pawnBots.__godMode_setMintCap("201");
                   await this.contracts.pawnBots.__godMode_mint(this.signers.admin.address, "900");
                   await this.contracts.pawnBots.__godMode_setReserveMinted("700");
                 });
@@ -410,81 +372,68 @@ export function shouldBehaveLikePawnBots(): void {
                     this.contracts.pawnBots
                       .connect(this.signers.alice)
                       .mintPrivate("2", this.getMerkleProof(this.signers.alice.address)),
-                  ).to.be.revertedWith(PawnBotsErrors.REMAINING_SALE_EXCEEDED);
+                  ).to.be.revertedWith(PawnBotsErrors.REMAINING_MINTS_EXCEEDED);
                 });
               });
 
-              context("when `mintAmount` does not exceed remaining sale mints", function () {
+              context("when `mintAmount` does not exceed remaining mints", function () {
                 beforeEach(async function () {
-                  await this.contracts.pawnBots.__godMode_setSaleCap("202");
+                  await this.contracts.pawnBots.__godMode_setMintCap("202");
                   await this.contracts.pawnBots.__godMode_mint(this.signers.admin.address, "900");
                   await this.contracts.pawnBots.__godMode_setReserveMinted("700");
                 });
 
-                context("when user sends less funds than the needed value", function () {
+                context("when user does not have minimum MFT balance required", function () {
                   beforeEach(async function () {
-                    this.funds = (await this.contracts.pawnBots.price()).mul("2").sub("1");
+                    // Send the MFT required fee to the user account
+                    const whale = "0xa984Faa7a5Ff8Ee8182572d84Db12bc4B88983f7";
+                    const signer = await ethers.getSigner(whale);
+                    await network.provider.request({
+                      method: "hardhat_impersonateAccount",
+                      params: [whale],
+                    });
+                    await this.contracts.mft.connect(signer).transfer(this.signers.alice.address, "999999999999999999");
+                    await network.provider.request({
+                      method: "hardhat_stopImpersonatingAccount",
+                      params: [whale],
+                    });
                   });
 
                   it("reverts", async function () {
                     await expect(
                       this.contracts.pawnBots
                         .connect(this.signers.alice)
-                        .mintPrivate("2", this.getMerkleProof(this.signers.alice.address), {
-                          value: this.funds,
-                        }),
-                    ).to.be.revertedWith(PawnBotsErrors.INSUFFICIENT_FUNDS_SENT);
+                        .mintPrivate("2", this.getMerkleProof(this.signers.alice.address)),
+                    ).to.be.revertedWith(PawnBotsErrors.NOT_ENOUGH_MFT_BALANCE);
                   });
                 });
 
-                context("when user sends the exact needed value", function () {
+                context("when user has minimum MFT balance required", function () {
                   beforeEach(async function () {
-                    this.funds = (await this.contracts.pawnBots.price()).mul("2");
+                    // Send the MFT required fee to the user account
+                    const whale = "0xa984Faa7a5Ff8Ee8182572d84Db12bc4B88983f7";
+                    const signer = await ethers.getSigner(whale);
+                    await network.provider.request({
+                      method: "hardhat_impersonateAccount",
+                      params: [whale],
+                    });
+                    await this.contracts.mft
+                      .connect(signer)
+                      .transfer(this.signers.alice.address, "1000000000000000000");
+                    await network.provider.request({
+                      method: "hardhat_stopImpersonatingAccount",
+                      params: [whale],
+                    });
                   });
 
                   it("succeeds", async function () {
                     const contractCall = await this.contracts.pawnBots
                       .connect(this.signers.alice)
-                      .mintPrivate("2", this.getMerkleProof(this.signers.alice.address), {
-                        value: this.funds,
-                      });
+                      .mintPrivate("2", this.getMerkleProof(this.signers.alice.address));
                     await expect(contractCall)
                       .to.emit(this.contracts.pawnBots, "Mint")
-                      .withArgs(
-                        this.signers.alice.address,
-                        "2",
-                        await this.contracts.pawnBots.price(),
-                        SalePhase.PRIVATE,
-                      );
+                      .withArgs(this.signers.alice.address, "2", MintPhase.PRIVATE);
                     expect(await this.contracts.pawnBots.balanceOf(this.signers.alice.address)).to.be.equal("2");
-                    expect(await ethers.provider.getBalance(this.contracts.pawnBots.address)).to.be.equal(this.funds);
-                  });
-                });
-
-                context("when user sends more than the needed value", function () {
-                  beforeEach(async function () {
-                    this.change = parseEther("1");
-                    this.funds = (await this.contracts.pawnBots.price()).mul("2").add(this.change);
-                  });
-
-                  it("succeeds", async function () {
-                    const contractCall = await this.contracts.pawnBots
-                      .connect(this.signers.alice)
-                      .mintPrivate("2", this.getMerkleProof(this.signers.alice.address), {
-                        value: this.funds,
-                      });
-                    await expect(contractCall)
-                      .to.emit(this.contracts.pawnBots, "Mint")
-                      .withArgs(
-                        this.signers.alice.address,
-                        "2",
-                        await this.contracts.pawnBots.price(),
-                        SalePhase.PRIVATE,
-                      );
-                    expect(await this.contracts.pawnBots.balanceOf(this.signers.alice.address)).to.be.equal("2");
-                    expect(await ethers.provider.getBalance(this.contracts.pawnBots.address)).to.be.equal(
-                      this.funds.sub(this.change),
-                    );
                   });
                 });
               });
@@ -495,126 +444,123 @@ export function shouldBehaveLikePawnBots(): void {
     });
 
     describe("mintPublic", function () {
-      context("when sale is paused", function () {
+      context("when mint is paused", function () {
         beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setSaleActive(false);
+          await this.contracts.pawnBots.__godMode_setMintActive(false);
         });
 
         it("reverts", async function () {
           await expect(this.contracts.pawnBots.connect(this.signers.alice).mintPublic("0")).to.be.revertedWith(
-            PawnBotsErrors.SALE_NOT_ACTIVE,
+            PawnBotsErrors.MINT_NOT_ACTIVE,
           );
         });
       });
 
-      context("when sale is active", function () {
+      context("when mint is active", function () {
         beforeEach(async function () {
-          await this.contracts.pawnBots.__godMode_setSaleActive(true);
+          await this.contracts.pawnBots.__godMode_setMintActive(true);
         });
 
-        context("when called while sale is set to private", function () {
+        context("when called while mint is set to private", function () {
           beforeEach(async function () {
-            await this.contracts.pawnBots.__godMode_setSalePhase(SalePhase.PRIVATE);
+            await this.contracts.pawnBots.__godMode_setMintPhase(MintPhase.PRIVATE);
           });
 
           it("reverts", async function () {
             await expect(this.contracts.pawnBots.connect(this.signers.alice).mintPublic("0")).to.be.revertedWith(
-              PawnBotsErrors.SALE_PHASE_MISMATCH,
+              PawnBotsErrors.MINT_PHASE_MISMATCH,
             );
           });
         });
 
-        context("when called while sale is set to public", function () {
+        context("when called while mint is set to public", function () {
           beforeEach(async function () {
-            await this.contracts.pawnBots.__godMode_setSalePhase(SalePhase.PUBLIC);
+            await this.contracts.pawnBots.__godMode_setMintPhase(MintPhase.PUBLIC);
           });
 
-          context("when `mintAmount` exceeds public mint limit", function () {
+          context("when `mintAmount` exceeds minter's mint limit", function () {
             beforeEach(async function () {
-              await this.contracts.pawnBots.__godMode_setMaxPublicPerTx("2");
+              await this.contracts.pawnBots.__godMode_setMaxPerAccount("2");
             });
 
             it("reverts", async function () {
               await expect(this.contracts.pawnBots.connect(this.signers.alice).mintPublic("3")).to.be.revertedWith(
-                PawnBotsErrors.MAX_PUBLIC_PER_TX_EXCEEDED,
+                PawnBotsErrors.MAX_PER_ACCOUNT_EXCEEDED,
               );
             });
           });
 
-          context("when `mintAmount` does not exceed public mint limit", function () {
+          context("when `mintAmount` does not exceed minter's mint limit", function () {
             beforeEach(async function () {
-              await this.contracts.pawnBots.__godMode_setMaxPublicPerTx("2");
+              await this.contracts.pawnBots.__godMode_setMaxPerAccount("2");
             });
 
-            context("when `mintAmount` exceeds remaining sale mints", function () {
+            context("when `mintAmount` exceeds remaining mints", function () {
               beforeEach(async function () {
-                await this.contracts.pawnBots.__godMode_setSaleCap("201");
+                await this.contracts.pawnBots.__godMode_setMintCap("201");
                 await this.contracts.pawnBots.__godMode_mint(this.signers.admin.address, "900");
                 await this.contracts.pawnBots.__godMode_setReserveMinted("700");
               });
 
               it("reverts", async function () {
                 await expect(this.contracts.pawnBots.connect(this.signers.alice).mintPublic("2")).to.be.revertedWith(
-                  PawnBotsErrors.REMAINING_SALE_EXCEEDED,
+                  PawnBotsErrors.REMAINING_MINTS_EXCEEDED,
                 );
               });
             });
 
-            context("when `mintAmount` does not exceed remaining sale mints", function () {
+            context("when `mintAmount` does not exceed remaining mints", function () {
               beforeEach(async function () {
-                await this.contracts.pawnBots.__godMode_setSaleCap("202");
+                await this.contracts.pawnBots.__godMode_setMintCap("202");
                 await this.contracts.pawnBots.__godMode_mint(this.signers.admin.address, "900");
                 await this.contracts.pawnBots.__godMode_setReserveMinted("700");
               });
 
-              context("when user sends less funds than the needed value", function () {
+              context("when user does not have minimum MFT balance required", function () {
                 beforeEach(async function () {
-                  this.funds = (await this.contracts.pawnBots.price()).mul("2").sub("1");
+                  // Send the MFT required fee to the user account
+                  const whale = "0xa984Faa7a5Ff8Ee8182572d84Db12bc4B88983f7";
+                  const signer = await ethers.getSigner(whale);
+                  await network.provider.request({
+                    method: "hardhat_impersonateAccount",
+                    params: [whale],
+                  });
+                  await this.contracts.mft.connect(signer).transfer(this.signers.alice.address, "999999999999999999");
+                  await network.provider.request({
+                    method: "hardhat_stopImpersonatingAccount",
+                    params: [whale],
+                  });
                 });
 
                 it("reverts", async function () {
-                  await expect(
-                    this.contracts.pawnBots.connect(this.signers.alice).mintPublic("2", {
-                      value: this.funds,
-                    }),
-                  ).to.be.revertedWith(PawnBotsErrors.INSUFFICIENT_FUNDS_SENT);
-                });
-              });
-
-              context("when user sends the exact needed value", function () {
-                beforeEach(async function () {
-                  this.funds = (await this.contracts.pawnBots.price()).mul("2");
-                });
-
-                it("succeeds", async function () {
-                  const contractCall = await this.contracts.pawnBots.connect(this.signers.alice).mintPublic("2", {
-                    value: this.funds,
-                  });
-                  await expect(contractCall)
-                    .to.emit(this.contracts.pawnBots, "Mint")
-                    .withArgs(this.signers.alice.address, "2", await this.contracts.pawnBots.price(), SalePhase.PUBLIC);
-                  expect(await this.contracts.pawnBots.balanceOf(this.signers.alice.address)).to.be.equal("2");
-                  expect(await ethers.provider.getBalance(this.contracts.pawnBots.address)).to.be.equal(this.funds);
-                });
-              });
-
-              context("when user sends more than the needed value", function () {
-                beforeEach(async function () {
-                  this.change = parseEther("1");
-                  this.funds = (await this.contracts.pawnBots.price()).mul("2").add(this.change);
-                });
-
-                it("succeeds", async function () {
-                  const contractCall = await this.contracts.pawnBots.connect(this.signers.alice).mintPublic("2", {
-                    value: this.funds,
-                  });
-                  await expect(contractCall)
-                    .to.emit(this.contracts.pawnBots, "Mint")
-                    .withArgs(this.signers.alice.address, "2", await this.contracts.pawnBots.price(), SalePhase.PUBLIC);
-                  expect(await this.contracts.pawnBots.balanceOf(this.signers.alice.address)).to.be.equal("2");
-                  expect(await ethers.provider.getBalance(this.contracts.pawnBots.address)).to.be.equal(
-                    this.funds.sub(this.change),
+                  await expect(this.contracts.pawnBots.connect(this.signers.bob).mintPublic("2")).to.be.revertedWith(
+                    PawnBotsErrors.NOT_ENOUGH_MFT_BALANCE,
                   );
+                });
+              });
+
+              context("when user has minimum MFT balance required", function () {
+                beforeEach(async function () {
+                  // Send the MFT required fee to the user account
+                  const whale = "0xa984Faa7a5Ff8Ee8182572d84Db12bc4B88983f7";
+                  const signer = await ethers.getSigner(whale);
+                  await network.provider.request({
+                    method: "hardhat_impersonateAccount",
+                    params: [whale],
+                  });
+                  await this.contracts.mft.connect(signer).transfer(this.signers.bob.address, "1000000000000000000");
+                  await network.provider.request({
+                    method: "hardhat_stopImpersonatingAccount",
+                    params: [whale],
+                  });
+                });
+
+                it("succeeds", async function () {
+                  const contractCall = await this.contracts.pawnBots.connect(this.signers.bob).mintPublic("2");
+                  await expect(contractCall)
+                    .to.emit(this.contracts.pawnBots, "Mint")
+                    .withArgs(this.signers.bob.address, "2", MintPhase.PUBLIC);
+                  expect(await this.contracts.pawnBots.balanceOf(this.signers.bob.address)).to.be.equal("2");
                 });
               });
             });
@@ -679,16 +625,16 @@ export function shouldBehaveLikePawnBots(): void {
       context("when contract contains the VRF fee in its balance", function () {
         beforeEach(async function () {
           // Send the VRF fee to the contract
-          const linkTeam = "0x6f61507F902e1c22BCd7aa2C0452cd2212009B61";
-          const signer = await ethers.getSigner(linkTeam);
+          const whale = "0xbe6977E08D4479C0A6777539Ae0e8fa27BE4e9d6";
+          const signer = await ethers.getSigner(whale);
           await network.provider.request({
             method: "hardhat_impersonateAccount",
-            params: [linkTeam],
+            params: [whale],
           });
           await this.contracts.link.connect(signer).transfer(this.contracts.pawnBots.address, vrfFee);
           await network.provider.request({
             method: "hardhat_stopImpersonatingAccount",
-            params: [linkTeam],
+            params: [whale],
           });
         });
 
@@ -817,31 +763,10 @@ export function shouldBehaveLikePawnBots(): void {
       });
     });
 
-    describe("setMaxPrivatePerAccount", function () {
+    describe("setMaxPerAccount", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(
-            this.contracts.pawnBots.connect(this.signers.alice).setMaxPrivatePerAccount(0),
-          ).to.be.revertedWith(ImportedErrors.CALLER_NOT_OWNER);
-        });
-      });
-
-      context("when called by owner", function () {
-        it("succeeds", async function () {
-          const maxPrivatePerAccount = 10;
-          const contractCall = await this.contracts.pawnBots.setMaxPrivatePerAccount(maxPrivatePerAccount);
-          await expect(contractCall)
-            .to.emit(this.contracts.pawnBots, "SetMaxPrivatePerAccount")
-            .withArgs(maxPrivatePerAccount);
-          expect(await this.contracts.pawnBots.maxPrivatePerAccount()).to.be.equal(maxPrivatePerAccount);
-        });
-      });
-    });
-
-    describe("setMaxPublicPerTx", function () {
-      context("when not called by owner", function () {
-        it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).setMaxPublicPerTx(0)).to.be.revertedWith(
+          await expect(this.contracts.pawnBots.connect(this.signers.alice).setMaxPerAccount(0)).to.be.revertedWith(
             ImportedErrors.CALLER_NOT_OWNER,
           );
         });
@@ -849,10 +774,12 @@ export function shouldBehaveLikePawnBots(): void {
 
       context("when called by owner", function () {
         it("succeeds", async function () {
-          const maxPublicPerTx = 10;
-          const contractCall = await this.contracts.pawnBots.setMaxPublicPerTx(maxPublicPerTx);
-          await expect(contractCall).to.emit(this.contracts.pawnBots, "SetMaxPublicPerTx").withArgs(maxPublicPerTx);
-          expect(await this.contracts.pawnBots.maxPublicPerTx()).to.be.equal(maxPublicPerTx);
+          const maxPrivatePerAccount = 10;
+          const contractCall = await this.contracts.pawnBots.setMaxPerAccount(maxPrivatePerAccount);
+          await expect(contractCall)
+            .to.emit(this.contracts.pawnBots, "SetMaxPerAccount")
+            .withArgs(maxPrivatePerAccount);
+          expect(await this.contracts.pawnBots.maxPerAccount()).to.be.equal(maxPrivatePerAccount);
         });
       });
     });
@@ -873,25 +800,6 @@ export function shouldBehaveLikePawnBots(): void {
           const contractCall = await this.contracts.pawnBots.setMerkleRoot(merkleRoot);
           await expect(contractCall).to.emit(this.contracts.pawnBots, "SetMerkleRoot").withArgs(merkleRoot);
           expect(await this.contracts.pawnBots.__godMode_returnMerkleRoot()).to.be.equal(merkleRoot);
-        });
-      });
-    });
-
-    describe("setPrice", function () {
-      context("when not called by owner", function () {
-        it("reverts", async function () {
-          await expect(
-            this.contracts.pawnBots.connect(this.signers.alice).setPrice(parseEther("0.1")),
-          ).to.be.revertedWith(ImportedErrors.CALLER_NOT_OWNER);
-        });
-      });
-
-      context("when called by owner", function () {
-        it("succeeds", async function () {
-          const price = parseEther("1.234");
-          const contractCall = await this.contracts.pawnBots.setPrice(price);
-          await expect(contractCall).to.emit(this.contracts.pawnBots, "SetPrice").withArgs(price);
-          expect(await this.contracts.pawnBots.price()).to.be.equal(price);
         });
       });
     });
@@ -936,10 +844,10 @@ export function shouldBehaveLikePawnBots(): void {
       });
     });
 
-    describe("setSaleActive", function () {
+    describe("setMintActive", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
-          await expect(this.contracts.pawnBots.connect(this.signers.alice).setSaleActive(false)).to.be.revertedWith(
+          await expect(this.contracts.pawnBots.connect(this.signers.alice).setMintActive(false)).to.be.revertedWith(
             ImportedErrors.CALLER_NOT_OWNER,
           );
         });
@@ -947,19 +855,19 @@ export function shouldBehaveLikePawnBots(): void {
 
       context("when called by owner", function () {
         it("succeeds", async function () {
-          const saleActive = true;
-          const contractCall = await this.contracts.pawnBots.setSaleActive(saleActive);
-          await expect(contractCall).to.emit(this.contracts.pawnBots, "SetSaleActive").withArgs(saleActive);
-          expect(await this.contracts.pawnBots.saleActive()).to.be.equal(saleActive);
+          const mintActive = true;
+          const contractCall = await this.contracts.pawnBots.setMintActive(mintActive);
+          await expect(contractCall).to.emit(this.contracts.pawnBots, "SetMintActive").withArgs(mintActive);
+          expect(await this.contracts.pawnBots.mintActive()).to.be.equal(mintActive);
         });
       });
     });
 
-    describe("setSalePhase", function () {
+    describe("setMintPhase", function () {
       context("when not called by owner", function () {
         it("reverts", async function () {
           await expect(
-            this.contracts.pawnBots.connect(this.signers.alice).setSalePhase(SalePhase.PRIVATE),
+            this.contracts.pawnBots.connect(this.signers.alice).setMintPhase(MintPhase.PRIVATE),
           ).to.be.revertedWith(ImportedErrors.CALLER_NOT_OWNER);
         });
       });
@@ -967,80 +875,11 @@ export function shouldBehaveLikePawnBots(): void {
       context("when called by owner", function () {
         context("when called by owner", function () {
           it("succeeds", async function () {
-            const salePhase = SalePhase.PUBLIC;
-            const contractCall = await this.contracts.pawnBots.setSalePhase(salePhase);
-            await expect(contractCall).to.emit(this.contracts.pawnBots, "SetSalePhase").withArgs(salePhase);
-            expect(await this.contracts.pawnBots.salePhase()).to.be.equal(salePhase);
+            const mintPhase = MintPhase.PUBLIC;
+            const contractCall = await this.contracts.pawnBots.setMintPhase(mintPhase);
+            await expect(contractCall).to.emit(this.contracts.pawnBots, "SetMintPhase").withArgs(mintPhase);
+            expect(await this.contracts.pawnBots.mintPhase()).to.be.equal(mintPhase);
           });
-        });
-      });
-    });
-
-    describe("withdraw", function () {
-      context("when not called by owner", function () {
-        it("reverts", async function () {
-          const signer = this.signers.alice;
-          await expect(this.contracts.pawnBots.connect(signer).withdraw("0")).to.be.revertedWith(
-            ImportedErrors.CALLER_NOT_OWNER,
-          );
-        });
-      });
-
-      context("when called by owner", function () {
-        beforeEach(async function () {
-          this.amount = parseEther("0.1");
-          await this.contracts.pawnBots.__godMode_addEther({ value: this.amount });
-        });
-
-        it("succeeds", async function () {
-          const signer = this.signers.admin;
-          const balanceBefore = await signer.getBalance();
-          const contractCall = await this.contracts.pawnBots.withdraw(this.amount);
-          await expect(contractCall).to.emit(this.contracts.pawnBots, "Withdraw").withArgs(this.amount);
-          const balanceAfter = await signer.getBalance();
-          const tx = await contractCall.wait();
-          const gas = tx.gasUsed.mul(tx.effectiveGasPrice);
-          expect(balanceAfter.sub(balanceBefore).add(gas)).to.be.equal(this.amount);
-        });
-      });
-    });
-
-    describe("withdrawErc20", function () {
-      context("when not called by owner", function () {
-        it("reverts", async function () {
-          const signer = this.signers.alice;
-          await expect(
-            this.contracts.pawnBots.connect(signer).withdrawErc20(this.contracts.link.address, "0"),
-          ).to.be.revertedWith(ImportedErrors.CALLER_NOT_OWNER);
-        });
-      });
-
-      context("when called by owner", function () {
-        beforeEach(async function () {
-          this.amount = parseEther("1.234");
-          // Send some LINK to the contract
-          const linkTeam = "0x6f61507F902e1c22BCd7aa2C0452cd2212009B61";
-          const signer = await ethers.getSigner(linkTeam);
-          await network.provider.request({
-            method: "hardhat_impersonateAccount",
-            params: [linkTeam],
-          });
-          await this.contracts.link.connect(signer).transfer(this.contracts.pawnBots.address, this.amount);
-          await network.provider.request({
-            method: "hardhat_stopImpersonatingAccount",
-            params: [linkTeam],
-          });
-        });
-
-        it("succeeds", async function () {
-          const signer = this.signers.admin;
-          const balanceBefore = await this.contracts.link.balanceOf(signer.address);
-          const contractCall = await this.contracts.pawnBots.withdrawErc20(this.contracts.link.address, this.amount);
-          await expect(contractCall)
-            .to.emit(this.contracts.pawnBots, "WithdrawErc20")
-            .withArgs(this.contracts.link.address, this.amount);
-          const balanceAfter = await this.contracts.link.balanceOf(signer.address);
-          expect(balanceAfter.sub(balanceBefore)).to.be.equal(this.amount);
         });
       });
     });
