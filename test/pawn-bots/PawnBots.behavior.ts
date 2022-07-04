@@ -12,8 +12,8 @@ export function shouldBehaveLikePawnBots(): void {
       const COLLECTION_SIZE = await this.contracts.pawnBots.COLLECTION_SIZE();
       const RESERVE_CAP = await this.contracts.pawnBots.RESERVE_CAP();
 
-      expect(COLLECTION_SIZE).to.equal("10000");
-      expect(RESERVE_CAP).to.equal("1000");
+      expect(COLLECTION_SIZE).to.equal("8888");
+      expect(RESERVE_CAP).to.equal("2100");
 
       expect(await this.contracts.pawnBots.name()).to.equal("Pawn Bots");
       expect(await this.contracts.pawnBots.mintCap()).to.equal(COLLECTION_SIZE.sub(RESERVE_CAP));
@@ -61,7 +61,7 @@ export function shouldBehaveLikePawnBots(): void {
     describe("mintCap", function () {
       context("when not changed", function () {
         it("returns the correct value", async function () {
-          expect(await this.contracts.pawnBots.mintCap()).to.equal(9000);
+          expect(await this.contracts.pawnBots.mintCap()).to.equal(6788);
         });
       });
 
@@ -214,7 +214,7 @@ export function shouldBehaveLikePawnBots(): void {
 
           context("when offset not changed", function () {
             it("returns the correct value", async function () {
-              expect(await this.contracts.pawnBots.tokenURI(0)).to.be.equal(this.baseURI + "box.json");
+              expect(await this.contracts.pawnBots.tokenURI(0)).to.be.equal(this.baseURI + "box");
             });
           });
 
@@ -224,7 +224,7 @@ export function shouldBehaveLikePawnBots(): void {
             });
 
             it("returns the correct value", async function () {
-              expect(await this.contracts.pawnBots.tokenURI(0)).to.be.equal(this.baseURI + "4856" + ".json");
+              expect(await this.contracts.pawnBots.tokenURI(0)).to.be.equal(this.baseURI + "0");
             });
           });
         });
@@ -573,9 +573,9 @@ export function shouldBehaveLikePawnBots(): void {
       context("when not called by owner", function () {
         it("reverts", async function () {
           const signer = this.signers.alice;
-          await expect(this.contracts.pawnBots.connect(signer).reserve("0")).to.be.revertedWith(
-            ImportedErrors.CALLER_NOT_OWNER,
-          );
+          await expect(
+            this.contracts.pawnBots.connect(signer).reserve("0", this.signers.alice.address),
+          ).to.be.revertedWith(ImportedErrors.CALLER_NOT_OWNER);
         });
       });
 
@@ -590,9 +590,9 @@ export function shouldBehaveLikePawnBots(): void {
           });
 
           it("reverts", async function () {
-            await expect(this.contracts.pawnBots.reserve(this.reserveAmount)).to.be.revertedWith(
-              PawnBotsErrors.REMAINING_RESERVE_EXCEEDED,
-            );
+            await expect(
+              this.contracts.pawnBots.reserve(this.reserveAmount, this.signers.alice.address),
+            ).to.be.revertedWith(PawnBotsErrors.REMAINING_RESERVE_EXCEEDED);
           });
         });
 
@@ -607,9 +607,10 @@ export function shouldBehaveLikePawnBots(): void {
 
           it("succeeds", async function () {
             const reserveAmount = 10;
-            const contractCall = await this.contracts.pawnBots.reserve(reserveAmount);
-            await expect(contractCall).to.emit(this.contracts.pawnBots, "Reserve").withArgs(reserveAmount);
-            expect(await this.contracts.pawnBots.balanceOf(this.signers.admin.address)).to.be.equal(reserveAmount);
+            const recipient = this.signers.alice.address;
+            const contractCall = await this.contracts.pawnBots.reserve(reserveAmount, recipient);
+            await expect(contractCall).to.emit(this.contracts.pawnBots, "Reserve").withArgs(reserveAmount, recipient);
+            expect(await this.contracts.pawnBots.balanceOf(recipient)).to.be.equal(reserveAmount);
           });
         });
       });

@@ -89,15 +89,14 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
 
     /// PUBLIC STORAGE ///
 
-    // TODO: finalize constant values
     /// @dev The theoretical collection size.
-    uint256 public constant COLLECTION_SIZE = 10_000;
+    uint256 public constant COLLECTION_SIZE = 8888;
 
     /// @dev The MFT token contract address.
     address public constant MFT = 0xDF2C7238198Ad8B389666574f2d8bc411A4b7428;
 
     /// @dev The token reserve allocated for contract owner.
-    uint256 public constant RESERVE_CAP = 1_000;
+    uint256 public constant RESERVE_CAP = 2100;
 
     /// @inheritdoc IPawnBots
     uint256 public override maxPerAccount;
@@ -164,11 +163,9 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
         string memory mBaseURI = _baseURI();
         uint256 mOffset = offset;
         if (mOffset == 0) {
-            // TODO: live-test possible issues with multiple token IDs
-            return bytes(mBaseURI).length > 0 ? string(abi.encodePacked(mBaseURI, "box", ".json")) : "";
+            return bytes(mBaseURI).length > 0 ? string(abi.encodePacked(mBaseURI, "box")) : "";
         } else {
-            uint256 moddedId = (tokenId + mOffset) % COLLECTION_SIZE;
-            return bytes(mBaseURI).length > 0 ? string(abi.encodePacked(mBaseURI, moddedId.toString(), ".json")) : "";
+            return bytes(mBaseURI).length > 0 ? string(abi.encodePacked(mBaseURI, tokenId.toString())) : "";
         }
     }
 
@@ -245,7 +242,7 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
     }
 
     /// @inheritdoc IPawnBots
-    function reserve(uint256 reserveAmount) external override onlyOwner nonReentrant {
+    function reserve(uint256 reserveAmount, address recipient) external override onlyOwner nonReentrant {
         if (reserveAmount + reserveMinted > RESERVE_CAP) {
             revert PawnBots__RemainingReserveExceeded();
         }
@@ -254,8 +251,8 @@ contract PawnBots is IPawnBots, ERC721A, Ownable, ReentrancyGuard, VRFConsumerBa
             reserveMinted += reserveAmount;
         }
 
-        _safeMint(msg.sender, reserveAmount);
-        emit Reserve(reserveAmount);
+        _safeMint(recipient, reserveAmount);
+        emit Reserve(reserveAmount, recipient);
     }
 
     /// @inheritdoc IPawnBots
