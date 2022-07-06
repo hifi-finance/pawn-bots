@@ -25,7 +25,8 @@ interface IPawnBots {
 
     /// @notice Emitted when reserved tokens are minted.
     /// @param reserveAmount The amount of reserved tokens minted.
-    event Reserve(uint256 reserveAmount);
+    /// @param recipient The recipient of reserved tokens minted.
+    event Reserve(uint256 reserveAmount, address recipient);
 
     /// @notice Emitted when the collection metadata is revealed.
     event Reveal();
@@ -141,7 +142,8 @@ interface IPawnBots {
     /// - `reserveAmount` cannot exceed remaining reserve.
     ///
     /// @param reserveAmount The amount of reserved tokens to mint.
-    function reserve(uint256 reserveAmount) external;
+    /// @param recipient The recipient of reserved tokens to mint.
+    function reserve(uint256 reserveAmount, address recipient) external;
 
     /// @notice Reveal the collection metadata.
     ///

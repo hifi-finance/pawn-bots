@@ -41,7 +41,7 @@ export interface PawnBotsInterface extends utils.Interface {
     "provenanceHash()": FunctionFragment;
     "rawFulfillRandomness(bytes32,uint256)": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
-    "reserve(uint256)": FunctionFragment;
+    "reserve(uint256,address)": FunctionFragment;
     "reserveMinted()": FunctionFragment;
     "reveal()": FunctionFragment;
     "revealTime()": FunctionFragment;
@@ -128,7 +128,7 @@ export interface PawnBotsInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "reserve",
-    values: [BigNumberish]
+    values: [BigNumberish, string]
   ): string;
   encodeFunctionData(
     functionFragment: "reserveMinted",
@@ -308,7 +308,7 @@ export interface PawnBotsInterface extends utils.Interface {
     "BurnUnsold(uint256)": EventFragment;
     "Mint(address,uint256,uint8)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
-    "Reserve(uint256)": EventFragment;
+    "Reserve(uint256,address)": EventFragment;
     "Reveal()": EventFragment;
     "SetBaseURI(string)": EventFragment;
     "SetMaxPerAccount(uint256)": EventFragment;
@@ -374,8 +374,8 @@ export type OwnershipTransferredEventFilter =
   TypedEventFilter<OwnershipTransferredEvent>;
 
 export type ReserveEvent = TypedEvent<
-  [BigNumber],
-  { reserveAmount: BigNumber }
+  [BigNumber, string],
+  { reserveAmount: BigNumber; recipient: string }
 >;
 
 export type ReserveEventFilter = TypedEventFilter<ReserveEvent>;
@@ -539,6 +539,7 @@ export interface PawnBots extends BaseContract {
 
     reserve(
       reserveAmount: BigNumberish,
+      recipient: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -706,6 +707,7 @@ export interface PawnBots extends BaseContract {
 
   reserve(
     reserveAmount: BigNumberish,
+    recipient: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -868,6 +870,7 @@ export interface PawnBots extends BaseContract {
 
     reserve(
       reserveAmount: BigNumberish,
+      recipient: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1000,8 +1003,11 @@ export interface PawnBots extends BaseContract {
       newOwner?: string | null
     ): OwnershipTransferredEventFilter;
 
-    "Reserve(uint256)"(reserveAmount?: null): ReserveEventFilter;
-    Reserve(reserveAmount?: null): ReserveEventFilter;
+    "Reserve(uint256,address)"(
+      reserveAmount?: null,
+      recipient?: null
+    ): ReserveEventFilter;
+    Reserve(reserveAmount?: null, recipient?: null): ReserveEventFilter;
 
     "Reveal()"(): RevealEventFilter;
     Reveal(): RevealEventFilter;
@@ -1120,6 +1126,7 @@ export interface PawnBots extends BaseContract {
 
     reserve(
       reserveAmount: BigNumberish,
+      recipient: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1297,6 +1304,7 @@ export interface PawnBots extends BaseContract {
 
     reserve(
       reserveAmount: BigNumberish,
+      recipient: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

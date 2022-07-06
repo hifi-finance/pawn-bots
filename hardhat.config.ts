@@ -81,6 +81,7 @@ const config: HardhatUserConfig = {
     },
     goerli: getChainConfig("goerli"),
     kovan: getChainConfig("kovan"),
+    mainnet: getChainConfig("mainnet"),
     rinkeby: getChainConfig("rinkeby"),
     ropsten: getChainConfig("ropsten"),
   },
