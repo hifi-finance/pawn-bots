@@ -2,7 +2,7 @@
 
 <img width="4800" alt="banner" src="https://user-images.githubusercontent.com/4002635/178611975-f8629a64-777d-4cf2-be00-f406a81c297d.png">
 
-Pawn Bots is a limited collection of 8,888 NFTs that allow you to borrow up to 50% of their value.
+Pawn Bots is an NFT collection with a diminishing supply and the vision of digital assets as collateral. Inspired by nostalgic tech and art, this collection aims to bring the DeFi capabilities of borrowing and lending to the NFT world.
 
 ## Development
 
