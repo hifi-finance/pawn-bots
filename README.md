@@ -1,5 +1,7 @@
 # Pawn Bots [![Coverage Status](https://coveralls.io/repos/github/hifi-finance/pawn-bots/badge.svg?branch=main)](https://coveralls.io/github/hifi-finance/pawn-bots?branch=main) [![Yarn](https://img.shields.io/badge/maintained%20with-yarn-2d8dbb.svg)](https://yarnpkg.com/) [![Styled with Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://prettier.io) [![Commitizen Friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/) [![license: LGPL3.0](https://img.shields.io/badge/license-LGPL3.0-yellow.svg)](https://opensource.org/licenses/lgpl-3.0)
 
+<img width="4800" alt="banner" src="https://user-images.githubusercontent.com/4002635/178611975-f8629a64-777d-4cf2-be00-f406a81c297d.png">
+
 Pawn Bots is a limited collection of 8,888 NFTs that allow you to borrow up to 50% of their value.
 
 ## Development
