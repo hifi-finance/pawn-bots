@@ -1,1 +1,2 @@
+import "./participationTrophy";
 import "./pawnBots";
