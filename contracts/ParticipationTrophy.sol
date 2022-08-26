@@ -30,6 +30,10 @@ contract ParticipationTrophy is ERC1155, ERC1155Burnable, Ownable, ReentrancyGua
     /// @param newMerkleRoot The new Merkle root.
     event SetMerkleRoot(bytes32 newMerkleRoot);
 
+    /// @notice Emitted when a new token URI is set.
+    /// @param newURI The new token URI.
+    event SetURI(string newURI);
+
     /// PUBLIC STORAGE ///
 
     /// @notice Trophy type.
@@ -88,5 +92,18 @@ contract ParticipationTrophy is ERC1155, ERC1155Burnable, Ownable, ReentrancyGua
     function setMerkleRoot(bytes32 newMerkleRoot) external onlyOwner {
         merkleRoot = newMerkleRoot;
         emit SetMerkleRoot(newMerkleRoot);
+    }
+
+    /// @notice Set the token URI.
+    ///
+    /// @dev Emits a {SetURI} event.
+    ///
+    /// @dev Requirements:
+    /// - Can only be called by the owner.
+    ///
+    /// @param newURI The new token URI.
+    function setURI(string memory newURI) external onlyOwner {
+        _setURI(newURI);
+        emit SetURI(newURI);
     }
 }
